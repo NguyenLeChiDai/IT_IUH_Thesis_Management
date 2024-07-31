@@ -2,6 +2,60 @@ POST http://localhost:5000/api/auth/register
 Content-Type: application/json
 
 {
-    "username": "dai4",
-    "password": "dai"
+    "username": "minh hieu",
+    "password": "123456"
 }
+
+###
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+    "username": "minh hieu",
+    "password": "123456"
+}
+
+### đoạn mã này không thể sử dụng để request nữa
+POST http://localhost:5000/api/posts
+
+Content-Type:  application/json
+
+{
+  "title": "Sample Title",
+  "description": "Sample description",
+  "url": "react.com",
+  "status": "LEARNING"
+}
+### thay thế bằng đoạn này
+curl -X POST http://localhost:5000/api/posts \
+-H "Content-Type: application/json" \
+-d '{"title": "Sample Title", "description": "google.com", "url": "react.com", "status": "LEARNING"}'
+
+###
+curl -X POST http://localhost:5000/api/posts \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmEzMzczMjg3NjA3ZGZlNDg5Y2MxYWMiLCJpYXQiOjE3MjE5NzI1Mzd9.krXQCHgCw8OiaML17n8eSFZpq1O7NbNGFjh2LB0UWe0" \
+-d '{"title": " khoa hoc node", "description": "node js", "url": "nodejs.com.vn"}'
+
+### lấy các thông tin của minh hieu và khóa học
+GET http://localhost:5000/api/posts
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmEzMzczMjg3NjA3ZGZlNDg5Y2MxYWMiLCJpYXQiOjE3MjE5NzMyNDV9.qwLT4ObJVfdNgoAcZ_r9qN-YkYz1TQh5E9PsVtK9uRA
+
+### update khoa hoc post
+
+PUT http://localhost:5000/api/posts/66a3377587607dfe489cc1af
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmEzMzczMjg3NjA3ZGZlNDg5Y2MxYWMiLCJpYXQiOjE3MjE5NzMyNDV9.qwLT4ObJVfdNgoAcZ_r9qN-YkYz1TQh5E9PsVtK9uRA
+
+{
+  "title": "My update khoa hoc minh hieu",
+  "description": "update description",
+  "url": "https://reactjs.com",
+  "status": "LEARNING"
+}
+
+###
+DELETE http://localhost:5000/api/posts/66a3377587607dfe489cc1af
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmEzMzczMjg3NjA3ZGZlNDg5Y2MxYWMiLCJpYXQiOjE3MjE5NzMyNDV9.qwLT4ObJVfdNgoAcZ_r9qN-YkYz1TQh5E9PsVtK9uRA
+
+
