@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const PostSchema = new Schema({
-  studentId: {
+const TeacherSchema = new Schema({
+  teacherId: {
     type: String,
     required: true,
   },
@@ -12,36 +12,26 @@ const PostSchema = new Schema({
   },
   phone: {
     type: String,
-    required: true,
+    required: false,
   },
   email: {
     type: String,
-    required: true,
+    required: false,
   },
-  class: {
+
+  gender: {
     type: String,
-    required: true,
+    required: false,
   },
   major: {
     type: String,
-    required: true,
-  },
-  gender: {
-    type: String,
-    required: true,
-  },
-  groupName: {
-    type: String,
-    required: true,
-  },
-  groupStatus: {
-    type: String,
-    required: true,
+    required: false,
   },
   user: {
     type: Schema.Types.ObjectId,
     ref: "users",
+    required: true, // Bắt buộc có liên kết với người dùng
   },
 });
 
-module.exports = mongoose.model("posts", PostSchema);
+module.exports = mongoose.model("profileTeacher", TeacherSchema);

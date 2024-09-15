@@ -1,0 +1,29 @@
+.auth-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.auth-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.auth-form {
+  background: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.auth-form h5 {
+  color: brown;
+}
+
+.logo img {
+  height: 60px;
+  mix-blend-mode: multiply;
+}

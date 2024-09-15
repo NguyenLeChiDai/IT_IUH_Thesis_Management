@@ -1,0 +1,184 @@
+/* General Layout */
+body,
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: Arial, sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  background-color: #002147;
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 20px;
+  z-index: 1000;
+  transition: transform 0.3s ease-in-out;
+  transform: translateX(-100%);
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar h3 {
+  color: #00aaff;
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+.sidebar ul {
+  padding: 0;
+  list-style-type: none;
+}
+
+.sidebar ul li {
+  padding: 10px 0;
+}
+
+.sidebar ul li a {
+  color: white;
+  text-decoration: none;
+  display: block;
+  transition: padding-left 0.2s ease-in-out;
+}
+
+.sidebar ul li a:hover {
+  background-color: #0056b3;
+  padding-left: 10px;
+}
+
+/* Main Content */
+.content {
+  margin-left: 0;
+  padding: 20px;
+  transition: margin-left 0.3s ease-in-out;
+  width: 100%;
+}
+
+.content.shifted {
+  margin-left: 250px;
+}
+
+h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* User Info and Group Info */
+.user-info,
+.group-info {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.user-info h3,
+.group-info h3 {
+  font-size: 18px;
+  margin-bottom: 15px;
+  color: #0056b3;
+}
+
+.user-info p,
+.group-info p {
+  margin-bottom: 8px;
+  color: #555;
+}
+
+/* Update Info Section */
+.update-info-section {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.update-info-section h2 {
+  font-size: 20px;
+  margin-bottom: 15px;
+  color: #0056b3;
+}
+
+.update-info-section form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.update-info-section input {
+  width: 48%;
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.update-info-section button {
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.update-info-section button:hover {
+  background-color: #218838;
+}
+
+/* Toggle Button for Sidebar */
+button {
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+button.sidebar-toggle-button {
+  background-color: #0056b3;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+button.sidebar-toggle-button:hover {
+  background-color: #003d80;
+}
+
+@media (max-width: 768px) {
+  /* Adjustments for mobile */
+  .sidebar {
+    transform: translateX(-100%);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .content {
+    margin-left: 0;
+  }
+
+  .content.shifted {
+    margin-left: 0;
+  }
+
+  .update-info-section form {
+    flex-direction: column;
+  }
+
+  .update-info-section input {
+    width: 100%;
+  }
+}

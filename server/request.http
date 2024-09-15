@@ -2,8 +2,9 @@ POST http://localhost:5000/api/auth/register
 Content-Type: application/json
 
 {
-    "username": "minh hieu",
-    "password": "123456"
+   "username": "minhuser",
+    "password": "123456",
+    "role": "user"
 }
 
 ###
@@ -11,7 +12,7 @@ POST http://localhost:5000/api/auth/login
 Content-Type: application/json
 
 {
-    "username": "minh hieu",
+    "username": "minhuser",
     "password": "123456"
 }
 

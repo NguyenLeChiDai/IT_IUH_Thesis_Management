@@ -1,0 +1,49 @@
+/* styles.css hoặc TeacherInfo.module.css */
+
+.user-info-group-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Căn giữa theo chiều ngang */
+  padding: 20px;
+}
+
+.user-info {
+  background-color: #f8f9fa; /* Màu nền nhạt */
+  border: 1px solid #dee2e6; /* Viền nhẹ */
+  border-radius: 5px; /* Bo tròn các góc */
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Đổ bóng nhẹ */
+  width: 100%;
+  max-width: 100%; /* Đảm bảo chiều rộng tối đa là 100% */
+}
+
+.group-info {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.group-info .btn {
+  margin: 0 10px; /* Khoảng cách giữa các nút */
+}
+
+h3 {
+  margin-bottom: 20px;
+}
+
+p {
+  margin: 10px 0;
+}
+/* styles.css hoặc TeacherInfo.module.css */
+
+h3 {
+  font-size: 24px; /* Kích thước chữ lớn */
+  font-weight: bold; /* Chữ đậm */
+  color: #333; /* Màu chữ tối */
+  margin-bottom: 20px; /* Khoảng cách dưới tiêu đề */
+  padding: 10px; /* Thêm khoảng cách xung quanh tiêu đề */
+  border: 2px solid #007bff; /* Đường viền xung quanh tiêu đề */
+  border-radius: 5px; /* Bo tròn các góc của đường viền */
+  transition: background-color 0.3s, color 0.3s; /* Hiệu ứng chuyển đổi khi hover */
+  display: inline-block; /* Để đường viền không chiếm toàn bộ chiều rộng */
+}

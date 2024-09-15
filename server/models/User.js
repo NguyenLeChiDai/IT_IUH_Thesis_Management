@@ -11,6 +11,12 @@ const UserSchema = new Schema({
     type: String,
     required: true,
   },
+  role: {
+    type: String,
+    enum: ["Sinh viên", "Giảng viên", "admin"], // Chỉ cho phép 'Sinh Viên' hoặc 'admin', "teacher"
+    default: "Sinh viên",
+  },
+
   createdAt: {
     type: Date,
     default: Date.now,

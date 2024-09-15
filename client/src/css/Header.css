@@ -1,0 +1,23 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #002d72;
+  color: white;
+  padding: 10px 20px;
+}
+
+.header .logo img {
+  height: 50px;
+  /*  mix-blend-mode: multiply; */
+}
+
+.header .title h2 {
+  text-align: center;
+  color: white;
+}
+
+.header .right-link a {
+  color: white;
+  text-decoration: none;
+}

@@ -1,0 +1,85 @@
+.trang-chu {
+  font-family: Arial, sans-serif;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #003366;
+  color: white;
+}
+
+.logo img {
+  height: 50px;
+}
+
+.navbar ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 20px;
+}
+
+.navbar ul li a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.navbar ul li a:hover {
+  text-decoration: underline;
+}
+
+.login-btn button {
+  background-color: #ff6600;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.login-btn button:hover {
+  background-color: #cc5200;
+}
+
+.gioi-thieu {
+  display: flex;
+  justify-content: space-between;
+  padding: 40px 20px;
+  background-color: #f2f2f2;
+}
+
+.gioi-thieu-content {
+  max-width: 50%;
+}
+
+.gioi-thieu h2 {
+  color: #ff6600;
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+.gioi-thieu p {
+  color: #555555;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.gioi-thieu ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.gioi-thieu ul li {
+  color: #ff6600;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.gioi-thieu-image img {
+  max-width: 100%;
+  height: auto;
+}
