@@ -113,7 +113,7 @@ const DashboardUser = () => {
       >
         <Toolbar />
         <Box>
-          <Typography variant="h4">Thông tin sinh viên</Typography>
+          <Typography variant="h4">Thông tin sinh viên:</Typography>
           <StudentInfo />
         </Box>
       </Box>

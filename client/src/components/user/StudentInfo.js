@@ -3,7 +3,7 @@ import { Row, Col, Button, Form } from "react-bootstrap";
 import axios from "axios";
 import setAuthToken from "../../utils/setAuthToken"; // Đảm bảo bạn đã import setAuthToken đúng cách
 import { AuthContext } from "../../contexts/AuthContext"; // Import AuthContext
-
+import "../../css/StudentInfo.css";
 const StudentInfo = () => {
   const { updateProfile } = useContext(AuthContext); // Lấy updateProfile từ context
   const [userData, setUserData] = useState({});
@@ -73,7 +73,7 @@ const StudentInfo = () => {
   };
 
   return (
-    <Row className="user-info-group-container">
+    <Row className="user-info-container">
       {isEditing ? (
         <Form onSubmit={handleUpdateProfile}>
           <Col md={6} className="user-info">
@@ -142,7 +142,7 @@ const StudentInfo = () => {
               />
             </Form.Group>
           </Col>
-          <Col md={6} className="group-info">
+          <Col md={6} className="user-info">
             <h3>Thông Tin Nhóm Đề Tài</h3>
             <Form.Group>
               <Form.Label>Tên nhóm:</Form.Label>
@@ -174,22 +174,35 @@ const StudentInfo = () => {
         </Form>
       ) : (
         <>
-          <Col md={6} className="user-info">
-            <h3>Thông Tin Cá Nhân</h3>
-            <p>Mã sinh viên: {userData.studentId}</p>
-            <p>Họ và tên: {userData.name}</p>
-            <p>Số điện thoại: {userData.phone}</p>
-            <p>Email: {userData.email}</p>
-            <p>Lớp danh nghĩa: {userData.class}</p>
-            <p>Ngành học: {userData.major}</p>
-            <p>Giới tính: {userData.gender}</p>
+          <Col md={6} /* className="user-info" */>
+            <div className="card personal-info-card">
+              <div className="card-body">
+                <h3>Thông Tin Cá Nhân</h3>
+                <p>Mã sinh viên: {userData.studentId}</p>
+                <p>Họ và tên: {userData.name}</p>
+                <p>Số điện thoại: {userData.phone}</p>
+                <p>Email: {userData.email}</p>
+                <p>Lớp danh nghĩa: {userData.class}</p>
+                <p>Ngành học: {userData.major}</p>
+                <p>Giới tính: {userData.gender}</p>
+              </div>
+            </div>
           </Col>
-          <Col md={6} className="group-info">
-            <h3>Thông Tin Nhóm Đề Tài</h3>
-            <p>Tên nhóm: {userData.groupName}</p>
-            <p>Trạng thái Đề tài: {userData.groupStatus}</p>
+          <Col md={6} /* className="user-info" */>
+            <div className="card group-info-card">
+              <div className="card-body">
+                <h3>Thông Tin Nhóm Đề Tài</h3>
+                <p>Tên nhóm: {userData.groupName}</p>
+                <p>Trạng thái nhóm: {userData.groupStatus}</p>
+              </div>
+            </div>
           </Col>
-          <Button onClick={() => setIsEditing(true)}>Cập nhật</Button>
+          <Button
+            style={{ marginTop: "10px" }}
+            onClick={() => setIsEditing(true)}
+          >
+            Cập nhật
+          </Button>
         </>
       )}
     </Row>

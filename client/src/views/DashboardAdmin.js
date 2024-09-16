@@ -12,8 +12,11 @@ import {
   Box,
   CssBaseline,
   useMediaQuery,
+  Collapse, // Thêm Collapse từ MUI
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import ExpandLess from "@mui/icons-material/ExpandLess"; // Icon mở rộng
+import ExpandMore from "@mui/icons-material/ExpandMore"; // Icon thu gọn
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SchoolIcon from "@mui/icons-material/School";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
@@ -24,6 +27,7 @@ const drawerWidth = 240;
 
 const DashboardAdmin = () => {
   const [open, setOpen] = useState(false);
+  const [openSubMenu, setOpenSubMenu] = useState({}); // State cho menu con
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width:600px)"); // Xác định nếu là màn hình nhỏ
 
@@ -31,16 +35,39 @@ const DashboardAdmin = () => {
     setOpen(!open);
   };
 
+  // Toggle menu con
+  const handleToggleSubMenu = (index) => {
+    setOpenSubMenu((prevState) => ({
+      ...prevState,
+      [index]: !prevState[index],
+    }));
+  };
+
   const menuItems = [
-    { text: "Quản lý giảng viên", icon: <SchoolIcon />, onClick: () => {} },
+    {
+      text: "Quản lý giảng viên",
+      icon: <SchoolIcon />,
+      subMenu: [
+        {
+          text: "Quản lý tài khoản giảng viên",
+          icon: <AccountBoxIcon />,
+          onClick: () => navigate("/dashboardAdmin/manage-teacher-accounts"),
+        },
+        {
+          text: "Quản lý bằng cấp giảng viên",
+          icon: <AccountBoxIcon />,
+          onClick: () => navigate("/dashboardAdmin"),
+        },
+      ],
+    },
     {
       text: "Quản lý sinh viên",
       icon: <AccountCircleIcon />,
       subMenu: [
         {
-          text: "Quản lý tài khoản",
+          text: "Quản lý tài khoản sinh viên",
           icon: <AccountBoxIcon />,
-          onClick: () => navigate("/dashboardAdmin/account-management"),
+          onClick: () => navigate("/dashboardAdmin/manage-student-accounts"),
         },
       ],
     },
@@ -52,7 +79,7 @@ const DashboardAdmin = () => {
       <AppBar
         position="fixed"
         sx={{
-          width: open && !isMobile ? `calc(100% - ${drawerWidth}px)` : "100%", // Điều chỉnh AppBar khi Drawer mở
+          width: open && !isMobile ? `calc(100% - ${drawerWidth}px)` : "100%",
           ml: open && !isMobile ? `${drawerWidth}px` : 0,
         }}
       >
@@ -69,23 +96,17 @@ const DashboardAdmin = () => {
             Trang quản lý dành cho Admin
           </Typography>
           <Box sx={{ flexGrow: 1 }} />
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              marginTop: "1px",
-            }}
-          >
+          <Box sx={{ display: "flex", alignItems: "center", marginTop: "1px" }}>
             <UserMenu />
           </Box>
         </Toolbar>
       </AppBar>
 
       <Drawer
-        variant={isMobile ? "temporary" : "persistent"} // Drawer sẽ là temporary trên mobile
+        variant={isMobile ? "temporary" : "persistent"}
         anchor="left"
         open={open}
-        onClose={toggleDrawer} // Đóng Drawer khi bấm ra ngoài (trên mobile)
+        onClose={toggleDrawer}
         sx={{
           width: drawerWidth,
           flexShrink: 0,
@@ -98,22 +119,43 @@ const DashboardAdmin = () => {
         <List>
           {menuItems.map((item, index) => (
             <React.Fragment key={index}>
-              <ListItem button onClick={item.onClick}>
+              <ListItem
+                button
+                onClick={() => handleToggleSubMenu(index)}
+                sx={{
+                  "&:hover": {
+                    backgroundColor: "#BFBFBF", // Màu nền khi hover
+                    fontWeight: "bold", // Chữ đậm hơn khi hover
+                  },
+                }}
+              >
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text} />
+                {openSubMenu[index] ? <ExpandLess /> : <ExpandMore />}
               </ListItem>
-              {item.subMenu &&
-                item.subMenu.map((subItem, subIndex) => (
-                  <ListItem
-                    button
-                    key={subIndex}
-                    sx={{ pl: 4 }}
-                    onClick={subItem.onClick}
-                  >
-                    <ListItemIcon>{subItem.icon}</ListItemIcon>
-                    <ListItemText primary={subItem.text} />
-                  </ListItem>
-                ))}
+              {/* Hiển thị các subMenu khi openSubMenu[index] = true */}
+              <Collapse in={openSubMenu[index]} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  {item.subMenu &&
+                    item.subMenu.map((subItem, subIndex) => (
+                      <ListItem
+                        button
+                        key={subIndex}
+                        sx={{
+                          pl: 4,
+                          "&:hover": {
+                            backgroundColor: "#BFBFBF", // Màu nền khi hover
+                            fontWeight: "bold", // Chữ đậm hơn khi hover
+                          },
+                        }}
+                        onClick={subItem.onClick}
+                      >
+                        <ListItemIcon>{subItem.icon}</ListItemIcon>
+                        <ListItemText primary={subItem.text} />
+                      </ListItem>
+                    ))}
+                </List>
+              </Collapse>
             </React.Fragment>
           ))}
         </List>
@@ -124,7 +166,7 @@ const DashboardAdmin = () => {
         sx={{
           flexGrow: 1,
           p: 3,
-          width: open && !isMobile ? `calc(100% - ${drawerWidth}px)` : "100%", // Điều chỉnh chiều rộng main khi mở drawer
+          width: open && !isMobile ? `calc(100% - ${drawerWidth}px)` : "100%",
           transition: "width 0.3s",
         }}
       >

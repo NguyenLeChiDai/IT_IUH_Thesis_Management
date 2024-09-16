@@ -1,0 +1,30 @@
+/* chỉnh bảng thông tin cá nhân */
+.personal-info-card {
+  background-color: #e9ecef;
+}
+/* chỉnh bảng thông tin đề tài */
+.group-info-card {
+  background-color: #e9ecef;
+  height: 353px;
+}
+
+.info-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.personal-info,
+.group-info {
+  flex: 1;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+.personal-info {
+  background-color: #f8f9fa;
+  margin-right: 15px;
+}
+
+.group-info {
+  background-color: #e9ecef;
+}

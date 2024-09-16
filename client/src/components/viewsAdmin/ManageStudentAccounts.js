@@ -17,8 +17,10 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@mui/material";
+import { InputAdornment } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 
-const AccountManagement = () => {
+const ManageStudentAccounts = () => {
   const [users, setUsers] = useState([]);
   const [editUser, setEditUser] = useState(null);
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
@@ -27,6 +29,17 @@ const AccountManagement = () => {
     username: "",
     password: "",
     role: "Sinh viên",
+  });
+
+  const [searchTerm, setSearchTerm] = useState(""); // Từ khóa tìm kiếm
+
+  //HÀM LỌC USER tìm kiếm
+  const filteredUsers = users.filter((user) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return (
+      user.username.toLowerCase().includes(searchTermLower) ||
+      user.profile?.studentId?.toLowerCase().includes(searchTermLower)
+    );
   });
 
   const [newProfile, setNewProfile] = useState({
@@ -47,7 +60,9 @@ const AccountManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/users"); // Gọi API lấy danh sách user
+      const response = await axios.get(
+        "http://localhost:5000/api/users/list-students"
+      ); // Gọi API lấy danh sách user
       setUsers(response.data.users); // Lưu danh sách user vào state
     } catch (error) {
       console.error("Lỗi không tải được sinh viên:", error);
@@ -62,7 +77,9 @@ const AccountManagement = () => {
     if (!isConfirmed) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/users/${userId}`); // Gọi API xóa user
+      await axios.delete(
+        `http://localhost:5000/api/users/delete-student/${userId}`
+      ); // Gọi API xóa user
       fetchUsers(); // Tải lại danh sách user
     } catch (error) {
       console.error("Lỗi không xóa được sinh viên:", error);
@@ -198,6 +215,22 @@ const AccountManagement = () => {
       >
         Tạo tài khoản
       </Button>
+      {/* Tìm kiếm tài khoản */}
+      <TextField
+        label="Tìm kiếm theo Tên đăng nhập hoặc Mã sinh viên"
+        variant="outlined"
+        fullWidth
+        margin="normal"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)} // Cập nhật từ khóa tìm kiếm
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon />
+            </InputAdornment>
+          ),
+        }}
+      />
 
       {/* Form tạo tài khoản mới */}
       <Dialog
@@ -343,7 +376,7 @@ const AccountManagement = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {users.map((user) => (
+            {filteredUsers.map((user) => (
               <TableRow key={user._id}>
                 <TableCell>
                   {editUser && editUser._id === user._id ? (
@@ -405,4 +438,4 @@ const AccountManagement = () => {
   );
 };
 
-export default AccountManagement;
+export default ManageStudentAccounts;

@@ -70,14 +70,19 @@ function LoginForm() {
             onChange={onChangeLoginForm}
           />
         </Form.Group>
-        <Button variant="success" type="submit">
+        <Button style={{ marginTop: "10px" }} variant="success" type="submit">
           Đăng nhập
         </Button>
       </Form>
       <p>
         Bạn chưa có tài khoản?
         <Link to="/register">
-          <Button variant="info" size="sm" className="ml-2">
+          <Button
+            style={{ marginTop: "12px" }}
+            variant="info"
+            size="sm"
+            className="ml-2"
+          >
             Đăng ký
           </Button>
         </Link>

@@ -4,9 +4,20 @@ const User = require("../models/User");
 const argon2 = require("argon2"); // Thêm argon2 vào để mã hóa mật khẩu
 
 // Lấy danh sách user
-router.get("/", async (req, res) => {
+router.get("/list-students", async (req, res) => {
   try {
     const users = await User.find({ role: "Sinh viên" }); // Chỉ lấy user có role là 'Sinh viên'
+    res.json({ success: true, users });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+});
+
+// Lấy danh sách user(teacher)
+router.get("/list-teachers", async (req, res) => {
+  try {
+    const users = await User.find({ role: "Giảng viên" }); // Chỉ lấy user có role là 'Sinh viên'
     res.json({ success: true, users });
   } catch (error) {
     console.error(error);
@@ -41,9 +52,27 @@ router.put("/:id", async (req, res) => {
 });
 
 // Xóa user
-router.delete("/:id", async (req, res) => {
+router.delete("/delete-student/:id", async (req, res) => {
   try {
     const userDeleteCondition = { _id: req.params.id, role: "Sinh viên" };
+    const deletedUser = await User.findOneAndDelete(userDeleteCondition);
+
+    if (!deletedUser)
+      return res
+        .status(401)
+        .json({ success: false, message: "User not found or not authorized" });
+
+    res.json({ success: true, message: "User deleted successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+});
+
+// Xóa user
+router.delete("/delete-teacher/:id", async (req, res) => {
+  try {
+    const userDeleteCondition = { _id: req.params.id, role: "Giảng viên" };
     const deletedUser = await User.findOneAndDelete(userDeleteCondition);
 
     if (!deletedUser)

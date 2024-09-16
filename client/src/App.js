@@ -7,8 +7,9 @@ import AuthContextProvider from "./contexts/AuthContext";
 import DashboardAdmin from "./views/DashboardAdmin";
 import DashboardUser from "./views/DashboardUser";
 import ProtectedRoute from "./components/routing/ProtectedRoute";
-import AccountManagement from "./components/viewsAdmin/AccountManagement"; // Import AccountManagement
+import ManageStudentAccounts from "./components/viewsAdmin/ManageStudentAccounts"; // Import AccountManagement
 import DashboardTeacher from "./views/DashboardTeacher";
+import ManageTeacherAccounts from "./components/viewsAdmin/ManageTeacherAccounts";
 
 function App() {
   return (
@@ -22,8 +23,12 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboardAdmin" element={<DashboardAdmin />}>
               <Route
-                path="account-management"
-                element={<AccountManagement />}
+                path="manage-student-accounts"
+                element={<ManageStudentAccounts />}
+              />{" "}
+              <Route
+                path="manage-teacher-accounts"
+                element={<ManageTeacherAccounts />}
               />{" "}
               {/* Route mới cho AccountManagement */}
             </Route>
