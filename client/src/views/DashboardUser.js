@@ -11,6 +11,8 @@ import {
   Typography,
   Box,
   CssBaseline,
+  Collapse,
+  useMediaQuery,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
@@ -21,19 +23,47 @@ import ScoreIcon from "@mui/icons-material/Score";
 import UserMenu from "../components/user/UserMenu";
 import "../css/DashboardUser.css";
 import StudentInfo from "../components/user/StudentInfo";
+import { Outlet, useNavigate } from "react-router-dom";
+import ExpandLess from "@mui/icons-material/ExpandLess"; // Icon thu gọn
+import ExpandMore from "@mui/icons-material/ExpandMore"; // Icon mở rộng
 
 const drawerWidth = 240;
 
 const DashboardUser = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [openSubMenu, setOpenSubMenu] = useState({}); // State cho submenu
+  const isMobile = useMediaQuery("(max-width:600px)"); // Xác định nếu là màn hình nhỏ
+  const navigate = useNavigate();
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
+  // Toggle menu con
+  const handleToggleSubMenu = (index) => {
+    setOpenSubMenu((prevState) => ({
+      ...prevState,
+      [index]: !prevState[index],
+    }));
+  };
+
   const menuItems = [
-    { text: "Trang chủ", icon: <HomeIcon /> },
-    { text: "Nhóm sinh viên", icon: <GroupIcon /> },
+    {
+      text: "Trang chủ",
+      icon: <HomeIcon />,
+      onClick: () => navigate("/dashboardUser"),
+    },
+    {
+      text: "Nhóm sinh viên",
+      icon: <GroupIcon />,
+      subMenu: [
+        {
+          text: "Danh sách nhóm sinh viên",
+          icon: <GroupIcon />,
+          onClick: () => navigate("/dashboardUser/list-student-groups"),
+        },
+      ],
+    },
     { text: "Đề tài", icon: <AssignmentIcon /> },
     { text: "Tiêu chí Đánh giá của học kỳ", icon: <GradeIcon /> },
     { text: "Bảng điểm của tôi", icon: <ScoreIcon /> },
@@ -46,9 +76,10 @@ const DashboardUser = () => {
       <AppBar
         position="fixed"
         sx={{
-          width: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : "100%",
-          ml: sidebarOpen ? `${drawerWidth}px` : 0,
-          height: "72px", // Giảm chiều cao của AppBar
+          width:
+            sidebarOpen && !isMobile ? `calc(100% - ${drawerWidth}px)` : "100%",
+          ml: sidebarOpen && !isMobile ? `${drawerWidth}px` : 0,
+          height: "70px", // Giảm chiều cao của AppBar
         }}
       >
         <Toolbar>
@@ -64,14 +95,8 @@ const DashboardUser = () => {
             Dashboard Sinh viên
           </Typography>
           <Box sx={{ flexGrow: 1 }} />
-          <Box
-            sx={{
-              marginTop: "25px",
-              height: "10px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
+
+          <Box sx={{ display: "flex", alignItems: "center", marginTop: "1px" }}>
             <UserMenu />
           </Box>
         </Toolbar>
@@ -83,7 +108,7 @@ const DashboardUser = () => {
         anchor="left"
         open={sidebarOpen}
         sx={{
-          width: drawerWidth,
+          width: "60px",
           flexShrink: 0,
           "& .MuiDrawer-paper": {
             width: drawerWidth,
@@ -93,10 +118,37 @@ const DashboardUser = () => {
       >
         <List>
           {menuItems.map((item, index) => (
-            <ListItem button key={index}>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItem>
+            <React.Fragment key={index}>
+              <ListItem
+                button
+                onClick={
+                  item.subMenu ? () => handleToggleSubMenu(index) : item.onClick
+                }
+              >
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+                {item.subMenu &&
+                  (openSubMenu[index] ? <ExpandLess /> : <ExpandMore />)}
+              </ListItem>
+              {/* Hiển thị các subMenu khi openSubMenu[index] = true */}
+              {item.subMenu && (
+                <Collapse in={openSubMenu[index]} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {item.subMenu.map((subItem, subIndex) => (
+                      <ListItem
+                        button
+                        key={subIndex}
+                        sx={{ pl: 4 }}
+                        onClick={subItem.onClick}
+                      >
+                        <ListItemIcon>{subItem.icon}</ListItemIcon>
+                        <ListItemText primary={subItem.text} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Collapse>
+              )}
+            </React.Fragment>
           ))}
         </List>
       </Drawer>
@@ -107,15 +159,14 @@ const DashboardUser = () => {
         sx={{
           flexGrow: 1,
           p: 3,
-          width: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : "100%",
+          width:
+            sidebarOpen && !isMobile ? `calc(100% - ${drawerWidth}px)` : "100%",
+          ml: sidebarOpen && !isMobile ? `${drawerWidth}px` : 0,
           transition: "width 0.3s",
         }}
       >
         <Toolbar />
-        <Box>
-          <Typography variant="h4">Thông tin sinh viên:</Typography>
-          <StudentInfo />
-        </Box>
+        <Outlet />
       </Box>
     </Box>
   );

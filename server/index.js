@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 
 const authRouter = require("./routes/auth");
-const postRouter = require("./routes/post");
+const StudentGroupRouter = require("./routes/studentGroup");
 const profileStudent = require("./routes/profileStudent");
 const userRouter = require("./routes/users"); // Import route mới
 const profileTeacher = require("./routes/profileTeacher");
@@ -28,7 +28,7 @@ app.use(express.json());
 app.use(cors());
 
 app.use("/api/auth", authRouter);
-app.use("/api/posts", postRouter);
+app.use("/api/studentgroups", StudentGroupRouter);
 app.use("/api/student", profileStudent);
 app.use("/api/users", userRouter); // Sử dụng route mới
 app.use("/api/teachers", profileTeacher);

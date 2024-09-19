@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import { InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import "../../css/ManageStudentAccounts.css";
 
 const ManageStudentAccounts = () => {
   const [users, setUsers] = useState([]);

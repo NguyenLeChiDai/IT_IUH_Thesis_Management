@@ -111,4 +111,46 @@ router.post("/update", verifyToken, async (req, res) => {
     });
   }
 });
+
+// Thêm một route để sinh viên đăng ký vào nhóm
+router.post("/register-group", verifyToken, async (req, res) => {
+  const { groupId } = req.body;
+
+  try {
+    // Kiểm tra nhóm có tồn tại không
+    const group = await StudentGroup.findById(groupId);
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Group not found",
+      });
+    }
+
+    // Cập nhật profileStudent với groupId đã chọn
+    const updatedProfile = await Profile.findOneAndUpdate(
+      { user: req.userId },
+      { groupName: group.groupName, groupStatus: group.groupStatus },
+      { new: true }
+    );
+
+    if (!updatedProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "Profile not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Group registered successfully",
+      profile: updatedProfile,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+});
 module.exports = router;

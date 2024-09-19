@@ -10,6 +10,11 @@ import ProtectedRoute from "./components/routing/ProtectedRoute";
 import ManageStudentAccounts from "./components/viewsAdmin/ManageStudentAccounts"; // Import AccountManagement
 import DashboardTeacher from "./views/DashboardTeacher";
 import ManageTeacherAccounts from "./components/viewsAdmin/ManageTeacherAccounts";
+import PostTheTopic from "./components/viewTeacher/PostTheTopic";
+import { HomeAdmin } from "./components/viewsAdmin/HomeAdmin";
+import ManageStudentGroups from "./components/viewsAdmin/ManageStudentGroups";
+import { ListStudentGroups } from "./components/user/ListStudentGroups";
+import StudentInfo from "./components/user/StudentInfo";
 
 function App() {
   return (
@@ -22,6 +27,8 @@ function App() {
           <Route path="/trangchu" element={<TrangChu />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboardAdmin" element={<DashboardAdmin />}>
+              <Route index element={<HomeAdmin />} />{" "}
+              {/* Hiển thị HomeAdmin khi không có route con */}
               <Route
                 path="manage-student-accounts"
                 element={<ManageStudentAccounts />}
@@ -30,10 +37,19 @@ function App() {
                 path="manage-teacher-accounts"
                 element={<ManageTeacherAccounts />}
               />{" "}
-              {/* Route mới cho AccountManagement */}
+              <Route path="student-groups" element={<ManageStudentGroups />} />{" "}
             </Route>
-            <Route path="/dashboardUser" element={<DashboardUser />} />
-            <Route path="/dashboardTeacher" element={<DashboardTeacher />} />
+
+            <Route path="/dashboardUser" element={<DashboardUser />}>
+              <Route index element={<StudentInfo />} />{" "}
+              <Route
+                path="list-student-groups"
+                element={<ListStudentGroups />}
+              />{" "}
+            </Route>
+            <Route path="/dashboardTeacher" element={<DashboardTeacher />}>
+              <Route path="upload-topic" element={<PostTheTopic />} />
+            </Route>
           </Route>
         </Routes>
       </Router>

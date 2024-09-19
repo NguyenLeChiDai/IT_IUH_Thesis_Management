@@ -1,0 +1,93 @@
+/* Tổng quan cho toàn bộ container */
+.manage-student-accounts-container {
+  padding: 20px;
+  background-color: #f5f5f5;
+}
+
+/* Tiêu đề */
+.manage-student-accounts-container h4 {
+  color: #333;
+  font-weight: bold;
+  margin-bottom: 30px;
+}
+
+/* Nút Tạo tài khoản */
+.create-account-button {
+  margin-bottom: 20px;
+  background-color: #1976d2;
+  color: white;
+}
+
+.create-account-button:hover {
+  background-color: #115293;
+}
+
+/* Tìm kiếm */
+.search-field {
+  margin-bottom: 20px;
+  background-color: white;
+}
+
+/* Bảng quản lý tài khoản */
+.MuiTableContainer-root {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.MuiTable-root {
+  border-collapse: separate;
+  border-spacing: 0 10px;
+}
+
+.MuiTableCell-root {
+  background-color: white;
+  border-bottom: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+}
+
+.MuiTableHead-root .MuiTableCell-root {
+  font-weight: bold;
+  color: #1976d2;
+  background-color: #e3f2fd;
+}
+
+/* Nút hành động */
+.MuiButton-root {
+  margin-right: 8px;
+}
+
+.edit-button {
+  background-color: #ff9800;
+  color: white;
+}
+
+.edit-button:hover {
+  background-color: #e68900;
+}
+
+.delete-button {
+  background-color: #f44336;
+  color: white;
+}
+
+.delete-button:hover {
+  background-color: #d32f2f;
+}
+
+/* Hộp thoại (Dialog) */
+.MuiDialog-paper {
+  padding: 20px;
+}
+
+.MuiDialogTitle-root {
+  font-weight: bold;
+}
+
+.dialog-field {
+  margin-top: 10px;
+}
+
+.dialog-actions {
+  justify-content: flex-end;
+}

@@ -19,9 +19,11 @@ import ExpandLess from "@mui/icons-material/ExpandLess"; // Icon mở rộng
 import ExpandMore from "@mui/icons-material/ExpandMore"; // Icon thu gọn
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SchoolIcon from "@mui/icons-material/School";
+import HomeIcon from "@mui/icons-material/Home";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import UserMenu from "../components/user/UserMenu";
 import { Outlet, useNavigate } from "react-router-dom";
+import { HomeAdmin } from "../components/viewsAdmin/HomeAdmin";
 
 const drawerWidth = 240;
 
@@ -44,6 +46,11 @@ const DashboardAdmin = () => {
   };
 
   const menuItems = [
+    {
+      text: "Trang chủ",
+      icon: <HomeIcon />,
+      onClick: () => navigate("/dashboardAdmin"),
+    },
     {
       text: "Quản lý giảng viên",
       icon: <SchoolIcon />,
@@ -69,6 +76,11 @@ const DashboardAdmin = () => {
           icon: <AccountBoxIcon />,
           onClick: () => navigate("/dashboardAdmin/manage-student-accounts"),
         },
+        {
+          text: "Nhóm sinh viên", // Thêm mục "Nhóm sinh viên"
+          icon: <AccountBoxIcon />,
+          onClick: () => navigate("/dashboardAdmin/student-groups"), // Chuyển đến trang "Nhóm sinh viên"
+        },
       ],
     },
   ];
@@ -81,6 +93,7 @@ const DashboardAdmin = () => {
         sx={{
           width: open && !isMobile ? `calc(100% - ${drawerWidth}px)` : "100%",
           ml: open && !isMobile ? `${drawerWidth}px` : 0,
+          height: "70px",
         }}
       >
         <Toolbar>
@@ -108,7 +121,7 @@ const DashboardAdmin = () => {
         open={open}
         onClose={toggleDrawer}
         sx={{
-          width: drawerWidth,
+          width: "60px", //độ rộng của thanh dọc sau drawer
           flexShrink: 0,
           "& .MuiDrawer-paper": {
             width: drawerWidth,
@@ -121,7 +134,9 @@ const DashboardAdmin = () => {
             <React.Fragment key={index}>
               <ListItem
                 button
-                onClick={() => handleToggleSubMenu(index)}
+                onClick={
+                  item.subMenu ? () => handleToggleSubMenu(index) : item.onClick // Gọi trực tiếp onClick nếu không có subMenu
+                }
                 sx={{
                   "&:hover": {
                     backgroundColor: "#BFBFBF", // Màu nền khi hover
@@ -131,7 +146,8 @@ const DashboardAdmin = () => {
               >
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text} />
-                {openSubMenu[index] ? <ExpandLess /> : <ExpandMore />}
+                {item.subMenu &&
+                  (openSubMenu[index] ? <ExpandLess /> : <ExpandMore />)}
               </ListItem>
               {/* Hiển thị các subMenu khi openSubMenu[index] = true */}
               <Collapse in={openSubMenu[index]} timeout="auto" unmountOnExit>
@@ -165,8 +181,9 @@ const DashboardAdmin = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
           width: open && !isMobile ? `calc(100% - ${drawerWidth}px)` : "100%",
+          ml: open && !isMobile ? `${drawerWidth}px` : 0,
+          p: 3,
           transition: "width 0.3s",
         }}
       >

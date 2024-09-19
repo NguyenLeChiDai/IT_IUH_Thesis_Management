@@ -1,0 +1,14 @@
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent; /* Nền trong suốt */
+}
+
+.logo-image {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain; /* Đảm bảo logo không bị cắt */
+  background: transparent;
+  /* Nếu ảnh vẫn có nền, bạn không thể loại bỏ hoàn toàn bằng CSS mà cần xử lý ảnh trước */
+}

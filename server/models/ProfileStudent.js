@@ -30,14 +30,6 @@ const StudentSchema = new Schema({
     type: String,
     required: false,
   },
-  groupName: {
-    type: String,
-    required: false,
-  },
-  groupStatus: {
-    type: String,
-    required: false,
-  },
   user: {
     type: Schema.Types.ObjectId,
     ref: "users",
@@ -45,4 +37,4 @@ const StudentSchema = new Schema({
   },
 });
 
-module.exports = mongoose.model("profile", StudentSchema);
+module.exports = mongoose.model("profileStudent", StudentSchema);

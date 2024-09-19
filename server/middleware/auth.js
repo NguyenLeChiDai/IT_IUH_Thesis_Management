@@ -14,6 +14,7 @@ const verifyToken = (req, res, next) => {
 
     req.userId = decoded.userId;
     req.role = decoded.role; // Gán role từ token vào req
+    req.groupStatus = decoded.groupStatus; // Gán groupStatus từ token vào req
     next(); // Đã kiểm tra token và cho qua
   } catch (error) {
     console.log(error);
@@ -32,7 +33,17 @@ const checkRole = (role) => (req, res, next) => {
   next();
 };
 
+const checkgroupStatus = (groupStatus) => (req, res, next) => {
+  if (req.groupStatus !== groupStatus) {
+    return res
+      .status(403)
+      .json({ success: false, message: "Token không hợp lệ!" });
+  }
+  next();
+};
+
 module.exports = {
   verifyToken,
   checkRole,
+  checkgroupStatus,
 };

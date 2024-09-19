@@ -195,7 +195,7 @@ const ManageStudentAccounts = () => {
   return (
     <div>
       <Typography variant="h4" gutterBottom>
-        Quản lý tài khoản sinh viên
+        Quản lý tài khoản giảng viên
       </Typography>
 
       {/* Nút Tạo tài khoản */}

@@ -30,7 +30,7 @@ const UserMenu = () => {
         alt="Avatar"
         className="user-avatar me-2"
         style={{
-          marginBottom: "20px",
+          marginBottom: "10px",
           width: "50px",
           height: "50px",
           borderRadius: "50%",
@@ -42,6 +42,7 @@ const UserMenu = () => {
           variant="light"
           id="dropdown-basic"
           className="d-flex flex-column align-items-start"
+          style={{ marginTop: "20px" }}
         >
           <span>Chào, {currentProfile?.name || user?.username || "User"}</span>
           <small className="text-muted">{user?.role}</small>

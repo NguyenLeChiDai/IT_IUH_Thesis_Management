@@ -11,6 +11,7 @@ import {
   Typography,
   Box,
   CssBaseline,
+  useMediaQuery,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
@@ -26,6 +27,7 @@ const drawerWidth = 240;
 
 const DashboardTeacher = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isMobile = useMediaQuery("(max-width:600px)"); // Xác định nếu là màn hình nhỏ
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -46,8 +48,9 @@ const DashboardTeacher = () => {
       <AppBar
         position="fixed"
         sx={{
-          width: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : "100%",
-          ml: sidebarOpen ? `${drawerWidth}px` : 0,
+          width:
+            sidebarOpen && !isMobile ? `calc(100% - ${drawerWidth}px)` : "100%",
+          ml: sidebarOpen && !isMobile ? `${drawerWidth}px` : 0,
           height: "72px", // Giảm chiều cao của AppBar
         }}
       >
@@ -69,14 +72,7 @@ const DashboardTeacher = () => {
             Dashboard Giảng viên
           </Typography>
           <Box sx={{ flexGrow: 1 }} />
-          <Box
-            sx={{
-              marginTop: "25px",
-              height: "10px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
+          <Box sx={{ display: "flex", alignItems: "center", marginTop: "1px" }}>
             <UserMenu />
           </Box>
         </Toolbar>
@@ -84,11 +80,11 @@ const DashboardTeacher = () => {
 
       {/* Ngăn kéo (Drawer) bên trái */}
       <Drawer
-        variant="persistent"
+        variant={isMobile ? "temporary" : "persistent"}
         anchor="left"
         open={sidebarOpen}
         sx={{
-          width: drawerWidth,
+          width: "60px", //độ rộng của thanh dọc sau drawer
           flexShrink: 0,
           "& .MuiDrawer-paper": {
             width: drawerWidth,
@@ -112,7 +108,9 @@ const DashboardTeacher = () => {
         sx={{
           flexGrow: 1,
           p: 3,
-          width: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : "100%",
+          width:
+            sidebarOpen && !isMobile ? `calc(100% - ${drawerWidth}px)` : "100%",
+          ml: sidebarOpen && !isMobile ? `${drawerWidth}px` : 0,
           transition: "width 0.3s",
         }}
       >
