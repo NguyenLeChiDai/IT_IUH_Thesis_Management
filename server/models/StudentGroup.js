@@ -12,11 +12,12 @@ const StudentGroupSchema = new Schema({
   },
   groupStatus: {
     type: String,
-    enum: ["Không có sinh viên", "Chưa đủ sinh viên", "Đã đủ sinh viên"], // Chỉ cho phép 'Sinh Viên' hoặc 'admin', "teacher"
-    default: "Không có sinh viên",
+    enum: ["0/2", "1/2", "2/2"], // Chỉ cho phép 'Sinh Viên' hoặc 'admin', "teacher"
+    default: "0/2",
   },
   profileStudents: [
     {
+      // Thay đổi từ ObjectId thành mảng chứa ObjectId
       type: Schema.Types.ObjectId,
       ref: "profileStudent",
       required: false,

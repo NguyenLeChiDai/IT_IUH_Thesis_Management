@@ -51,25 +51,34 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Xóa user
+// Xóa user sinh viên cùng với hồ sơ sinh viên tương ứng
 router.delete("/delete-student/:id", async (req, res) => {
   try {
     const userDeleteCondition = { _id: req.params.id, role: "Sinh viên" };
+
+    // Tìm và xóa user có role là "Sinh viên"
     const deletedUser = await User.findOneAndDelete(userDeleteCondition);
 
-    if (!deletedUser)
+    if (!deletedUser) {
       return res
         .status(401)
         .json({ success: false, message: "User not found or not authorized" });
+    }
 
-    res.json({ success: true, message: "User deleted successfully!" });
+    // Xóa hồ sơ sinh viên tương ứng sau khi xóa user
+    await ProfileStudent.findOneAndDelete({ user: deletedUser._id });
+
+    res.json({
+      success: true,
+      message: "User and profile deleted successfully!",
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 });
 
-// Xóa user
+// Xóa Giảng viên
 router.delete("/delete-teacher/:id", async (req, res) => {
   try {
     const userDeleteCondition = { _id: req.params.id, role: "Giảng viên" };

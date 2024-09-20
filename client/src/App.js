@@ -15,6 +15,7 @@ import { HomeAdmin } from "./components/viewsAdmin/HomeAdmin";
 import ManageStudentGroups from "./components/viewsAdmin/ManageStudentGroups";
 import { ListStudentGroups } from "./components/user/ListStudentGroups";
 import StudentInfo from "./components/user/StudentInfo";
+import { ToastContainer } from "react-toastify";
 
 function App() {
   return (
@@ -27,17 +28,22 @@ function App() {
           <Route path="/trangchu" element={<TrangChu />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboardAdmin" element={<DashboardAdmin />}>
-              <Route index element={<HomeAdmin />} />{" "}
-              {/* Hiển thị HomeAdmin khi không có route con */}
+              <Route index element={<HomeAdmin />} />
               <Route
                 path="manage-student-accounts"
                 element={<ManageStudentAccounts />}
               />{" "}
+              {/* Đường dẫn cho "Quản lý tài khoản sinh viên" */}
               <Route
                 path="manage-teacher-accounts"
-                element={<ManageTeacherAccounts />}
+                element={<ManageStudentAccounts />}
               />{" "}
-              <Route path="student-groups" element={<ManageStudentGroups />} />{" "}
+              {/* Đường dẫn cho "Quản lý tài khoản giảng viên" */}
+              <Route
+                path="student-groups"
+                element={<ManageStudentGroups />}
+              />{" "}
+              {/* Đường dẫn cho "Nhóm sinh viên" */}
             </Route>
 
             <Route path="/dashboardUser" element={<DashboardUser />}>
@@ -52,6 +58,7 @@ function App() {
             </Route>
           </Route>
         </Routes>
+        <ToastContainer />
       </Router>
     </AuthContextProvider>
   );

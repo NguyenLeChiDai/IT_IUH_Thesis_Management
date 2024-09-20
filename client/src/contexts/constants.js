@@ -3,4 +3,4 @@ export const apiUrl =
     ? "http://localhost:5000/api"
     : "somedeployURL";
 
-export const LOCAL_STORAGE_TOKEN_NAME = "chidai";
+export const LOCAL_STORAGE_TOKEN_NAME = "token";

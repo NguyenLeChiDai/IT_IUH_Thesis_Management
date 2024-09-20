@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { verifyToken, checkRole } = require("../middleware/auth");
 const StudentGroup = require("../models/StudentGroup");
-
+const ProfileStudent = require("../models/ProfileStudent"); // Thêm dòng này
 //@route GET api/studentGroups
 //@desc GET studentGroups
 //@access private
@@ -26,32 +26,81 @@ router.get("/list-groups", verifyToken, async (req, res) => {
   }
 });
 
+//@route GET api/menbergroup
+//@desc GET studentGroups
+//@access private
+
+router.get("/group-members/:id", verifyToken, async (req, res) => {
+  try {
+    // Tìm nhóm theo ID
+    const group = await StudentGroup.findById(req.params.id).populate({
+      path: "profileStudents", // Lấy thông tin của các sinh viên trong nhóm
+      select: "studentId name email phone", // Chỉ lấy các trường cần thiết
+    });
+
+    // Kiểm tra nếu nhóm không tồn tại
+    if (!group) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Group not found" });
+    }
+
+    // Kiểm tra nếu nhóm không có sinh viên
+    if (group.profileStudents.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Group has no students" });
+    }
+
+    // Trả về danh sách sinh viên trong nhóm
+    res.json({
+      success: true,
+      groupName: group.groupName,
+      members: group.profileStudents,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 //@route POST api/studentGroups
 //@desc Create studentGroups
 //@access private
 
-// Route để admin tạo group mới
 router.post(
   "/create-group",
   verifyToken,
   checkRole("admin"),
   async (req, res) => {
-    const { groupId, groupName, groupStatus } = req.body;
+    const { groupName, groupStatus } = req.body;
 
     // Kiểm tra dữ liệu đầu vào
-    if (!groupId || !groupName) {
+    if (!groupName) {
       return res.status(400).json({
         success: false,
-        message: "groupId and groupName are required",
+        message: "Tên nhóm là bắt buộc",
       });
     }
 
     try {
+      // Kiểm tra xem tên nhóm đã tồn tại chưa
+      const existingGroup = await StudentGroup.findOne({ groupName });
+      if (existingGroup) {
+        return res.status(400).json({
+          success: false,
+          message: "Tên nhóm đã tồn tại",
+        });
+      }
+
+      // Tạo groupId tự động từ tên nhóm
+      const groupId = groupName.toLowerCase().replace(/\s+/g, "-");
+
       // Tạo nhóm mới
       const newGroup = new StudentGroup({
         groupId,
         groupName,
-        groupStatus: groupStatus || "Không có sinh viên", // Nếu không có groupStatus thì mặc định
+        groupStatus: groupStatus || "0/2", // Mặc định nếu không có trạng thái
       });
 
       // Lưu nhóm mới vào CSDL
@@ -59,44 +108,108 @@ router.post(
 
       res.json({
         success: true,
-        message: "Group created successfully",
+        message: "Tạo nhóm thành công",
         group: newGroup,
       });
     } catch (error) {
       console.log(error);
       res.status(500).json({
         success: false,
-        message: "Failed to create group",
+        message: "Lỗi khi tạo nhóm",
         error: error.message,
       });
     }
   }
 );
 
-//  @router DELETE / api.posts
-// @desc Delete post
-// @access Private
+// @route DELETE api/studentGroups/delete-group/:id
+// @desc Xóa nhóm sinh viên theo ID
+// @access private
+router.delete(
+  "/delete-group/:id",
+  verifyToken,
+  checkRole("admin"),
+  async (req, res) => {
+    try {
+      const deleteGroup = await StudentGroup.findByIdAndDelete(req.params.id);
 
-router.delete("/:id", verifyToken, async (req, res) => {
-  try {
-    const postDeleteCondition = { _id: req.params.id, user: req.userId };
-    const deleteStudentGroup = await StudentGroup.findOneAndDelete(
-      postDeleteCondition
-    );
+      if (!deleteGroup) {
+        return res.status(404).json({
+          success: false,
+          message: "Group not found",
+        });
+      }
 
-    //nguời dùng không được ủy quyền hoặc không tìm thấy post
-    if (!deleteStudentGroup)
-      return res.status(401).json({
+      res.json({
+        success: true,
+        message: "Group deleted successfully",
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ success: false, message: "Server error" });
+    }
+  }
+);
+// @route PUT api/studentGroups/update-group/:id
+// @desc Cập nhật nhóm sinh viên
+// @access private
+router.put(
+  "/update-group/:id",
+  verifyToken,
+  checkRole("admin"),
+  async (req, res) => {
+    const { groupName, groupStatus } = req.body;
+
+    // Kiểm tra dữ liệu đầu vào
+    if (!groupName) {
+      return res.status(400).json({
         success: false,
-        message: "post not pound or user not authorised",
+        message: "Tên nhóm là bắt buộc",
+      });
+    }
+
+    try {
+      // Kiểm tra xem nhóm khác đã có tên giống vậy chưa
+      const existingGroup = await StudentGroup.findOne({
+        groupName,
+        _id: { $ne: req.params.id }, // Loại bỏ chính nhóm đang cập nhật
       });
 
-    res.json({ success: true, post: deleteStudentGroup });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, message: "internal server orror" });
+      if (existingGroup) {
+        return res.status(400).json({
+          success: false,
+          message: "Tên nhóm đã tồn tại",
+        });
+      }
+
+      // Cập nhật groupId nếu thay đổi tên nhóm
+      const groupId = groupName.toLowerCase().replace(/\s+/g, "-");
+
+      // Cập nhật nhóm
+      const updatedGroup = await StudentGroup.findByIdAndUpdate(
+        req.params.id,
+        { groupName, groupStatus, groupId },
+        { new: true }
+      );
+
+      if (!updatedGroup) {
+        return res.status(404).json({
+          success: false,
+          message: "Nhóm không tồn tại",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Cập nhật nhóm thành công",
+        group: updatedGroup,
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ success: false, message: "Lỗi server" });
+    }
   }
-});
+);
 
 // @route POST api/studentGroups/join-group/:id
 // @desc Tham gia nhóm sinh viên (Xác nhận trước khi thêm)
@@ -119,18 +232,20 @@ router.post("/join-group/:id", verifyToken, async (req, res) => {
         .json({ success: false, message: "Student profile not found" });
     }
 
-    // Kiểm tra nếu sinh viên đã ở trong nhóm
-    if (group.profileStudents.includes(studentProfile._id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Student already in group" });
+    // Kiểm tra nếu sinh viên đã tham gia nhóm nào rồi
+    if (studentProfile.studentGroup) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Bạn đã tham gia một nhóm khác và không thể tham gia nhóm khác.",
+      });
     }
 
     // Xác nhận trước khi thêm sinh viên vào nhóm
     if (!req.body.confirmation) {
       return res.json({
         success: true,
-        message: "Do you want to join this group?",
+        message: "Bạn muốn tham gia nhóm này không?",
         confirmationRequired: true,
       });
     }
@@ -140,17 +255,103 @@ router.post("/join-group/:id", verifyToken, async (req, res) => {
 
     // Cập nhật trạng thái nhóm dựa trên số lượng sinh viên
     if (group.profileStudents.length === 1) {
-      group.groupStatus = "Chưa đủ sinh viên";
+      group.groupStatus = "1/2";
     } else if (group.profileStudents.length >= 2) {
-      group.groupStatus = "Đã đủ sinh viên";
+      group.groupStatus = "2/2";
+    }
+
+    // Lưu nhóm
+    await group.save();
+
+    // Cập nhật thông tin nhóm vào profile của sinh viên
+    studentProfile.studentGroup = group._id;
+    await studentProfile.save();
+
+    res.json({
+      success: true,
+      message: "Bạn tham gia nhóm thành công",
+      group,
+      studentProfile,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+});
+
+//@route POST api/studentGroups/leave-group
+//@desc Hủy nhóm đã đăng ký của sinh viên
+//@access private
+router.post("/leave-group", verifyToken, async (req, res) => {
+  try {
+    const studentProfile = await ProfileStudent.findOne({ user: req.userId });
+
+    if (!studentProfile || !studentProfile.studentGroup) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Bạn không thuộc nhóm nào." });
+    }
+
+    const group = await StudentGroup.findById(studentProfile.studentGroup);
+    group.profileStudents = group.profileStudents.filter(
+      (student) => student.toString() !== studentProfile._id.toString()
+    );
+
+    // Cập nhật trạng thái nhóm
+    if (group.profileStudents.length === 0) {
+      group.groupStatus = "0/2";
+    } else if (group.profileStudents.length === 1) {
+      group.groupStatus = "1/2";
     }
 
     await group.save();
 
-    res.json({ success: true, message: "Joined group successfully", group });
+    // Hủy liên kết nhóm trong profile sinh viên
+    studentProfile.studentGroup = null;
+    await studentProfile.save();
+
+    res.json({
+      success: true,
+      message: "Bạn đã hủy nhóm thành công.",
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+});
+
+//@route GET api/studentGroups/my-group
+//@desc Lấy nhóm đã đăng ký của sinh viên
+//@access private
+router.get("/my-group", verifyToken, async (req, res) => {
+  try {
+    const studentProfile = await ProfileStudent.findOne({
+      user: req.userId,
+    }).populate({
+      path: "studentGroup",
+      populate: {
+        path: "profileStudents", // populate thông tin của các sinh viên trong nhóm
+        select: "name studentId", // chọn các trường cần thiết
+      },
+    });
+
+    if (!studentProfile || !studentProfile.studentGroup) {
+      return res.json({
+        success: true,
+        message: "Bạn chưa đăng ký nhóm nào.",
+        group: null,
+      });
+    }
+
+    const group = studentProfile.studentGroup;
+    res.json({
+      success: true,
+      groupName: group.groupName,
+      members: group.profileStudents,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Lỗi server" });
   }
 });
 

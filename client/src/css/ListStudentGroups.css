@@ -25,3 +25,29 @@
 .group-card button:hover {
   background-color: #0056b3;
 }
+
+/* giao diện nhóm sinh viên đã đăng ký */
+.group-info {
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.group-info h3 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.group-info ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.group-info ul li {
+  margin-bottom: 5px;
+}
+
+.btn {
+  margin-top: 20px;
+}
