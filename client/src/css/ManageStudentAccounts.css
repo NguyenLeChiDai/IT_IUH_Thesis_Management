@@ -91,3 +91,11 @@
 .dialog-actions {
   justify-content: flex-end;
 }
+
+/* xuống dòng khi quá số chữ trong 1 hàng */
+.table-cell {
+  white-space: nowrap; /* Không cho phép xuống dòng */
+  overflow: hidden; /* Ẩn nội dung tràn ra ngoài */
+  text-overflow: ellipsis; /* Hiển thị "..." khi nội dung quá dài */
+  max-width: 200px; /* Giới hạn chiều rộng của ô, bạn có thể điều chỉnh giá trị này */
+}

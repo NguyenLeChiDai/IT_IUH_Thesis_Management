@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../../css/ListStudentGroups.css";
-import { Toast } from "react-bootstrap";
+
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -112,7 +112,7 @@ export const ListStudentGroups = () => {
         fetchGroups();
         fetchStudentGroup(); // Cập nhật thông tin nhóm của sinh viên
       } else {
-        Toast(response.data.message);
+        toast(response.data.message);
       }
     } catch (error) {
       console.error("Lỗi khi tham gia nhóm!", error);

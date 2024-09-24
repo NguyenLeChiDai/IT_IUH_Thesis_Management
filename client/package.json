@@ -20,7 +20,9 @@
     "react-scripts": "5.0.1",
     "react-sidebar": "^3.0.2",
     "react-toastify": "^10.0.5",
-    "web-vitals": "^2.1.4"
+    "sweetalert2": "^11.14.1",
+    "web-vitals": "^2.1.4",
+    "xlsx": "^0.18.5"
   },
   "scripts": {
     "start": "react-scripts start",

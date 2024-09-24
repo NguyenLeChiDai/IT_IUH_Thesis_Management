@@ -16,10 +16,19 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Select,
+  MenuItem,
+  TablePagination,
+  Input,
+  CircularProgress,
 } from "@mui/material";
 import { InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import "../../css/ManageStudentAccounts.css";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Swal from "sweetalert2";
+import * as XLSX from "xlsx"; // import file excel
 
 const ManageStudentAccounts = () => {
   const [users, setUsers] = useState([]);
@@ -28,10 +37,28 @@ const ManageStudentAccounts = () => {
   const [errors, setErrors] = useState({}); // For form validation errors
   const [newUser, setNewUser] = useState({
     username: "",
-    password: "",
+    password: "12345678",
     role: "Sinh viên",
   });
 
+  const [isLoading, setIsLoading] = useState(false); // trạng thái tải khi upload file
+
+  // Thêm state cho phân trang
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // Hàm xử lý thay đổi trang
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  // Hàm xử lý thay đổi số hàng trên mỗi trang
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  //const tìm kiếm từ khóa
   const [searchTerm, setSearchTerm] = useState(""); // Từ khóa tìm kiếm
 
   //HÀM LỌC USER tìm kiếm
@@ -72,64 +99,126 @@ const ManageStudentAccounts = () => {
 
   //HÀM XÓA USER
   const handleDelete = async (userId) => {
-    const isConfirmed = window.confirm(
-      "Bạn có chắc chắn muốn xóa tài khoản này không?"
-    );
-    if (!isConfirmed) return;
+    const user = users.find((user) => user._id === userId); // Tìm user theo ID
+
+    // Gọi hàm xác nhận xóa
+    const isConfirmed = await confirmDelete(user);
+    if (!isConfirmed) return; // Nếu không xác nhận, thoát khỏi hàm
 
     try {
       await axios.delete(
         `http://localhost:5000/api/users/delete-student/${userId}`
-      ); // Gọi API xóa user
+      );
+
+      toast.success(`Tài khoản sinh viên "${user.username}" đã bị xóa!`, {
+        position: "top-right",
+        autoClose: 2500,
+      });
+
       fetchUsers(); // Tải lại danh sách user
     } catch (error) {
-      console.error("Lỗi không xóa được sinh viên:", error);
+      toast.error("Lỗi khi xóa tài khoản sinh viên.", {
+        position: "top-right",
+        autoClose: 2500,
+      });
+      console.error("Lỗi khi xóa tài khoản sinh viên:", error);
     }
   };
 
+  // Hàm xác nhận xóa
+  const confirmDelete = async (user) => {
+    const result = await Swal.fire({
+      title: "Xác Nhận Xóa!",
+      text: `Bạn có chắc chắn muốn xóa tài khoản "${user.username}" này không?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Có, xóa nó!",
+      cancelButtonText: "Không",
+    });
+
+    return result.isConfirmed; // Trả về kết quả xác nhận
+  };
+
+  //Chọn user để chỉnh sửa
   const handleEdit = (user) => {
     setEditUser(user); // Chọn user để chỉnh sửa
   };
 
   //HÀM CẬP NHẬT USER
   const handleUpdate = async () => {
-    const isConfirmed = window.confirm(
-      "Bạn có chắc chắn muốn cập nhật tài khoản này không?"
-    );
-    if (!isConfirmed) return;
+    // Gọi hàm xác nhận cập nhật
+    const isConfirmed = await confirmUpdate(editUser);
+    if (!isConfirmed) return; // Nếu không xác nhận, thoát khỏi hàm
 
     try {
       await axios.put(`http://localhost:5000/api/users/${editUser._id}`, {
         username: editUser.username,
         password: editUser.password,
       }); // Gọi API cập nhật user
+
+      toast.success(`Tài khoản "${editUser.username}" đã được cập nhật!`, {
+        position: "top-right",
+        autoClose: 2500,
+      });
       setEditUser(null); // Hủy chỉnh sửa
       fetchUsers(); // Tải lại danh sách user
     } catch (error) {
       console.error("Lỗi không cập nhật được sinh viên:", error);
     }
   };
-  // Điều kiện các thường phải nhập
-  const validateForm = () => {
-    const newErrors = {};
-    if (!newUser.username) newErrors.username = "Tên đăng nhập là bắt buộc.";
-    if (!newUser.password) newErrors.password = "Mật khẩu là bắt buộc.";
-    if (!newUser.role) newErrors.role = "Vai trò là bắt buộc.";
-    if (!newProfile.studentId)
-      newErrors.studentId = "Mã sinh viên là bắt buộc.";
-    if (!newProfile.name) newErrors.name = "Họ và tên là bắt buộc.";
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // Return true if no errors
+  // Hàm xác nhận cập nhật
+  const confirmUpdate = async (user) => {
+    const result = await Swal.fire({
+      title: "Xác Nhận Cập Nhật!",
+      text: `Bạn có chắc chắn muốn cập nhật tài khoản "${user.username}" này không?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Có, cập nhật!",
+      cancelButtonText: "Không",
+    });
+
+    return result.isConfirmed; // Trả về kết quả xác nhận
   };
 
-  //HÀM TẠO TÀI KHOẢN
-  const handleCreateUser = async () => {
+  // XÁC NHẬN HỦY CHỈNH SỬA
+  const handleCancelEdit = async () => {
+    const result = await Swal.fire({
+      title: "Xác Nhận Hủy",
+      text: `Bạn có chắc chắn muốn hủy cập nhật tài khoản?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Có, Hủy Cập Nhật!",
+      cancelButtonText: "Không",
+    });
+
+    if (result.isConfirmed) {
+      setEditUser(null); // Hủy chỉnh sửa và thiết lập lại trạng thái editUser
+    }
+  };
+
+  // HÀM TẠO TÀI KHOẢN
+  const handleCreateUser = async (user) => {
     if (!validateForm()) return; // Không tiếp tục tiến trình nếu valid thất bại
-    const isConfirmed = window.confirm(
-      "Bạn có chắc chắn muốn tạo tài khoản này không?"
-    );
-    if (!isConfirmed) return;
+    setOpenCreateDialog(false);
+    const isConfirmed = await Swal.fire({
+      title: "Xác Nhận Tạo Tài Khoản",
+      text: `Bạn có chắc chắn muốn tạo tài khoản "${user.username}"  không?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Có, tạo tài khoản!",
+      cancelButtonText: "Không",
+    });
+
+    if (!isConfirmed.isConfirmed) return;
 
     try {
       const response = await axios.post(
@@ -153,7 +242,12 @@ const ManageStudentAccounts = () => {
       );
 
       if (response.data.success) {
-        alert("Tạo tài khoản thành công!");
+        Swal.fire({
+          title: "Thành Công!",
+          text: `Đã tạo tài khoản "${newUser.username}" thành công!`,
+          icon: "success",
+          confirmButtonColor: "#3085d6",
+        });
         setOpenCreateDialog(false);
         setNewUser({ username: "", password: "", role: "" });
         setNewProfile({
@@ -169,7 +263,12 @@ const ManageStudentAccounts = () => {
         });
         fetchUsers(); // Tải lại danh sách user
       } else {
-        alert(`Lỗi: ${response.data.message}`); // Hiển thị thông báo lỗi từ server
+        Swal.fire({
+          title: "Lỗi!",
+          text: `Lỗi: ${response.data.message}`,
+          icon: "error",
+          confirmButtonColor: "#d33",
+        });
       }
     } catch (error) {
       // Kiểm tra phản hồi lỗi và hiển thị chi tiết lỗi
@@ -178,27 +277,102 @@ const ManageStudentAccounts = () => {
         error.response.data &&
         error.response.data.message
       ) {
-        alert(`Lỗi: ${error.response.data.message}`);
+        Swal.fire({
+          title: "Lỗi!",
+          text: `Lỗi: ${error.response.data.message}`,
+          icon: "error",
+          confirmButtonColor: "#d33",
+        });
       } else {
-        alert("Có lỗi xảy ra trong quá trình tạo tài khoản.");
+        Swal.fire({
+          title: "Lỗi!",
+          text: "Có lỗi xảy ra trong quá trình tạo tài khoản.",
+          icon: "error",
+          confirmButtonColor: "#d33",
+        });
       }
     }
   };
 
-  //XÁC NHẬN HỦY CHỈNH SỬA
-  const handleCancelEdit = () => {
-    const isConfirmed = window.confirm(
-      "Bạn có chắc chắn muốn hủy chỉnh sửa không?"
-    );
-    if (isConfirmed) setEditUser(null); // Hủy chỉnh sửa
+  // Điều kiện các thường phải nhập
+  const validateForm = () => {
+    const newErrors = {};
+    if (!newUser.username) newErrors.username = "Tên đăng nhập là bắt buộc.";
+    if (!newUser.password) newErrors.password = "Mật khẩu là bắt buộc.";
+    if (!newUser.role) newErrors.role = "Vai trò là bắt buộc.";
+    if (!newProfile.studentId)
+      newErrors.studentId = "Mã sinh viên là bắt buộc.";
+    if (!newProfile.name) newErrors.name = "Họ và tên là bắt buộc.";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // Return true if no errors
   };
 
-  //XÁC NHẬN HỦY TẠO TÀI KHOẢN
-  const handleCloseCreateDialog = () => {
-    const isConfirmed = window.confirm(
-      "Bạn có chắc chắn muốn hủy tạo tài khoản không?"
-    );
-    if (isConfirmed) setOpenCreateDialog(false); // Đóng dialog tạo tài khoản
+  // XÁC NHẬN HỦY TẠO TÀI KHOẢN
+  const handleCloseCreateDialog = async (user) => {
+    setOpenCreateDialog(false);
+    const isConfirmed = await Swal.fire({
+      title: "Xác Nhận Hủy!",
+      text: `Bạn có chắc chắn muốn hủy tạo tài khoản "${user.username}"  không?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Có, hủy!",
+      cancelButtonText: "Không",
+    });
+
+    if (isConfirmed.isConfirmed) setOpenCreateDialog(false); // Đóng dialog tạo tài khoản
+  };
+
+  //Xử lý giử file excel
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+
+    setIsLoading(true); // Bắt đầu loading
+
+    reader.onload = async (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      try {
+        const response = await axios.post(
+          "http://localhost:5000/api/users/bulk-create",
+          jsonData
+        );
+        setIsLoading(false); // Kết thúc loading
+        if (response.data.success) {
+          Swal.fire({
+            title: "Thành công!",
+            text: `Đã tạo ${response.data.createdCount} tài khoản thành công!`,
+            icon: "success",
+            confirmButtonColor: "#3085d6",
+          });
+          fetchUsers(); // Refresh the user list
+        } else {
+          Swal.fire({
+            title: "Lỗi!",
+            text: response.data.message,
+            icon: "error",
+            confirmButtonColor: "#d33",
+          });
+        }
+      } catch (error) {
+        setIsLoading(false); // Kết thúc loading nếu có lỗi
+        Swal.fire({
+          title: "Lỗi!",
+          text: "Có lỗi xảy ra trong quá trình tạo tài khoản.",
+          icon: "error",
+          confirmButtonColor: "#d33",
+        });
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
   };
 
   return (
@@ -216,6 +390,31 @@ const ManageStudentAccounts = () => {
       >
         Tạo tài khoản
       </Button>
+
+      {/* button cập nhật Excel */}
+      <Input
+        type="file"
+        id="excel-upload"
+        style={{ display: "none" }}
+        onChange={handleFileUpload}
+        accept=".xlsx, .xls"
+      />
+      <label htmlFor="excel-upload">
+        <Button
+          variant="contained"
+          color="secondary"
+          component="span"
+          style={{ marginBottom: "20px", marginLeft: "10px" }}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : (
+            "Tải lên Excel"
+          )}
+        </Button>
+      </label>
+
       {/* Tìm kiếm tài khoản */}
       <TextField
         label="Tìm kiếm theo Tên đăng nhập hoặc Mã sinh viên"
@@ -269,16 +468,19 @@ const ManageStudentAccounts = () => {
             helperText={errors.password}
           />
           {/* Role Field - Dropdown  tạo lựa chọn vai trò*/}
-          <TextField
+          <Select
             margin="dense"
             label="Vai trò"
-            type="text"
             fullWidth
             value={newUser.role}
             onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
             error={!!errors.role}
             helperText={errors.role}
-          />
+          >
+            <MenuItem value="Sinh viên">Sinh viên</MenuItem>
+            {/*   <MenuItem value="Giáo viên">Giáo viên</MenuItem>
+            <MenuItem value="Admin">Admin</MenuItem> */}
+          </Select>
           {/* Thêm các trường của profile */}
           <TextField
             margin="dense"
@@ -377,64 +579,80 @@ const ManageStudentAccounts = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredUsers.map((user) => (
-              <TableRow key={user._id}>
-                <TableCell>
-                  {editUser && editUser._id === user._id ? (
-                    <TextField
-                      value={editUser.username}
-                      onChange={(e) =>
-                        setEditUser({ ...editUser, username: e.target.value })
-                      }
-                    />
-                  ) : (
-                    user.username
-                  )}
-                </TableCell>
+            {filteredUsers
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) //xử lý chuyển map
+              .map((user) => (
+                /*  {filteredUsers.map((user) => ( */
+                <TableRow key={user._id}>
+                  <TableCell>
+                    {editUser && editUser._id === user._id ? (
+                      <TextField
+                        value={editUser.username}
+                        onChange={(e) =>
+                          setEditUser({ ...editUser, username: e.target.value })
+                        }
+                      />
+                    ) : (
+                      user.username
+                    )}
+                  </TableCell>
 
-                <TableCell>
-                  {editUser && editUser._id === user._id ? (
-                    <TextField
-                      value={editUser.password}
-                      onChange={(e) =>
-                        setEditUser({ ...editUser, password: e.target.value })
-                      }
-                    />
-                  ) : (
-                    user.password
-                  )}
-                </TableCell>
+                  <TableCell className="table-cell">
+                    {editUser && editUser._id === user._id ? (
+                      <TextField
+                        value={editUser.password}
+                        onChange={(e) =>
+                          setEditUser({ ...editUser, password: e.target.value })
+                        }
+                      />
+                    ) : (
+                      user.password
+                    )}
+                  </TableCell>
 
-                <TableCell>{user.role}</TableCell>
-                <TableCell>
-                  {editUser && editUser._id === user._id ? (
-                    <>
-                      <Button onClick={handleUpdate} color="primary">
-                        Cập nhật
-                      </Button>
-                      <Button onClick={handleCancelEdit} color="secondary">
-                        Hủy
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button onClick={() => handleEdit(user)} color="primary">
-                        Sửa
-                      </Button>
-                      <Button
-                        onClick={() => handleDelete(user._id)}
-                        color="secondary"
-                      >
-                        Xóa
-                      </Button>
-                    </>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
+                  <TableCell>{user.role}</TableCell>
+                  <TableCell>
+                    {editUser && editUser._id === user._id ? (
+                      <>
+                        <Button onClick={handleUpdate} color="primary">
+                          Cập nhật
+                        </Button>
+                        <Button onClick={handleCancelEdit} color="secondary">
+                          Hủy
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          onClick={() => handleEdit(user)}
+                          color="primary"
+                        >
+                          Sửa
+                        </Button>
+                        <Button
+                          onClick={() => handleDelete(user._id)}
+                          color="secondary"
+                        >
+                          Xóa
+                        </Button>
+                      </>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </TableContainer>
+
+      <TablePagination //chuyển trang
+        rowsPerPageOptions={[5, 10, 25]} // lựa chọn số dòng trên trang
+        component="div"
+        count={filteredUsers.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
     </div>
   );
 };

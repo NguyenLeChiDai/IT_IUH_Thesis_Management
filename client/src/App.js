@@ -36,7 +36,7 @@ function App() {
               {/* Đường dẫn cho "Quản lý tài khoản sinh viên" */}
               <Route
                 path="manage-teacher-accounts"
-                element={<ManageStudentAccounts />}
+                element={<ManageTeacherAccounts />}
               />{" "}
               {/* Đường dẫn cho "Quản lý tài khoản giảng viên" */}
               <Route
