@@ -109,7 +109,9 @@ const DashboardAdmin = () => {
             Trang quản lý dành cho Admin
           </Typography>
           <Box sx={{ flexGrow: 1 }} />
-          <Box sx={{ display: "flex", alignItems: "center", marginTop: "1px" }}>
+          <Box
+            sx={{ display: "flex", alignItems: "center", marginBottom: "5px" }}
+          >
             <UserMenu />
           </Box>
         </Toolbar>

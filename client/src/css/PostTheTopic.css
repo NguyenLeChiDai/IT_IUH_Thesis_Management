@@ -1,0 +1,387 @@
+.post-the-topic {
+  width: 75%; /* Chiếm 75% chiều rộng của container */
+  margin-left: 20px; /* Cách lề trái 20px */
+  font-family: bold; /* Sử dụng font Arial, nếu không có thì dùng sans-serif */
+}
+
+h1,
+h2 {
+  text-align: center; /* Căn giữa văn bản cho tiêu đề h1 và h2 */
+  color: #333; /* Màu xám đậm cho chữ */
+}
+
+.tabs {
+  display: flex; /* Dùng flexbox để căn các phần tử theo hàng ngang */
+  justify-content: center; /* Căn giữa các nút tab */
+  margin-bottom: 30px; /* Cách dưới 30px */
+}
+
+.tabs button {
+  background-color: #f0f0f0; /* Màu nền cho nút tab */
+  border: none; /* Xóa đường viền mặc định */
+  padding: 10px 20px; /* Khoảng đệm bên trong nút */
+  margin: 0 5px; /* Khoảng cách giữa các nút tab */
+  cursor: pointer; /* Thay đổi con trỏ thành dạng pointer khi di chuột qua */
+  font-size: 16px; /* Kích thước chữ */
+  border-radius: 5px; /* Bo tròn các góc */
+  transition: all 0.3s ease; /* Hiệu ứng chuyển đổi mượt mà */
+}
+
+.tabs button.active {
+  background-color: #007bff; /* Màu nền khi tab được chọn */
+  color: white; /* Màu chữ trắng */
+  border: none; /* Xóa đường viền khi tab được chọn */
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3); /* Đổ bóng nhẹ cho tab đang chọn */
+}
+
+.add-topic,
+.manage-topic {
+  width: 100%; /* Chiếm toàn bộ chiều rộng container */
+}
+
+.add-topic form,
+.manage-topic form {
+  display: flex; /* Sử dụng flexbox */
+  flex-direction: column; /* Sắp xếp các phần tử theo cột */
+  align-items: center; /* Căn giữa các phần tử theo trục ngang */
+}
+
+.add-topic input,
+.add-topic textarea,
+.manage-topic input,
+.manage-topic textarea {
+  width: 100%; /* Chiếm toàn bộ chiều rộng của container */
+  max-width: 1500px; /* Giữ nguyên chiều rộng tối đa */
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-all; /* Thêm dòng này để bắt buộc xuống dòng */
+  white-space: pre-wrap; /* Giữ nguyên khoảng trắng và cho phép xuống dòng */
+  max-height: 150px; /* Chiều cao tối đa cho input */
+  overflow-y: auto; /* Cho phép cuộn nếu nội dung vượt quá chiều cao tối đa */
+  line-height: 1.5; /* Thêm khoảng cách giữa các dòng để dễ đọc hơn */
+  font-size: 16px; /* Kích thước font chữ phù hợp */
+}
+
+/* Style riêng cho textarea */
+.add-topic textarea,
+.manage-topic textarea {
+  max-height: 300px; /* Chiều cao tối đa lớn hơn cho textarea */
+  resize: vertical; /* Cho phép người dùng điều chỉnh chiều cao */
+}
+
+/* Thêm media query để điều chỉnh chiều rộng trên các màn hình nhỏ hơn */
+@media (max-width: 768px) {
+  .add-topic input,
+  .add-topic textarea,
+  .manage-topic input,
+  .manage-topic textarea {
+    max-width: 100%; /* Đảm bảo input và textarea không bị tràn trên màn hình nhỏ */
+  }
+}
+
+.add-topic button,
+.manage-topic button {
+  background-color: #007bff; /* Màu nền xanh */
+  color: white; /* Màu chữ trắng */
+  border: none; /* Không có đường viền */
+  padding: 10px 20px; /* Khoảng đệm 10px trên/dưới và 20px trái/phải */
+  border-radius: 4px; /* Bo tròn góc với bán kính 4px */
+  cursor: pointer; /* Con trỏ dạng pointer khi di chuột qua */
+  transition: background-color 0.3s; /* Hiệu ứng chuyển màu nền trong 0.3 giây */
+}
+
+.add-topic button:hover,
+.manage-topic button:hover {
+  background-color: #0056b3; /* Màu nền khi di chuột qua */
+}
+
+.manage-topic .search-section {
+  margin-bottom: 20px; /* Khoảng cách dưới 20px */
+  text-align: center;
+  display: "flex";
+  width: "100%";
+}
+
+.manage-topic .search-section input {
+  width: 200px; /* Chiều rộng 300px cho ô tìm kiếm */
+  margin-right: 110px; /* Cách phải 10px */
+}
+.manage-topic .search-section button {
+  width: 180px; /* Chiều rộng cho nút tìm kiếm */
+  /* Thêm các thuộc tính khác nếu cần */
+}
+
+.manage-topic .search-section button {
+  background-color: #007bff; /* Màu nền xanh */
+  color: white; /* Màu chữ trắng */
+  border: none; /* Không có đường viền */
+  padding: 10px; /* Khoảng đệm bên trong 10px */
+  cursor: pointer; /* Con trỏ dạng pointer khi di chuột qua */
+  border-radius: 4px; /* Bo tròn góc với bán kính 4px */
+}
+
+.manage-topic ul {
+  list-style-type: none; /* Loại bỏ dấu chấm đầu dòng của danh sách */
+  padding: 0; /* Không có khoảng cách trong */
+  margin: 0; /* Không có khoảng cách ngoài */
+
+  border-radius: 8px; /* Bo tròn góc */
+  background-color: #f9f9f9; /* Màu nền cho danh sách */
+  overflow: hidden; /* Ẩn phần nội dung tràn ra ngoài */
+}
+
+.manage-topic li {
+  padding: 10px; /* Khoảng đệm 10px cho mỗi mục trong danh sách */
+  border-bottom: none; /* Không có đường viền dưới */
+  margin-bottom: 10px; /* Khoảng cách dưới mỗi mục */
+  background-color: #fff; /* Màu nền cho mỗi mục */
+  border: 1px solid #e0e0e0; /* Đường viền nhẹ quanh mỗi mục */
+  border-radius: 8px; /* Bo tròn góc cho mỗi mục */
+  transition: box-shadow 0.3s; /* Hiệu ứng chuyển tiếp */
+  word-wrap: break-word; /* Tự động xuống dòng khi từ quá dài */
+  overflow-wrap: break-word; /* Cho phép từ xuống dòng khi cần */
+  max-width: 100%; /* Đảm bảo không bị tràn ra ngoài */
+  white-space: normal; /* Cho phép xuống dòng nếu quá dài */
+  justify-content: space-between;
+  align-items: center;
+}
+
+.manage-topic .update {
+  background-color: #28a745; /* Màu nền xanh lá cho nút update */
+  margin-left: 10px;
+  flex-shrink: 0; /* Ngăn nút bị co lại khi tên đề tài quá dài */
+}
+
+.manage-topic .delete {
+  background-color: #dc3545; /* Màu nền đỏ cho nút delete */
+  margin-right: 10px;
+  flex-shrink: 0; /* Ngăn nút bị co lại khi tên đề tài quá dài */
+}
+
+.manage-topic .update:hover {
+  background-color: #218838; /* Màu nền khi di chuột qua nút update */
+}
+
+.manage-topic .delete:hover {
+  background-color: #c82333; /* Màu nền khi di chuột qua nút delete */
+}
+
+.modal {
+  position: fixed; /* Định vị cố định ở một vị trí trên màn hình */
+  top: 0; /* Cách trên cùng 0 */
+  left: 0; /* Cách trái 0 */
+  width: 100%; /* Chiều rộng toàn màn hình */
+  height: 100%; /* Chiều cao toàn màn hình */
+  background-color: rgba(0, 0, 0, 0.5); /* Màu nền đen trong suốt 50% */
+  display: flex; /* Sử dụng flexbox để căn giữa nội dung */
+  align-items: center; /* Căn giữa theo trục dọc */
+  justify-content: center; /* Căn giữa theo trục ngang */
+  z-index: 1000; /* Đưa modal lên trên cùng */
+}
+
+.modal-content {
+  background-color: white;
+  padding: 30px; /* Tăng khoảng đệm bên trong */
+  border-radius: 12px; /* Bo tròn góc với bán kính 12px */
+  width: 500px; /* Chiều rộng cố định 500px */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Đổ bóng nhẹ để nổi bật */
+}
+
+.modal-content .close {
+  position: absolute;
+  top: 0px; /* Cách trên cùng 15px */
+  right: 5px; /* Cách bên phải 15px */
+  font-size: 30px; /* Kích thước font chữ là 30px */
+  cursor: pointer;
+  color: #374151; /* Màu chữ */
+  transition: color 0.3s ease; /* Hiệu ứng chuyển màu khi di chuột */
+}
+
+.modal-content .close:hover {
+  color: #f43f5e; /* Màu chữ khi di chuột */
+}
+
+.modal-content h2 {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  color: white;
+  padding: 5px 10px; /* Giảm padding */
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Roboto", sans-serif;
+  font-weight: bold;
+  font-size: 1.2rem; /* Giảm kích thước chữ */
+}
+
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Tạo khoảng cách giữa các trường input */
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px; /* Tạo khoảng cách giữa label và textarea */
+}
+/* nguy hiểm */
+textarea {
+  border: 1px solid #d1d5db; /* Đường viền nhạt */
+  border-radius: 8px; /* Bo tròn góc */
+  padding: 10px; /* Khoảng đệm bên trong */
+  font-size: 1rem; /* Kích thước chữ */
+  transition: border-color 0.3s ease; /* Hiệu ứng chuyển màu viền */
+}
+
+textarea:focus {
+  outline: none; /* Loại bỏ viền mặc định */
+  border-color: #3b82f6; /* Màu viền khi focus */
+}
+.form-group label {
+  margin-bottom: 5px; /* Khoảng cách giữa nhãn và trường input */
+  font-weight: bold;
+}
+
+.modal-content input,
+.modal-content textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.modal-content button.submit-btn {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa); /* Gradient cho nút */
+  border: none; /* Không viền */
+  border-radius: 8px; /* Bo tròn góc */
+  color: white; /* Màu chữ trắng */
+  font-size: 1rem; /* Kích thước chữ */
+  padding: 10px; /* Khoảng đệm bên trong */
+  cursor: pointer; /* Con trỏ dạng pointer */
+  transition: background-color 0.3s ease; /* Hiệu ứng chuyển màu */
+  text-align: center; /* Căn giữa chữ */
+  margin-top: 15px; /* Khoảng cách trên nút */
+}
+
+.modal-content button.submit-btn:hover {
+  background-color: #0056b3;
+}
+
+.modal-topic-parent {
+  display: flex; /* Sử dụng flexbox */
+  justify-content: center; /* Căn giữa theo chiều ngang */
+  align-items: center; /* Căn giữa theo chiều dọc */
+  position: fixed; /* Giữ cố định */
+  z-index: 1000; /* Trên cùng */
+  left: 0;
+  top: 0;
+  width: 100%; /* Toàn bộ chiều rộng */
+  height: 100%; /* Toàn bộ chiều cao */
+  background-color: rgba(0, 0, 0, 0.6); /* Nền đen mờ đậm hơn */
+  transition: opacity 0.3s ease; /* Hiệu ứng mở modal */
+}
+
+.modal-topic {
+  background-color: white;
+  padding: 20px;
+  border-radius: 12px; /* Bo tròn góc lớn hơn */
+  width: 100%;
+  max-width: 600px; /* Điều chỉnh max-width để modal rộng hơn */
+  max-height: 80vh; /* Giới hạn chiều cao modal */
+  overflow-y: auto; /* Cho phép cuộn dọc nếu nội dung vượt quá */
+  word-wrap: break-word; /* Cho phép xuống dòng nếu từ quá dài */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Đổ bóng tạo chiều sâu */
+  transform: scale(0.95); /* Hiệu ứng thu nhỏ khi mở */
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column; /* Sắp xếp các phần tử theo chiều dọc */
+  border: 1px silver;
+}
+
+.modal-topic-parent.show {
+  opacity: 1;
+}
+
+.modal-topic.show {
+  transform: scale(1); /* Hiển thị modal với kích thước đầy đủ */
+}
+
+.modal-topic h3 {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 10px; /* Sử dụng dấu gạch ngang thay vì camelCase */
+  text-align: center; /* Sử dụng dấu gạch ngang thay vì camelCase */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Sử dụng dấu gạch ngang */
+  display: flex;
+  align-items: center; /* Sử dụng dấu gạch ngang */
+  justify-content: center; /* Sử dụng dấu gạch ngang */
+  font-family: "Roboto", sans-serif;
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.modal-topic p {
+  font-size: 1.1rem;
+  color: #4b5563; /* Màu chữ xám */
+  margin-bottom: 15px;
+}
+
+/* Nút đóng */
+.modal-topic .close-button {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  border: 2px solid #d1d5db; /* Đường viền cho nút */
+  border-radius: 8px; /* Bo tròn góc nút */
+  font-size: 1rem; /* Kích thước chữ vừa */
+  padding: 10px 20px; /* Khoảng cách bên trong nút */
+  margin: 20px auto; /* Căn giữa nút */
+  display: block; /* Hiển thị dạng block để căn giữa */
+  color: white; /* Màu chữ trắng */
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease; /* Hiệu ứng chuyển màu */
+}
+
+.modal-topic .close-button:hover {
+  background-color: #d1d5db; /* Đổi màu nền khi hover */
+  color: #111827; /* Đổi màu chữ khi hover */
+}
+
+.modal-notice {
+  display: block;
+  position: fixed;
+  top: 50%; /* Đặt modal giữa chiều dọc */
+  left: 50%; /* Đặt modal giữa chiều ngang */
+  transform: translate(-50%, -50%); /* Căn giữa cả chiều ngang và dọc */
+  width: 100%;
+  height: auto; /* Thay đổi chiều cao để phù hợp với nội dung */
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.modal-content-notice {
+  margin: 0; /* Bỏ margin trên và dưới */
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 400px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.close {
+  cursor: pointer;
+  float: right;
+  font-size: 20px;
+}
+
+button {
+  margin: 10px;
+}

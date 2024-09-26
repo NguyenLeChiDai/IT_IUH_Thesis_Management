@@ -8,6 +8,7 @@ const StudentGroupRouter = require("./routes/studentGroup");
 const profileStudent = require("./routes/profileStudent");
 const userRouter = require("./routes/users"); // Import route mới
 const profileTeacher = require("./routes/profileTeacher");
+const topicPost = require("./routes/topic");
 //------- Kết nối CSDL
 const connectDB = async () => {
   try {
@@ -38,6 +39,7 @@ app.use("/api/studentgroups", StudentGroupRouter);
 app.use("/api/student", profileStudent);
 app.use("/api/users", userRouter); // Sử dụng route mới
 app.use("/api/teachers", profileTeacher);
+app.use("/api/topics", topicPost);
 
 const PORT = process.env.PORT || 5000; // Sử dụng PORT từ môi trường hoặc mặc định là 5000
 
