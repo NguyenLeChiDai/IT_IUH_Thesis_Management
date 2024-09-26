@@ -25,7 +25,13 @@ connectDB();
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+//app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Thay bằng domain của frontend
+    credentials: true, // Để gửi cookie hoặc thông tin xác thực
+  })
+);
 
 app.use("/api/auth", authRouter);
 app.use("/api/studentgroups", StudentGroupRouter);

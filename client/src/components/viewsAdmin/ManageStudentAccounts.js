@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import {
   Typography,
@@ -24,7 +24,7 @@ import {
 } from "@mui/material";
 import { InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import "../../css/ManageStudentAccounts.css";
+import "../../css/ManageAccounts.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
@@ -40,6 +40,8 @@ const ManageStudentAccounts = () => {
     password: "12345678",
     role: "Sinh viên",
   });
+
+  const fileInputRef = useRef(null);
 
   const [isLoading, setIsLoading] = useState(false); // trạng thái tải khi upload file
 
@@ -330,7 +332,7 @@ const ManageStudentAccounts = () => {
     const file = event.target.files[0];
     const reader = new FileReader();
 
-    setIsLoading(true); // Bắt đầu loading
+    setIsLoading(true);
 
     reader.onload = async (e) => {
       const data = new Uint8Array(e.target.result);
@@ -339,36 +341,171 @@ const ManageStudentAccounts = () => {
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
+      const processedData = jsonData.map((row) => ({
+        username: String(row.username || ""),
+        password: String(row.password || "12345678"),
+        studentId: String(row.studentId || ""),
+        name: String(row.name || ""),
+        phone: String(row.phone || ""),
+        email: String(row.email || ""),
+        class: String(row.class || ""),
+        major: String(row.major || ""),
+        gender: String(row.gender || ""),
+      }));
+
       try {
         const response = await axios.post(
-          "http://localhost:5000/api/users/bulk-create",
-          jsonData
+          "http://localhost:5000/api/users/bulk-create-students",
+          { users: processedData },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
         );
-        setIsLoading(false); // Kết thúc loading
-        if (response.data.success) {
-          Swal.fire({
-            title: "Thành công!",
-            text: `Đã tạo ${response.data.createdCount} tài khoản thành công!`,
-            icon: "success",
-            confirmButtonColor: "#3085d6",
-          });
-          fetchUsers(); // Refresh the user list
-        } else {
-          Swal.fire({
-            title: "Lỗi!",
-            text: response.data.message,
-            icon: "error",
-            confirmButtonColor: "#d33",
-          });
+        setIsLoading(false);
+
+        let message = `Đã tạo ${response.data.createdCount} tài khoản thành công.`;
+        let icon = "success";
+
+        if (
+          response.data.duplicateUsernames &&
+          response.data.duplicateUsernames.length > 0
+        ) {
+          message += ` ${
+            response.data.duplicateUsernames.length
+          } tài khoản bị trùng username: ${response.data.duplicateUsernames.join(
+            ", "
+          )}`;
+          icon = "warning";
         }
+
+        if (response.data.errors && response.data.errors.length > 0) {
+          message += ` ${response.data.errors.length} tài khoản gặp lỗi khi tạo.`;
+          icon = "warning";
+        }
+
+        Swal.fire({
+          title: "Kết quả tạo tài khoản",
+          text: message,
+          icon: icon,
+          confirmButtonColor: "#3085d6",
+        });
+
+        fetchUsers(); // Tải lại danh sách user
       } catch (error) {
-        setIsLoading(false); // Kết thúc loading nếu có lỗi
+        setIsLoading(false);
         Swal.fire({
           title: "Lỗi!",
           text: "Có lỗi xảy ra trong quá trình tạo tài khoản.",
           icon: "error",
           confirmButtonColor: "#d33",
         });
+        console.error("Error details:", error.response?.data);
+      }
+
+      // Reset giá trị của input file
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
+
+  ///////////
+  const handleFileUpload1 = async (event) => {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+
+    setIsLoading(true);
+
+    reader.onload = async (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      const processedData = jsonData.map((row) => ({
+        username: String(row.username || ""),
+        password: String(row.password || "12345678"),
+        role: String(row.role || "Sinh viên"),
+        studentId: String(row.studentId || ""),
+        name: String(row.name || ""),
+        phone: String(row.phone || ""),
+        email: String(row.email || ""),
+        class: String(row.class || ""),
+        major: String(row.major || ""),
+        gender: String(row.gender || ""),
+      }));
+
+      try {
+        const response = await axios.post(
+          "http://localhost:5000/api/users/bulk-create-students-1",
+          { users: processedData },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        setIsLoading(false);
+
+        let message = `Đã tạo ${response.data.createdCount} tài khoản thành công.`;
+        let icon = "success";
+
+        if (
+          response.data.duplicateUsernames &&
+          response.data.duplicateUsernames.length > 0
+        ) {
+          message += ` ${
+            response.data.duplicateUsernames.length
+          } tài khoản bị trùng username: ${response.data.duplicateUsernames.join(
+            ", "
+          )}`;
+          icon = "warning";
+        }
+
+        if (
+          response.data.invalidRoles &&
+          response.data.invalidRoles.length > 0
+        ) {
+          message += ` ${
+            response.data.invalidRoles.length
+          } tài khoản có vai trò không hợp lệ: ${response.data.invalidRoles.join(
+            ", "
+          )}`;
+          icon = "warning";
+        }
+
+        if (response.data.errors && response.data.errors.length > 0) {
+          message += ` ${response.data.errors.length} tài khoản gặp lỗi khi tạo.`;
+          icon = "warning";
+        }
+
+        Swal.fire({
+          title: "Kết quả tạo tài khoản",
+          text: message,
+          icon: icon,
+          confirmButtonColor: "#3085d6",
+        });
+
+        fetchUsers(); // Tải lại danh sách user
+      } catch (error) {
+        setIsLoading(false);
+        Swal.fire({
+          title: "Lỗi!",
+          text: "Có lỗi xảy ra trong quá trình tạo tài khoản.",
+          icon: "error",
+          confirmButtonColor: "#d33",
+        });
+        console.error("Error details:", error.response?.data);
+      }
+
+      // Reset giá trị của input file
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
     };
 
@@ -396,8 +533,9 @@ const ManageStudentAccounts = () => {
         type="file"
         id="excel-upload"
         style={{ display: "none" }}
-        onChange={handleFileUpload}
+        onChange={handleFileUpload1}
         accept=".xlsx, .xls"
+        ref={fileInputRef}
       />
       <label htmlFor="excel-upload">
         <Button

@@ -92,7 +92,7 @@
   justify-content: flex-end;
 }
 
-/* xuống dòng khi quá số chữ trong 1 hàng */
+/* xuống dòng khi quá số chữ trong 1 hàng password */
 .table-cell {
   white-space: nowrap; /* Không cho phép xuống dòng */
   overflow: hidden; /* Ẩn nội dung tràn ra ngoài */
