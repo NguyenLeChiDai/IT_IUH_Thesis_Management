@@ -1,6 +1,6 @@
 .groups-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr); /* Chia lưới thành 7 cột */
+  grid-template-columns: repeat(6, 1fr); /* Chia lưới thành 7 cột */
   gap: 10px; /* Khoảng cách giữa các nhóm */
 }
 

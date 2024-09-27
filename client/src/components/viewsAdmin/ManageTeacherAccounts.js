@@ -21,6 +21,7 @@ import {
   TablePagination,
   Input,
   CircularProgress,
+  Box,
 } from "@mui/material";
 import { InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
@@ -43,7 +44,9 @@ const ManageTeacherAccounts = () => {
 
   const fileInputRef = useRef(null); // trạng thái lại ban đầu sau khi gửi file đi
 
-  const [isLoading, setIsLoading] = useState(false); // trạng thái tải khi upload file
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [fileInputKey, setFileInputKey] = useState(0); //theo dõi việc reset input
 
   const [searchTerm, setSearchTerm] = useState(""); // Từ khóa tìm kiếm
 
@@ -304,7 +307,7 @@ const ManageTeacherAccounts = () => {
     setOpenCreateDialog(false);
     const isConfirmed = await Swal.fire({
       title: "Xác Nhận Hủy!",
-      text: `Bạn có chắc chắn muốn hủy tạo tài khoản "${user.username}"  không?`,
+      text: `Bạn có chắc chắn muốn hủy tạo tài khoản không?`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
@@ -317,11 +320,24 @@ const ManageTeacherAccounts = () => {
   };
 
   //Xử lý giử file excel
-  const handleFileUpload = async (event) => {
+  const handleFileSelect = (event) => {
     const file = event.target.files[0];
-    const reader = new FileReader();
+    setSelectedFile(file);
+  };
+  //upload excel
+  const handleFileUpload = async () => {
+    if (!selectedFile) {
+      Swal.fire({
+        title: "Lỗi!",
+        text: "Vui lòng chọn file trước khi tải lên.",
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+      return;
+    }
 
-    setIsLoading(true);
+    setIsUploading(true);
+    const reader = new FileReader();
 
     reader.onload = async (e) => {
       const data = new Uint8Array(e.target.result);
@@ -330,10 +346,23 @@ const ManageTeacherAccounts = () => {
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
+      // Kiểm tra xem có cột teacherId trong dữ liệu không
+      if (jsonData.some((row) => "studentId" in row)) {
+        setIsUploading(false);
+        Swal.fire({
+          title: "Lỗi!",
+          text: "File Excel chứa cột studentId không hợp lệ cho giảng viên.",
+          icon: "error",
+          confirmButtonColor: "#d33",
+        });
+        return;
+      }
+
       const processedData = jsonData.map((row) => ({
         username: String(row.username || ""),
         password: String(row.password || "12345678"),
-        studentId: String(row.studentId || ""),
+        role: String(row.role || "Giảng viên"),
+        teacherId: String(row.teacherId || ""),
         name: String(row.name || ""),
         phone: String(row.phone || ""),
         email: String(row.email || ""),
@@ -352,7 +381,7 @@ const ManageTeacherAccounts = () => {
             },
           }
         );
-        setIsLoading(false);
+        setIsUploading(false);
 
         let message = `Đã tạo ${response.data.createdCount} tài khoản thành công.`;
         let icon = "success";
@@ -381,9 +410,11 @@ const ManageTeacherAccounts = () => {
           confirmButtonColor: "#3085d6",
         });
 
-        fetchUsers(); // Tải lại danh sách user
+        fetchUsers();
+        setSelectedFile(null);
+        setFileInputKey((prev) => prev + 1); // Reset input file
       } catch (error) {
-        setIsLoading(false);
+        setIsUploading(false);
         Swal.fire({
           title: "Lỗi!",
           text: "Có lỗi xảy ra trong quá trình tạo tài khoản.",
@@ -393,13 +424,12 @@ const ManageTeacherAccounts = () => {
         console.error("Error details:", error.response?.data);
       }
 
-      // Reset giá trị của input file
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
     };
 
-    reader.readAsArrayBuffer(file);
+    reader.readAsArrayBuffer(selectedFile);
   };
 
   return (
@@ -408,40 +438,52 @@ const ManageTeacherAccounts = () => {
         Quản lý tài khoản giảng viên
       </Typography>
 
-      {/* Nút Tạo tài khoản */}
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => setOpenCreateDialog(true)}
-        style={{ marginBottom: "20px" }}
+      {/* Container cho nút Tạo tài khoản và phần chọn file Excel */}
+      <Box
+        sx={{ display: "flex", alignItems: "center", gap: 2, marginBottom: 2 }}
       >
-        Tạo tài khoản
-      </Button>
-
-      {/* button cập nhật Excel */}
-      <Input
-        type="file"
-        id="excel-upload"
-        style={{ display: "none" }}
-        onChange={handleFileUpload}
-        accept=".xlsx, .xls"
-        ref={fileInputRef}
-      />
-      <label htmlFor="excel-upload">
+        {/* Nút Tạo tài khoản */}
         <Button
           variant="contained"
-          color="secondary"
-          component="span"
-          style={{ marginBottom: "20px", marginLeft: "10px" }}
-          disabled={isLoading}
+          color="primary"
+          onClick={() => setOpenCreateDialog(true)}
         >
-          {isLoading ? (
+          Tạo tài khoản
+        </Button>
+
+        {/* Phần chọn và tải lên file Excel */}
+        <Input
+          key={fileInputKey}
+          type="file"
+          id="excel-upload"
+          style={{ display: "none" }}
+          onChange={handleFileSelect}
+          accept=".xlsx, .xls"
+          ref={fileInputRef}
+        />
+        <label htmlFor="excel-upload">
+          <Button variant="contained" color="secondary" component="span">
+            Chọn file Excel
+          </Button>
+        </label>
+        {selectedFile && (
+          <Typography variant="body2" sx={{ marginLeft: 1, marginRight: 1 }}>
+            File đã chọn: {selectedFile.name}
+          </Typography>
+        )}
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleFileUpload}
+          disabled={isUploading || !selectedFile}
+        >
+          {isUploading ? (
             <CircularProgress size={24} color="inherit" />
           ) : (
-            "Tải lên Excel"
+            "Tải lên"
           )}
         </Button>
-      </label>
+      </Box>
       {/* Tìm kiếm tài khoản */}
       <TextField
         label="Tìm kiếm theo Tên đăng nhập hoặc Mã sinh viên"

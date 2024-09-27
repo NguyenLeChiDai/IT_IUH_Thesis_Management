@@ -113,67 +113,6 @@ router.delete("/delete-teacher/:id", async (req, res) => {
   }
 });
 
-// Tạo số lượng lớn tài khoản với file excel sinh viên (bulk)
-router.post("/bulk-create-students", async (req, res) => {
-  const { users } = req.body;
-  if (!users || !Array.isArray(users)) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Invalid data format" });
-  }
-
-  const createdUsers = [];
-  const errors = [];
-  const duplicateUsernames = [];
-
-  // Kiểm tra username trùng lặp
-  const existingUsernames = await User.find({
-    username: { $in: users.map((u) => u.username) },
-  }).select("username");
-  const existingUsernameSet = new Set(existingUsernames.map((u) => u.username));
-
-  for (const user of users) {
-    if (existingUsernameSet.has(user.username)) {
-      duplicateUsernames.push(user.username);
-      continue;
-    }
-
-    try {
-      const hashedPassword = await argon2.hash(user.password);
-      const newUser = new User({
-        username: user.username,
-        password: hashedPassword,
-        role: "Sinh viên",
-      });
-      await newUser.save();
-
-      const newProfile = new ProfileStudent({
-        user: newUser._id,
-        studentId: user.studentId,
-        name: user.name,
-        phone: user.phone,
-        email: user.email,
-        class: user.class,
-        major: user.major,
-        gender: user.gender,
-      });
-      await newProfile.save();
-
-      createdUsers.push(newUser);
-    } catch (error) {
-      errors.push({ username: user.username, error: error.message });
-    }
-  }
-
-  res.json({
-    success: true,
-    message: "Process completed",
-    createdCount: createdUsers.length,
-    duplicateUsernames,
-    errors,
-  });
-});
-
 // Tạo số lượng lớn tài khoản với file excel giảng viên (bulk)
 router.post("/bulk-create-teachers", async (req, res) => {
   const { users } = req.body;
@@ -235,7 +174,8 @@ router.post("/bulk-create-teachers", async (req, res) => {
   });
 });
 
-router.post("/bulk-create-students-1", async (req, res) => {
+// Tạo số lượng lớn tài khoản với file excel sinh viên (bulk)
+router.post("/bulk-create-students", async (req, res) => {
   const { users } = req.body;
   if (!users || !Array.isArray(users)) {
     return res
@@ -246,7 +186,6 @@ router.post("/bulk-create-students-1", async (req, res) => {
   const createdUsers = [];
   const errors = [];
   const duplicateUsernames = [];
-  const invalidRoles = [];
 
   // Kiểm tra username trùng lặp
   const existingUsernames = await User.find({
@@ -257,11 +196,6 @@ router.post("/bulk-create-students-1", async (req, res) => {
   for (const user of users) {
     if (existingUsernameSet.has(user.username)) {
       duplicateUsernames.push(user.username);
-      continue;
-    }
-
-    if (user.role !== "Sinh viên") {
-      invalidRoles.push(user.username);
       continue;
     }
 
@@ -297,7 +231,6 @@ router.post("/bulk-create-students-1", async (req, res) => {
     message: "Process completed",
     createdCount: createdUsers.length,
     duplicateUsernames,
-    invalidRoles,
     errors,
   });
 });

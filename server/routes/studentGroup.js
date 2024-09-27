@@ -236,8 +236,7 @@ router.post("/join-group/:id", verifyToken, async (req, res) => {
     if (studentProfile.studentGroup) {
       return res.status(400).json({
         success: false,
-        message:
-          "Bạn đã tham gia một nhóm khác và không thể tham gia nhóm khác.",
+        message: "Bạn đã có nhóm và không thể tham gia nhóm khác.",
       });
     }
 
