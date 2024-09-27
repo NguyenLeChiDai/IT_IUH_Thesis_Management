@@ -124,14 +124,21 @@ const AuthContextProvider = ({ children }) => {
     });
   };
   // updateProfile
-  const updateProfile = (newProfile) => {
-    dispatch({
-      type: "SET_AUTH",
-      payload: {
-        ...authState,
-        profile: newProfile,
-      },
-    });
+  const updateProfile = async () => {
+    try {
+      const response = await axios.get(`${apiUrl}/student/profile-student`);
+      if (response.data.success) {
+        dispatch({
+          type: "SET_AUTH",
+          payload: {
+            ...authState,
+            profile: response.data.profile,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    }
   };
 
   // Context data

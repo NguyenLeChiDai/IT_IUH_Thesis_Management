@@ -17,10 +17,16 @@ const StudentGroupSchema = new Schema({
   },
   profileStudents: [
     {
-      // Thay đổi từ ObjectId thành mảng chứa ObjectId
-      type: Schema.Types.ObjectId,
-      ref: "profileStudent",
-      required: false,
+      student: {
+        type: Schema.Types.ObjectId,
+        ref: "profileStudent",
+        required: false,
+      },
+      role: {
+        type: String,
+        enum: ["Nhóm trưởng", "Thành viên"],
+        required: true,
+      },
     },
   ],
 });

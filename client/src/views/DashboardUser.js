@@ -22,10 +22,12 @@ import GradeIcon from "@mui/icons-material/Grade";
 import ScoreIcon from "@mui/icons-material/Score";
 import UserMenu from "../components/user/UserMenu";
 import "../css/DashboardUser.css";
-import StudentInfo from "../components/user/StudentInfo";
 import { Outlet, useNavigate } from "react-router-dom";
 import ExpandLess from "@mui/icons-material/ExpandLess"; // Icon thu gọn
 import ExpandMore from "@mui/icons-material/ExpandMore"; // Icon mở rộng
+import "font-awesome/css/font-awesome.min.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faList } from "@fortawesome/free-solid-svg-icons";
 
 const drawerWidth = 240;
 
@@ -59,7 +61,7 @@ const DashboardUser = () => {
       subMenu: [
         {
           text: "Danh sách nhóm sinh viên",
-          icon: <GroupIcon />,
+          icon: <FontAwesomeIcon icon={faList} />,
           onClick: () => navigate("/dashboardUser/list-student-groups"),
         },
       ],
@@ -96,7 +98,9 @@ const DashboardUser = () => {
           </Typography>
           <Box sx={{ flexGrow: 1 }} />
 
-          <Box sx={{ display: "flex", alignItems: "center", marginTop: "1px" }}>
+          <Box
+            sx={{ display: "flex", alignItems: "center", marginBottom: "10px" }}
+          >
             <UserMenu />
           </Box>
         </Toolbar>

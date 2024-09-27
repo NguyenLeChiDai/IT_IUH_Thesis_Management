@@ -51,16 +51,25 @@ router.post("/add", async (req, res) => {
 // Lấy thông tin hồ sơ người dùng
 router.get("/profile-student", verifyToken, async (req, res) => {
   try {
-    const profile = await Profile.findOne({ user: req.userId }).populate(
-      "user",
-      "-password"
-    );
+    const profile = await Profile.findOne({ user: req.userId })
+      .populate("user", "-password")
+      .populate("studentGroup", "groupName groupStatus");
+
     if (!profile)
       return res
         .status(400)
         .json({ success: false, message: "Profile not found" });
 
-    res.json({ success: true, profile });
+    // Tạo object mới với thông tin cần thiết
+    const profileInfo = {
+      ...profile.toObject(),
+      groupName: profile.studentGroup ? profile.studentGroup.groupName : null,
+      groupStatus: profile.studentGroup
+        ? profile.studentGroup.groupStatus
+        : null,
+    };
+
+    res.json({ success: true, profile: profileInfo });
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, message: "Internal server error" });

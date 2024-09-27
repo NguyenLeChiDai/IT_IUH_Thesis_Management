@@ -1,14 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import "../../css/ListStudentGroups.css";
 
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { AuthContext } from "../../contexts/AuthContext";
+import { Dialog, DialogContent, DialogTitle, Button } from "@mui/material";
+import Swal from "sweetalert2";
 
 export const ListStudentGroups = () => {
   const [groups, setGroups] = useState([]);
   const [myGroup, setMyGroup] = useState(null);
   const [confirmation, setConfirmation] = useState(null);
+  const { updateProfile } = useContext(AuthContext);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedGroup, setSelectedGroup] = useState(null); // chọn xem nhóm
 
   useEffect(() => {
     fetchMyGroup();
@@ -25,22 +31,22 @@ export const ListStudentGroups = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      console.log(response.data); // Kiểm tra phản hồi từ API
 
       if (response.data.groupName) {
         setMyGroup(response.data);
       } else {
         setMyGroup(null);
+        fetchGroups();
       }
     } catch (error) {
       console.error("Lỗi khi lấy nhóm:", error);
-      toast.success("Lỗi khi lấy nhóm!", {
-        position: "top-right",
-        autoClose: 2500,
-      });
+      toast.error("Lỗi khi lấy thông tin nhóm!");
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Lấy danh sách tất cả nhóm có thể đăng ký
   const fetchGroups = async () => {
     try {
       const response = await axios.get(
@@ -49,39 +55,30 @@ export const ListStudentGroups = () => {
       if (response.data.success) {
         setGroups(response.data.groups);
       } else {
-        // Khi có lỗi
-        toast.error("Hiện tại hệ thống không có nhóm!", {
-          position: "top-right",
-          autoClose: 2500,
-        });
+        toast.error("Hiện tại hệ thống không có nhóm!");
       }
     } catch (error) {
       console.error("Lỗi khi tải nhóm:", error);
-      // Khi có lỗi
-      toast.error("Lỗi khi tải nhóm!", {
-        position: "top-right",
-        autoClose: 2500,
-      });
+      toast.error("Lỗi khi tải danh sách nhóm!");
     }
   };
 
-  const fetchStudentGroup = async () => {
+  // xem chi tiết nhóm
+  const fetchGroupDetails = async (groupId) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "http://localhost:5000/api/profileStudent/my-group", // API để lấy thông tin nhóm của sinh viên
+        `http://localhost:5000/api/studentGroups/group-details/${groupId}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       if (response.data.success) {
-        setMyGroup(response.data.group); // Lưu thông tin nhóm vào state
+        setSelectedGroup(response.data);
       }
     } catch (error) {
-      console.error("Lỗi khi tải nhóm của sinh viên:", error);
+      console.error("Lỗi khi lấy thông tin nhóm:", error);
+      toast.error("Không thể lấy thông tin nhóm!");
     }
   };
 
@@ -99,28 +96,51 @@ export const ListStudentGroups = () => {
         }
       );
 
+      // Tìm tên nhóm dựa trên groupId
+      const group = groups.find((g) => g._id === groupId);
+      const groupName = group ? group.groupName : "Nhóm không xác định";
+
       if (response.data.confirmationRequired) {
-        setConfirmation({
-          groupId: groupId,
-          message: response.data.message,
+        const result = await Swal.fire({
+          title: "Xác nhận tham gia nhóm",
+          text: `Bạn có chắc chắn muốn tham gia nhóm "${groupName}" không?`,
+          icon: "question",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Xác nhận",
+          cancelButtonText: "Hủy",
         });
+
+        if (result.isConfirmed) {
+          await confirmJoinGroup(groupId, groupName);
+        }
       } else if (response.data.success) {
-        toast.success("Đã tham gia nhóm thành công!", {
-          position: "top-right",
-          autoClose: 2500,
-        });
-        fetchGroups();
-        fetchStudentGroup(); // Cập nhật thông tin nhóm của sinh viên
+        Swal.fire(
+          "Thành công",
+          `Đã tham gia nhóm "${groupName}" thành công!`,
+          "success"
+        );
+        fetchMyGroup();
       } else {
-        toast(response.data.message);
+        Swal.fire("Lỗi", response.data.message, "error");
       }
     } catch (error) {
       console.error("Lỗi khi tham gia nhóm!", error);
+      if (error.response && error.response.status === 400) {
+        Swal.fire(
+          "Lỗi",
+          "Nhóm đã đủ số lượng. Vui lòng chọn nhóm khác!",
+          "error"
+        );
+      } else {
+        Swal.fire("Lỗi", "Lỗi khi tham gia nhóm!", "error");
+      }
     }
   };
 
   // Xác nhận tham gia nhóm
-  const confirmJoinGroup = async (groupId) => {
+  const confirmJoinGroup = async (groupId, groupName) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
@@ -134,104 +154,242 @@ export const ListStudentGroups = () => {
       );
 
       if (response.data.success) {
-        toast.success("Đã tham gia nhóm thành công!", {
-          position: "top-right",
-          autoClose: 2500,
-        });
-        setConfirmation(null);
-        fetchGroups();
-        fetchMyGroup(); // Gọi fetchMyGroup để cập nhật thông tin nhóm ngay lập tức
+        Swal.fire(
+          "Thành công",
+          `Đã tham gia nhóm "${groupName}" thành công!`,
+          "success"
+        );
+        fetchMyGroup();
+        updateProfile();
       }
     } catch (error) {
       console.error("Có lỗi khi tham gia nhóm:", error);
+      Swal.fire("Lỗi", "Lỗi khi xác nhận tham gia nhóm!", "error");
     }
   };
-  // Hủy nhóm
+  // Rời nhóm
   const handleLeaveGroup = async () => {
+    if (!myGroup) {
+      toast.error("Bạn chưa tham gia nhóm nào!");
+      return;
+    }
+
+    try {
+      const result = await Swal.fire({
+        title: "Xác nhận rời nhóm",
+        text: `Bạn có chắc chắn muốn rời khỏi nhóm "${myGroup.groupName}" không?`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Xác nhận",
+        cancelButtonText: "Hủy",
+      });
+
+      if (result.isConfirmed) {
+        const token = localStorage.getItem("token");
+        const response = await axios.post(
+          "http://localhost:5000/api/studentGroups/leave-group",
+          {},
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (response.data.success) {
+          toast.success(`Bạn đã rời khỏi nhóm "${myGroup.groupName}"!`);
+          setMyGroup(null);
+          fetchGroups();
+          updateProfile();
+        } else {
+          Swal.fire(
+            "Lỗi",
+            response.data.message || "Có lỗi xảy ra khi rời nhóm",
+            "error"
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Lỗi khi rời nhóm:", error);
+      Swal.fire("Lỗi", "Lỗi khi rời khỏi nhóm!", "error");
+    }
+  };
+
+  // thay đổi nhóm trưởng
+  const handleChangeLeader = async (groupId, newLeaderId) => {
+    if (!groupId || !newLeaderId) {
+      toast.error("Không thể thay đổi nhóm trưởng: Thiếu thông tin cần thiết");
+      return;
+    }
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://localhost:5000/api/studentGroups/leave-group",
+        `http://localhost:5000/api/studentGroups/change-leader/${groupId}/${newLeaderId}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       if (response.data.success) {
-        toast.success(response.data.message, {
-          position: "top-right",
-          autoClose: 2500,
-        });
-        setMyGroup(null);
-        fetchGroups();
+        toast.success("Đã thay đổi nhóm trưởng thành công!");
+        fetchMyGroup();
+      } else {
+        toast.error(response.data.message);
       }
     } catch (error) {
-      console.error("Lỗi khi hủy nhóm:", error);
-      toast.success("Bạn đã rời khỏi nhóm thành công!", {
-        position: "top-right",
-        autoClose: 2500,
-      });
+      console.error("Lỗi khi thay đổi nhóm trưởng:", error);
+      toast.error("Lỗi khi thay đổi nhóm trưởng!");
     }
   };
 
+  if (isLoading) {
+    return <div>Đang tải...</div>;
+  }
+
   return (
-    <div>
+    <div className="list-student-groups">
       <h2>Thông tin nhóm sinh viên</h2>
-      {console.log(myGroup)} {/* Kiểm tra giá trị myGroup */}
       {confirmation && (
-        <div className="confirmation-popup">
-          <p>{confirmation.message}</p>
-          <button onClick={() => confirmJoinGroup(confirmation.groupId)}>
-            Xác nhận
-          </button>
-          <button onClick={() => setConfirmation(null)}>Hủy</button>
-        </div>
+        <Dialog open={!!confirmation} onClose={() => setConfirmation(null)}>
+          <DialogTitle>Xác nhận tham gia nhóm</DialogTitle>
+          <DialogContent>
+            <p>{confirmation.message}</p>
+            <Button
+              onClick={() => confirmJoinGroup(confirmation.groupId)}
+              color="primary"
+            >
+              Xác nhận
+            </Button>
+            <Button onClick={() => setConfirmation(null)} color="secondary">
+              Hủy
+            </Button>
+          </DialogContent>
+        </Dialog>
       )}
       {myGroup ? (
-        <div className="group-info">
-          <h3>Bạn đã đăng ký nhóm: {myGroup.groupName}</h3>
+        <div className="my-group-info">
+          <h3>Nhóm của tôi: {myGroup.groupName}</h3>
           <p>
             <strong>Trạng thái:</strong> {myGroup.groupStatus}
           </p>
           <p>
-            <strong>Trạng thái nhóm:</strong>{" "}
             {myGroup.members.length === 2
               ? "Nhóm đã đủ thành viên"
               : "Nhóm chưa đủ thành viên"}
           </p>
-          <p>
-            <strong>Thành viên:</strong>
-          </p>
-          <ul>
-            {myGroup.members.map((member) => (
-              <li key={member._id}>
-                {member.name} - {member.studentId}{" "}
-                {/* Hiển thị thêm mã sinh viên */}
-              </li>
+          <div className="members-container">
+            {myGroup.members.map((member, index) => (
+              <div
+                key={index}
+                className={`member-card ${
+                  member.role === "Nhóm trưởng" ? "leader" : ""
+                }`}
+              >
+                <h5>
+                  <strong>Sinh viên: {member.name}</strong>
+                </h5>
+                <p>
+                  <strong>Vai trò:</strong> {member.role}
+                </p>
+                <p>
+                  <strong>Mã số:</strong> {member.studentId}
+                </p>
+                <p>
+                  <strong>Email:</strong> {member.email}
+                </p>
+                <p>
+                  <strong>Số điện thoại:</strong> {member.phone}
+                </p>
+                <p>
+                  <strong>Giới tính:</strong> {member.gender}
+                </p>
+                {myGroup.members.length === 2 &&
+                  member.role !== "Nhóm trưởng" && (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() =>
+                        handleChangeLeader(myGroup._id, member._id)
+                      }
+                    >
+                      Đặt làm nhóm trưởng
+                    </Button>
+                  )}
+              </div>
             ))}
-          </ul>
-          <button className="btn btn-danger" onClick={handleLeaveGroup}>
-            Hủy nhóm
-          </button>
+          </div>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={handleLeaveGroup}
+          >
+            Rời nhóm
+          </Button>
         </div>
       ) : (
         <div className="groups-grid">
           {groups.map((group) => (
-            <div key={group._id} className="group-card">
-              <p>
-                <strong>Nhóm:</strong> {group.groupName}
-              </p>
+            <div
+              key={group._id}
+              className="group-card"
+              onClick={() => fetchGroupDetails(group._id)}
+            >
+              <h3>{group.groupName}</h3>
               <p>
                 <strong>Trạng thái:</strong> {group.groupStatus}
               </p>
-              <button onClick={() => handleJoinGroup(group._id)}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleJoinGroup(group._id);
+                }}
+              >
                 Tham gia nhóm
-              </button>
+              </Button>
             </div>
           ))}
         </div>
       )}
+      <Dialog
+        open={!!selectedGroup}
+        onClose={() => setSelectedGroup(null)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Chi tiết nhóm: {selectedGroup?.groupName}</DialogTitle>
+        <DialogContent>
+          {selectedGroup && (
+            <>
+              <p>
+                <strong>Trạng thái:</strong> {selectedGroup.groupStatus}
+              </p>
+              <h4>Thành viên:</h4>
+              <div className="members-container">
+                {selectedGroup.members.map((member, index) => (
+                  <div
+                    key={index}
+                    className={`member-card ${
+                      member.role === "Nhóm trưởng" ? "leader" : ""
+                    }`}
+                  >
+                    <h5>
+                      <strong>Sinh viên: {member.name}</strong>
+                    </h5>
+                    <p>
+                      <strong>Vai trò:</strong> {member.role}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          <Button onClick={() => setSelectedGroup(null)} color="primary">
+            Đóng
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -22,18 +22,17 @@ const StudentInfo = () => {
   });
 
   useEffect(() => {
-    // Lấy token từ localStorage
     const token = localStorage.getItem("token");
-
     if (token) {
-      // Đặt token vào headers của axios
       setAuthToken(token);
     } else {
       console.log("Token not found, redirect to login");
-      // Redirect to login page or show error
     }
 
-    // Gọi API để lấy thông tin hồ sơ của người dùng
+    fetchProfileData();
+  }, []);
+
+  const fetchProfileData = () => {
     axios
       .get("http://localhost:5000/api/student/profile-student")
       .then((response) => {
@@ -48,7 +47,7 @@ const StudentInfo = () => {
       .catch((error) => {
         console.log("Error fetching profile: ", error);
       });
-  }, []);
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -65,7 +64,8 @@ const StudentInfo = () => {
         if (data.success) {
           setUserData(data.profile);
           setIsEditing(false);
-          updateProfile(data.profile); // Cập nhật profile vào context
+          updateProfile(data.profile);
+          fetchProfileData(); // Fetch updated data after successful update
         } else {
           alert(data.message);
         }
@@ -199,8 +199,8 @@ const StudentInfo = () => {
               <div className="card group-info-card">
                 <div className="card-body">
                   <h3>Thông Tin Nhóm Đề Tài</h3>
-                  <p>Tên nhóm: {userData.groupName}</p>
-                  <p>Trạng thái nhóm: {userData.groupStatus}</p>
+                  <p>Tên nhóm: {userData.groupName || "Chưa có nhóm"}</p>
+                  <p>Trạng thái nhóm: {userData.groupStatus || "N/A"}</p>
                 </div>
               </div>
             </Col>

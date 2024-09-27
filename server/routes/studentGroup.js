@@ -26,6 +26,41 @@ router.get("/list-groups", verifyToken, async (req, res) => {
   }
 });
 
+// @route GET api/studentGroups/group-details/:id
+// @desc Lấy thông tin chi tiết của nhóm
+// @access private
+router.get("/group-details/:id", verifyToken, async (req, res) => {
+  try {
+    const group = await StudentGroup.findById(req.params.id).populate({
+      path: "profileStudents.student",
+      select: "name studentId",
+    });
+
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy nhóm",
+      });
+    }
+
+    const members = group.profileStudents.map((member) => ({
+      name: member.student.name,
+      studentId: member.student.studentId,
+      role: member.role,
+    }));
+
+    res.json({
+      success: true,
+      groupName: group.groupName,
+      groupStatus: group.groupStatus,
+      members: members,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+});
+
 //@route GET api/menbergroup
 //@desc GET studentGroups
 //@access private
@@ -223,6 +258,14 @@ router.post("/join-group/:id", verifyToken, async (req, res) => {
         .json({ success: false, message: "Group not found" });
     }
 
+    // Kiểm tra số lượng thành viên trong nhóm
+    if (group.profileStudents.length >= 2) {
+      return res.status(400).json({
+        success: false,
+        message: "Nhóm đã đủ 2 thành viên, không thể tham gia.",
+      });
+    }
+
     const user = req.userId;
     const studentProfile = await ProfileStudent.findOne({ user });
 
@@ -249,8 +292,9 @@ router.post("/join-group/:id", verifyToken, async (req, res) => {
       });
     }
 
-    // Thêm sinh viên vào nhóm nếu đã xác nhận
-    group.profileStudents.push(studentProfile._id);
+    const role =
+      group.profileStudents.length === 0 ? "Nhóm trưởng" : "Thành viên";
+    group.profileStudents.push({ student: studentProfile._id, role });
 
     // Cập nhật trạng thái nhóm dựa trên số lượng sinh viên
     if (group.profileStudents.length === 1) {
@@ -258,8 +302,7 @@ router.post("/join-group/:id", verifyToken, async (req, res) => {
     } else if (group.profileStudents.length >= 2) {
       group.groupStatus = "2/2";
     }
-
-    // Lưu nhóm
+    // lưu nhóm
     await group.save();
 
     // Cập nhật thông tin nhóm vào profile của sinh viên
@@ -268,7 +311,7 @@ router.post("/join-group/:id", verifyToken, async (req, res) => {
 
     res.json({
       success: true,
-      message: "Bạn tham gia nhóm thành công",
+      message: `Bạn đã tham gia nhóm thành công với vai trò ${role}`,
       group,
       studentProfile,
     });
@@ -292,8 +335,16 @@ router.post("/leave-group", verifyToken, async (req, res) => {
     }
 
     const group = await StudentGroup.findById(studentProfile.studentGroup);
+
+    if (!group) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy nhóm." });
+    }
+
+    // Xóa sinh viên khỏi nhóm
     group.profileStudents = group.profileStudents.filter(
-      (student) => student.toString() !== studentProfile._id.toString()
+      (member) => member.student.toString() !== studentProfile._id.toString()
     );
 
     // Cập nhật trạng thái nhóm
@@ -301,6 +352,8 @@ router.post("/leave-group", verifyToken, async (req, res) => {
       group.groupStatus = "0/2";
     } else if (group.profileStudents.length === 1) {
       group.groupStatus = "1/2";
+      // Nếu chỉ còn một thành viên, đặt người đó làm nhóm trưởng
+      group.profileStudents[0].role = "Nhóm trưởng";
     }
 
     await group.save();
@@ -311,10 +364,10 @@ router.post("/leave-group", verifyToken, async (req, res) => {
 
     res.json({
       success: true,
-      message: "Bạn đã hủy nhóm thành công.",
+      message: "Bạn đã rời nhóm thành công.",
     });
   } catch (error) {
-    console.error(error);
+    console.error("Lỗi khi rời nhóm:", error);
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
 });
@@ -324,15 +377,7 @@ router.post("/leave-group", verifyToken, async (req, res) => {
 //@access private
 router.get("/my-group", verifyToken, async (req, res) => {
   try {
-    const studentProfile = await ProfileStudent.findOne({
-      user: req.userId,
-    }).populate({
-      path: "studentGroup",
-      populate: {
-        path: "profileStudents", // populate thông tin của các sinh viên trong nhóm
-        select: "name studentId", // chọn các trường cần thiết
-      },
-    });
+    const studentProfile = await ProfileStudent.findOne({ user: req.userId });
 
     if (!studentProfile || !studentProfile.studentGroup) {
       return res.json({
@@ -342,11 +387,35 @@ router.get("/my-group", verifyToken, async (req, res) => {
       });
     }
 
-    const group = studentProfile.studentGroup;
+    const group = await StudentGroup.findById(
+      studentProfile.studentGroup
+    ).populate({
+      path: "profileStudents.student",
+      select: "name studentId email phone gender", // Thêm các trường mới
+    });
+
+    if (!group) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Nhóm không tồn tại" });
+    }
+
+    const members = group.profileStudents.map((member) => ({
+      _id: member.student._id, // Thêm _id của sinh viên
+      name: member.student.name,
+      studentId: member.student.studentId,
+      email: member.student.email, // Thêm email
+      phone: member.student.phone, // Thêm số điện thoại
+      gender: member.student.gender, // Thêm giới tính
+      role: member.role,
+    }));
+
     res.json({
       success: true,
+      _id: group._id, // Thêm _id của nhóm
       groupName: group.groupName,
-      members: group.profileStudents,
+      groupStatus: group.groupStatus,
+      members: members,
     });
   } catch (error) {
     console.error(error);
@@ -354,4 +423,133 @@ router.get("/my-group", verifyToken, async (req, res) => {
   }
 });
 
+// @route POST api/studentGroups/change-leader/:groupId/:newLeaderId
+// @desc Thay đổi nhóm trưởng
+// @access private
+router.post(
+  "/change-leader/:groupId/:newLeaderId",
+  verifyToken,
+  async (req, res) => {
+    try {
+      const group = await StudentGroup.findById(req.params.groupId);
+      if (!group) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy nhóm" });
+      }
+
+      const currentUser = await ProfileStudent.findOne({ user: req.userId });
+      if (!currentUser) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy thông tin sinh viên",
+        });
+      }
+
+      // Kiểm tra xem người dùng hiện tại có phải là nhóm trưởng không
+      const currentLeader = group.profileStudents.find(
+        (member) => member.role === "Nhóm trưởng"
+      );
+      if (
+        !currentLeader ||
+        currentLeader.student.toString() !== currentUser._id.toString()
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "Bạn không có quyền thay đổi nhóm trưởng",
+        });
+      }
+
+      // Tìm và cập nhật vai trò của thành viên mới
+      const newLeader = group.profileStudents.find(
+        (member) => member.student.toString() === req.params.newLeaderId
+      );
+      if (!newLeader) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy thành viên mới trong nhóm",
+        });
+      }
+
+      currentLeader.role = "Thành viên";
+      newLeader.role = "Nhóm trưởng";
+
+      await group.save();
+
+      res.json({
+        success: true,
+        message: "Đã thay đổi nhóm trưởng thành công",
+        group,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, message: "Lỗi server" });
+    }
+  }
+);
+
+// @route POST api/studentGroups/change-leader/:groupId/:newLeaderId
+// @desc Thay đổi nhóm trưởng
+// @access private
+router.post(
+  "/change-leader/:groupId/:newLeaderId",
+  verifyToken,
+  async (req, res) => {
+    try {
+      const group = await StudentGroup.findById(req.params.groupId);
+      if (!group) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy nhóm" });
+      }
+
+      const currentUser = await ProfileStudent.findOne({ user: req.userId });
+      if (!currentUser) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy thông tin sinh viên",
+        });
+      }
+
+      // Kiểm tra xem người dùng hiện tại có phải là nhóm trưởng không
+      const currentLeader = group.profileStudents.find(
+        (member) => member.role === "Nhóm trưởng"
+      );
+      if (
+        !currentLeader ||
+        currentLeader.student.toString() !== currentUser._id.toString()
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "Bạn không có quyền thay đổi nhóm trưởng",
+        });
+      }
+
+      // Tìm và cập nhật vai trò của thành viên mới
+      const newLeader = group.profileStudents.find(
+        (member) => member.student.toString() === req.params.newLeaderId
+      );
+      if (!newLeader) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy thành viên mới trong nhóm",
+        });
+      }
+
+      currentLeader.role = "Thành viên";
+      newLeader.role = "Nhóm trưởng";
+
+      await group.save();
+
+      res.json({
+        success: true,
+        message: "Đã thay đổi nhóm trưởng thành công",
+        group,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, message: "Lỗi server" });
+    }
+  }
+);
 module.exports = router;

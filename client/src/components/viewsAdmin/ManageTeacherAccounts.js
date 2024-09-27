@@ -231,7 +231,6 @@ const ManageTeacherAccounts = () => {
             name: newProfile.name,
             phone: newProfile.phone,
             email: newProfile.email,
-            class: newProfile.class,
             major: newProfile.major,
             gender: newProfile.gender,
           },
@@ -366,7 +365,6 @@ const ManageTeacherAccounts = () => {
         name: String(row.name || ""),
         phone: String(row.phone || ""),
         email: String(row.email || ""),
-        class: String(row.class || ""),
         major: String(row.major || ""),
         gender: String(row.gender || ""),
       }));
@@ -592,16 +590,7 @@ const ManageTeacherAccounts = () => {
               setNewProfile({ ...newProfile, email: e.target.value })
             }
           />
-          <TextField
-            margin="dense"
-            label="Lớp"
-            type="text"
-            fullWidth
-            value={newProfile.class}
-            onChange={(e) =>
-              setNewProfile({ ...newProfile, class: e.target.value })
-            }
-          />
+
           <TextField
             margin="dense"
             label="Ngành dạy"

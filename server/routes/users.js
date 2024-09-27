@@ -153,7 +153,6 @@ router.post("/bulk-create-teachers", async (req, res) => {
         name: user.name,
         phone: user.phone,
         email: user.email,
-        class: user.class,
         major: user.major,
         gender: user.gender,
       });
