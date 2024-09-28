@@ -145,7 +145,7 @@ const TeacherInfo = () => {
             <h3>Thông Tin Cá Nhân</h3>
             <p>Mã giảng viên: {userData.teacherId}</p>
             <p>Họ và tên: {userData.name}</p>
-            <p>Số điện thoại: {userData.phone}</p>
+            <p>Số điện thoại: 0{userData.phone}</p>
             <p>Email: {userData.email}</p>
             <p>Chuyên Ngành: {userData.major}</p>
             <p>Giới tính: {userData.gender}</p>

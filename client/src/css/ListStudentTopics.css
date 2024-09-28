@@ -1,0 +1,97 @@
+/* ListStudentTopics.css */
+
+/* Container chính */
+.student-topics-list {
+  font-family: Arial, sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Tiêu đề */
+.student-topics-list h2 {
+  color: #024995;
+  font-weight: bold;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+/* Container cho search */
+.search-container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+/* Input tìm kiếm */
+.search-input {
+  flex: 1;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Bảng */
+.custom-table {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Header bảng */
+.custom-table th {
+  background-color: #007bff;
+  color: white;
+  text-align: center;
+  padding: 12px;
+}
+
+/* Body bảng */
+.custom-table td {
+  padding: 12px;
+  vertical-align: middle;
+  text-align: center;
+}
+
+/* Cột đề tài thu nhỏ */
+.custom-table td:nth-child(2) {
+  width: 45%;
+}
+
+/* Cột giảng viên mở rộng */
+.custom-table td:nth-child(3) {
+  width: 23%;
+}
+
+/* Cột hành động mở rộng */
+.custom-table td:nth-child(5) {
+  width: 10%;
+}
+
+/* Button đăng ký */
+.custom-button {
+  background-color: #28a745;
+  border-color: #28a745;
+  transition: all 0.3s ease;
+}
+
+.custom-button:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+  transform: translateY(-2px);
+}
+
+/* Thiết kế responsive */
+@media (max-width: 768px) {
+  .search-container {
+    flex-direction: column;
+  }
+
+  .custom-table td:nth-child(2),
+  .custom-table td:nth-child(3) {
+    width: auto;
+  }
+}

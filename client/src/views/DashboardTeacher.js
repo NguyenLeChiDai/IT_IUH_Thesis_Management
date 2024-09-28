@@ -23,8 +23,8 @@ import ScoreIcon from "@mui/icons-material/Score";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import TeacherInfo from "../components/teacher/TeacherInfo";
-import UserMenu from "../components/user/UserMenu";
+import TeacherInfo from "../components/viewTeacher/TeacherInfo";
+import UserMenu from "../components/viewStudent/UserMenu";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 
 import "../css/DashboardTeacher.css";

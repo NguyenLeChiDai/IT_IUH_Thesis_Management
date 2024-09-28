@@ -28,7 +28,7 @@ const Auth = ({ authRoute }) => {
     if (user.role === "admin") {
       return <Navigate to="/dashboardAdmin" />;
     } else if (user.role === "Sinh viên") {
-      return <Navigate to="/dashboardUser" />;
+      return <Navigate to="/dashboardStudent" />;
     } else {
       return <Navigate to="/dashboardTeacher" />;
     }

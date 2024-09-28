@@ -20,7 +20,7 @@ import GroupIcon from "@mui/icons-material/Group";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import GradeIcon from "@mui/icons-material/Grade";
 import ScoreIcon from "@mui/icons-material/Score";
-import UserMenu from "../components/user/UserMenu";
+import UserMenu from "../components/viewStudent/UserMenu";
 import "../css/DashboardUser.css";
 import { Outlet, useNavigate } from "react-router-dom";
 import ExpandLess from "@mui/icons-material/ExpandLess"; // Icon thu gọn
@@ -31,7 +31,7 @@ import { faList } from "@fortawesome/free-solid-svg-icons";
 
 const drawerWidth = 240;
 
-const DashboardUser = () => {
+const DashboardStudent = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [openSubMenu, setOpenSubMenu] = useState({}); // State cho submenu
   const isMobile = useMediaQuery("(max-width:600px)"); // Xác định nếu là màn hình nhỏ
@@ -53,7 +53,7 @@ const DashboardUser = () => {
     {
       text: "Trang chủ",
       icon: <HomeIcon />,
-      onClick: () => navigate("/dashboardUser"),
+      onClick: () => navigate("/dashboardStudent"),
     },
     {
       text: "Nhóm sinh viên",
@@ -62,11 +62,21 @@ const DashboardUser = () => {
         {
           text: "Danh sách nhóm sinh viên",
           icon: <FontAwesomeIcon icon={faList} />,
-          onClick: () => navigate("/dashboardUser/list-student-groups"),
+          onClick: () => navigate("/dashboardStudent/list-student-groups"),
         },
       ],
     },
-    { text: "Đề tài", icon: <AssignmentIcon /> },
+    {
+      text: "Đề tài",
+      icon: <AssignmentIcon />,
+      subMenu: [
+        {
+          text: "Danh sách đề tài",
+          icon: <FontAwesomeIcon icon={faList} />,
+          onClick: () => navigate("/dashboardStudent/list-student-topics"),
+        },
+      ],
+    },
     { text: "Tiêu chí Đánh giá của học kỳ", icon: <GradeIcon /> },
     { text: "Bảng điểm của tôi", icon: <ScoreIcon /> },
   ];
@@ -176,4 +186,4 @@ const DashboardUser = () => {
   );
 };
 
-export default DashboardUser;
+export default DashboardStudent;

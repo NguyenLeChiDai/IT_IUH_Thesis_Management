@@ -298,7 +298,7 @@ export const ListStudentGroups = () => {
                   <strong>Email:</strong> {member.email}
                 </p>
                 <p>
-                  <strong>Số điện thoại:</strong> {member.phone}
+                  <strong>Số điện thoại:</strong> 0{member.phone}
                 </p>
                 <p>
                   <strong>Giới tính:</strong> {member.gender}

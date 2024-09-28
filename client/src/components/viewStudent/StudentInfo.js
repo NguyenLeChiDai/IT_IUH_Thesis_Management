@@ -187,7 +187,7 @@ const StudentInfo = () => {
                   <h3>Thông Tin Cá Nhân</h3>
                   <p>Mã sinh viên: {userData.studentId}</p>
                   <p>Họ và tên: {userData.name}</p>
-                  <p>Số điện thoại: {userData.phone}</p>
+                  <p>Số điện thoại: 0{userData.phone}</p>
                   <p>Email: {userData.email}</p>
                   <p>Lớp danh nghĩa: {userData.class}</p>
                   <p>Ngành học: {userData.major}</p>

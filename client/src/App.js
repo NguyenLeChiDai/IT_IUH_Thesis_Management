@@ -5,7 +5,7 @@ import TrangChu from "./screen/TrangChu";
 import Auth from "./views/Auth";
 import AuthContextProvider from "./contexts/AuthContext";
 import DashboardAdmin from "./views/DashboardAdmin";
-import DashboardUser from "./views/DashboardUser";
+import DashboardStudent from "./views/DashboardStudent";
 import ProtectedRoute from "./components/routing/ProtectedRoute";
 import ManageStudentAccounts from "./components/viewsAdmin/ManageStudentAccounts"; // Import AccountManagement
 import DashboardTeacher from "./views/DashboardTeacher";
@@ -13,9 +13,10 @@ import ManageTeacherAccounts from "./components/viewsAdmin/ManageTeacherAccounts
 import PostTheTopic from "./components/viewTeacher/PostTheTopic";
 import { HomeAdmin } from "./components/viewsAdmin/HomeAdmin";
 import ManageStudentGroups from "./components/viewsAdmin/ManageStudentGroups";
-import { ListStudentGroups } from "./components/user/ListStudentGroups";
-import StudentInfo from "./components/user/StudentInfo";
+import { ListStudentGroups } from "./components/viewStudent/ListStudentGroups";
+import StudentInfo from "./components/viewStudent/StudentInfo";
 import { ToastContainer } from "react-toastify";
+import { ListStudentTopics } from "./components/viewStudent/ListStudentTopics";
 
 function App() {
   return (
@@ -46,13 +47,18 @@ function App() {
               {/* Đường dẫn cho "Nhóm sinh viên" */}
             </Route>
 
-            <Route path="/dashboardUser" element={<DashboardUser />}>
+            <Route path="/dashboardStudent" element={<DashboardStudent />}>
               <Route index element={<StudentInfo />} />{" "}
               <Route
                 path="list-student-groups"
                 element={<ListStudentGroups />}
               />{" "}
+              <Route
+                path="list-student-topics"
+                element={<ListStudentTopics />}
+              />{" "}
             </Route>
+
             <Route path="/dashboardTeacher" element={<DashboardTeacher />}>
               <Route path="upload-topic" element={<PostTheTopic />} />
             </Route>

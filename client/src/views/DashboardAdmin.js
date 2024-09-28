@@ -21,7 +21,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SchoolIcon from "@mui/icons-material/School";
 import HomeIcon from "@mui/icons-material/Home";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
-import UserMenu from "../components/user/UserMenu";
+import UserMenu from "../components/viewStudent/UserMenu";
 import { Outlet, useNavigate } from "react-router-dom";
 import { HomeAdmin } from "../components/viewsAdmin/HomeAdmin";
 
