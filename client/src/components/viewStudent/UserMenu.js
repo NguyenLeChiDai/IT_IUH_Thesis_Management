@@ -23,6 +23,10 @@ const UserMenu = () => {
     navigate("/login");
   };
 
+  const handleChangePassword = () => {
+    navigate("/change-password"); // Chuyển hướng đến đúng route đã cấu hình
+  };
+
   return (
     <div className="user-dropdown d-flex align-items-center">
       <img
@@ -48,7 +52,9 @@ const UserMenu = () => {
         </Dropdown.Toggle>
 
         <Dropdown.Menu>
-          <Dropdown.Item href="#">Cập nhật mật khẩu</Dropdown.Item>
+          <Dropdown.Item onClick={handleChangePassword}>
+            Cập nhật mật khẩu
+          </Dropdown.Item>
           <Dropdown.Item onClick={handleLogout}>Đăng xuất</Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>

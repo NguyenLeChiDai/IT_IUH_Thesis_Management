@@ -134,4 +134,59 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
+
+// Đổi mật khẩu bằng userId
+router.post("/change-password/:id", async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+
+  try {
+    // Tìm kiếm user bằng userId từ URL
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Kiểm tra mật khẩu hiện tại
+    try {
+      const isPasswordValid = await argon2.verify(user.password, oldPassword);
+      if (!isPasswordValid) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Current password is incorrect" });
+      }
+
+      // Kiểm tra nếu mật khẩu mới trùng với mật khẩu hiện tại
+      const isNewPasswordSameAsOld = await argon2.verify(
+        user.password,
+        newPassword
+      );
+      if (isNewPasswordSameAsOld) {
+        return res.status(400).json({
+          success: false,
+          message: "New password cannot be the same as the current password",
+        });
+      }
+    } catch (err) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Error verifying password" });
+    }
+
+    // Mã hóa mật khẩu mới
+    const hashedNewPassword = await argon2.hash(newPassword);
+    user.password = hashedNewPassword;
+
+    // Lưu thay đổi
+    await user.save();
+    return res.json({
+      success: true,
+      message: "Password updated successfully",
+    });
+  } catch (error) {
+    console.error("Error during password change:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+});
 module.exports = router;

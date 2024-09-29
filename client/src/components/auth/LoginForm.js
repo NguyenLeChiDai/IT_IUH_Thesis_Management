@@ -5,7 +5,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useContext } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
 import AlertMessage from "../layout/AlertMessage";
-
+import "../../css/LoginForm.css";
+import "font-awesome/css/font-awesome.min.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faRightToBracket } from "@fortawesome/free-solid-svg-icons";
+import { faLock } from "@fortawesome/free-solid-svg-icons";
 function LoginForm() {
   // Context
   const { loginUser } = useContext(AuthContext);
@@ -44,50 +48,62 @@ function LoginForm() {
   };
 
   return (
-    <>
-      <Form onSubmit={login}>
-        <AlertMessage info={alert} />
+    <div className="login-container">
+      <div className="login-form">
+        <Form onSubmit={login}>
+          <AlertMessage info={alert} />
 
-        <Form.Group>
-          <h6 style={{ color: "black", textAlign: "left" }}>Tên đăng nhập</h6>
-          <Form.Control
-            type="text"
-            placeholder="Tên đăng nhập"
-            name="username"
-            required
-            value={username}
-            onChange={onChangeLoginForm}
-          />
-        </Form.Group>
-        <Form.Group>
-          <h6 style={{ color: "black", textAlign: "left" }}>Mật khẩu</h6>
-          <Form.Control
-            type="password"
-            placeholder="Mật khẩu"
-            name="password"
-            required
-            value={password}
-            onChange={onChangeLoginForm}
-          />
-        </Form.Group>
-        <Button style={{ marginTop: "10px" }} variant="success" type="submit">
-          Đăng nhập
-        </Button>
-      </Form>
-      <p>
-        Bạn chưa có tài khoản?
-        <Link to="/register">
-          <Button
-            style={{ marginTop: "12px" }}
-            variant="info"
-            size="sm"
-            className="ml-2"
-          >
-            Đăng ký
+          <Form.Group className="form-group">
+            <h6>
+              <FontAwesomeIcon
+                icon={faRightToBracket}
+                style={{ marginRight: "8px" }} // Tùy chỉnh style nếu cần
+              />
+              Tên đăng nhập
+            </h6>
+            <Form.Control
+              type="text"
+              placeholder="Tên đăng nhập"
+              name="username"
+              required
+              value={username}
+              onChange={onChangeLoginForm}
+            />
+          </Form.Group>
+          <Form.Group className="form-group">
+            <h6>
+              <FontAwesomeIcon
+                icon={faLock}
+                style={{
+                  marginRight: "10px",
+                  fontSize: "1.0rem", // Điều chỉnh kích thước icon tại đây
+                }}
+              />
+              Mật khẩu
+            </h6>
+            <Form.Control
+              type="password"
+              placeholder="Mật khẩu"
+              name="password"
+              required
+              value={password}
+              onChange={onChangeLoginForm}
+            />
+          </Form.Group>
+          <Button className="btn-login" type="submit">
+            Đăng nhập
           </Button>
-        </Link>
-      </p>
-    </>
+        </Form>
+        {/* <p className="register-link">
+          Bạn chưa có tài khoản?
+          <Link to="/register">
+            <Button className="btn-register">
+              Đăng ký
+            </Button>
+          </Link>
+        </p> */}
+      </div>
+    </div>
   );
 }
 

@@ -1,7 +1,8 @@
 import React from "react";
 import "../css/TrangChu.css";
 import { useNavigate } from "react-router-dom";
-
+import logo from "../assets/logo-iuh.jpg";
+import logo2 from "../assets/cntt-iuh.jpg";
 function TrangChu() {
   const navigate = useNavigate();
 
@@ -12,10 +13,7 @@ function TrangChu() {
     <div className="trang-chu">
       <header className="header">
         <div className="logo">
-          <img
-            src="https://iuh.edu.vn/images/logo.png"
-            alt="Logo Trường Đại Học Công Nghiệp TP.HCM"
-          />
+          <img src={logo} alt="Logo Trường Đại Học Công Nghiệp TP.HCM" />
         </div>
         <nav className="navbar">
           <ul>
@@ -41,7 +39,11 @@ function TrangChu() {
 
       <section className="gioi-thieu">
         <div className="gioi-thieu-content">
-          <h2>Giới thiệu</h2>
+          <h2>
+            Giới thiệu Website Quản Lý Khóa Luận Tốt Nghiệp tại Trường Đại học
+            Công Nghiệp TP.HCM
+          </h2>
+
           <p>
             Phần mềm quản lý khóa luận tốt nghiệp khoa Công nghệ Thông tin IUH
             là giải pháp toàn diện giúp các sinh viên và giảng viên quản lý và
@@ -57,7 +59,10 @@ function TrangChu() {
           </ul>
         </div>
         <div className="gioi-thieu-image">
-          <img src="https://path-to-your-image.png" alt="Minh họa" />
+          <img
+            src={logo2}
+            alt="Khoa Công Nghệ Thong Tin Trường Đại Học Công Nghiệp TP.HCM"
+          />
         </div>
       </section>
     </div>

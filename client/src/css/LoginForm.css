@@ -1,0 +1,99 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60vh; /* Thay đổi từ min-height: 100vh thành height: 80vh */
+  width: 100%;
+  max-width: 600px; /* Giới hạn chiều rộng để tránh tràn */
+  border-radius: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  margin: 10vh auto; /* Thêm margin trên và dưới */
+}
+
+.login-form {
+  background: white;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px; /* Đặt giới hạn chiều rộng hợp lý */
+}
+
+.login-form h2 {
+  margin-bottom: 30px;
+  color: #333;
+  text-align: center;
+  font-weight: 700;
+}
+
+.form-group {
+  display: flex;
+
+  margin-bottom: 25px;
+}
+
+.form-group h6 {
+  margin-bottom: 10px;
+  color: #555;
+  font-weight: 600;
+  text-align: left;
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #667eea;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.25);
+}
+
+.btn-login {
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 0 auto; /* Căn giữa nút */
+  display: block; /* Đảm bảo nút là phần tử block */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.register-link {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+  color: #555;
+}
+
+.btn-register {
+  background: transparent;
+  color: #667eea;
+  border: 1px solid #667eea;
+  padding: 8px 15px;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.3s ease, color 0.3s ease;
+  margin-left: 10px;
+}
+
+.btn-register:hover {
+  background: #667eea;
+  color: white;
+}

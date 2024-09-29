@@ -1,6 +1,6 @@
 import React from "react";
 import "../css/Header.css"; // Tạo file CSS để điều chỉnh style của header nếu cần
-import logo from "../assets/iuh-logo.png";
+import logo from "../assets/logo-iuh.jpg";
 
 const Header = () => {
   return (

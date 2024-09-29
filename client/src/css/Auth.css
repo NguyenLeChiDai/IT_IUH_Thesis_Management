@@ -1,14 +1,17 @@
 .auth-page {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 50vh;
+  overflow: hidden; /* Ẩn thanh cuộn chỉ cho phần tử này */
 }
 
 .auth-content {
   flex: 1;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding-bottom: 3vh; /* Giảm padding-bottom từ 3vh xuống 2vh */
+  margin-top: 0; /* Thêm margin-top nếu cần thiết */
 }
 
 .auth-form {
@@ -17,13 +20,37 @@
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   text-align: center;
+  padding-top: 80px; /* Thêm padding phía trên form */
 }
 
-.auth-form h5 {
-  color: brown;
+.auth-form h2 {
+  font-size: 1.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 50px;
+  padding-bottom: 0;
+  position: relative;
+  color: #6b65c6; /* Màu trung bình giữa #667eea và #764ba2 */
+
+  /* Thêm khung xung quanh */
+  border: 2px solid #6b65c6; /* Màu khung */
+  border-radius: 8px; /* Bo góc cho khung */
+  padding: 10px 20px; /* Thêm padding bên trong khung */
+
+  /* Hiệu ứng bóng */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Tạo bóng cho tiêu đề */
+}
+
+/* Thêm hiệu ứng hover */
+.auth-form h2:hover {
+  color: #764ba2; /* Đổi màu khi hover */
+  transition: color 0.3s ease; /* Hiệu ứng chuyển màu mượt mà */
 }
 
 .logo img {
-  height: 60px;
-  mix-blend-mode: multiply;
+  height: 70px;
+  display: block;
+  margin: 0 auto;
+  opacity: 0.8; /* Điều chỉnh độ trong suốt để logo "chìm" vào nền */
 }

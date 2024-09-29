@@ -17,6 +17,7 @@ import { ListStudentGroups } from "./components/viewStudent/ListStudentGroups";
 import StudentInfo from "./components/viewStudent/StudentInfo";
 import { ToastContainer } from "react-toastify";
 import { ListStudentTopics } from "./components/viewStudent/ListStudentTopics";
+import ChangePassword from "./components/password/ChangePassword";
 
 function App() {
   return (
@@ -62,6 +63,7 @@ function App() {
             <Route path="/dashboardTeacher" element={<DashboardTeacher />}>
               <Route path="upload-topic" element={<PostTheTopic />} />
             </Route>
+            <Route path="/change-password" element={<ChangePassword />} />
           </Route>
         </Routes>
         <ToastContainer />

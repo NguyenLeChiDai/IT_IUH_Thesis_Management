@@ -1,9 +1,50 @@
 .footer {
-  background-color: #002d72;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  text-align: center;
-  padding: 10px;
-  position: fixed;
+  padding: 40px 0;
   width: 100%;
-  bottom: 0;
+  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  flex-wrap: wrap;
+  gap: 20px; /* Khoảng cách giữa các phần */
+}
+
+.footer-logo {
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.footer-links {
+  display: flex;
+  gap: 30px; /* Tăng khoảng cách giữa các link */
+}
+
+.footer-links a {
+  color: white;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: opacity 0.4s ease, transform 0.3s ease;
+}
+
+.footer-links a:hover {
+  opacity: 0.7;
+  transform: translateY(-2px); /* Hiệu ứng nổi khi hover */
+}
+
+.footer-bottom {
+  margin-top: 20px;
+  text-align: center; /* Canh giữa văn bản */
+  font-size: 0.9rem;
+  opacity: 0.8;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2); /* Đường kẻ mờ giữa nội dung và footer-bottom */
 }
