@@ -91,22 +91,14 @@ function LoginForm() {
             />
           </Form.Group>
           <Button className="btn-login" type="submit">
-            Đăng nhập
+            Lấy lại mật khẩu
           </Button>
         </Form>
-        {/* <p className="register-link">
-          Bạn chưa có tài khoản?
-          <Link to="/register">
-            <Button className="btn-register">
-              Đăng ký
-            </Button>
-          </Link>
-        </p> */}
 
         <p className="forgotpassword-link">
-          Bạn quên mật khẩu?
+          Bạn đã có tài khoản?
           <Link to="/forgotpassword">
-            <Button className="btn-register">Lấy lại mật khẩu</Button>
+            <Button className="btn-register">Đăng nhập</Button>
           </Link>
         </p>
       </div>

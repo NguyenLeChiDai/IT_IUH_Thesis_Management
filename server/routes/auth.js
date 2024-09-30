@@ -131,7 +131,7 @@ router.post("/login", async (req, res) => {
     res.json({ success: true, message: "Đăng nhập thành công", accessToken });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ success: false, message: "Lỗi server" });
   }
 });
 
@@ -145,16 +145,17 @@ router.post("/change-password/:id", async (req, res) => {
     if (!user) {
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: "Không tìm thấy người dùng" });
     }
 
     // Kiểm tra mật khẩu hiện tại
     try {
       const isPasswordValid = await argon2.verify(user.password, oldPassword);
       if (!isPasswordValid) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Current password is incorrect" });
+        return res.status(400).json({
+          success: false,
+          message: "Mật khẩu hiện tại không chính xác",
+        });
       }
 
       // Kiểm tra nếu mật khẩu mới trùng với mật khẩu hiện tại
@@ -165,13 +166,13 @@ router.post("/change-password/:id", async (req, res) => {
       if (isNewPasswordSameAsOld) {
         return res.status(400).json({
           success: false,
-          message: "New password cannot be the same as the current password",
+          message: "Mật khẩu mới không thể giống với mật khẩu hiện tại",
         });
       }
     } catch (err) {
       return res
         .status(500)
-        .json({ success: false, message: "Error verifying password" });
+        .json({ success: false, message: "Lỗi xác minh mật khẩu" });
     }
 
     // Mã hóa mật khẩu mới
@@ -182,11 +183,11 @@ router.post("/change-password/:id", async (req, res) => {
     await user.save();
     return res.json({
       success: true,
-      message: "Password updated successfully",
+      message: "Mật khẩu mới đã được cập nhật thành công",
     });
   } catch (error) {
-    console.error("Error during password change:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    console.error("Lỗi khi đổi mật khẩu:", error);
+    res.status(500).json({ success: false, message: "Lỗi server" });
   }
 });
 module.exports = router;

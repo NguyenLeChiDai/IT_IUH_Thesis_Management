@@ -1,52 +1,85 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import "../../css/ChangePassword.css";
-import "font-awesome/css/font-awesome.min.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLock, faKey } from "@fortawesome/free-solid-svg-icons";
-import axios from "axios"; // Thêm axios để gửi request
+import {
+  faLock,
+  faKey,
+  faEye,
+  faEyeSlash,
+  faArrowLeft,
+} from "@fortawesome/free-solid-svg-icons";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../contexts/AuthContext"; // Đảm bảo đường dẫn này chính xác
+import Swal from "sweetalert2";
 
 const ChangePassword = () => {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
+
+  // Sử dụng AuthContext để lấy thông tin người dùng và token
+  const { authState } = useContext(AuthContext);
+
+  const togglePasswordVisibility = (field) => {
+    switch (field) {
+      case "old":
+        setShowOldPassword(!showOldPassword);
+        break;
+      case "new":
+        setShowNewPassword(!showNewPassword);
+        break;
+      case "confirm":
+        setShowConfirmPassword(!showConfirmPassword);
+        break;
+      default:
+        break;
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setMessage("");
 
-    const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("userId"); // Lấy ID từ localStorage
-
-    if (!userId || !token) {
-      setMessage(
-        "Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại."
-      );
+    if (newPassword !== confirmPassword) {
+      setMessage("Mật khẩu mới và xác nhận mật khẩu không khớp.");
       setIsLoading(false);
-      setTimeout(() => navigate("/login"), 300000);
+      return;
+    }
+
+    if (!authState.isAuthenticated || !authState.user) {
+      setMessage("Bạn chưa đăng nhập. Vui lòng đăng nhập lại.");
+      setIsLoading(false);
+      setTimeout(() => navigate("/login"), 3000);
       return;
     }
 
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/auth/change-password/${userId}`,
+        `http://localhost:5000/api/auth/change-password/${authState.user._id}`,
         {
           oldPassword,
           newPassword,
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
         }
       );
 
       setMessage(response.data.message);
+      Swal.fire("Thành công", `Bạn đã đổi mật khẩu thành công!`, "success");
       setOldPassword("");
       setNewPassword("");
+      setConfirmPassword("");
     } catch (error) {
       if (error.response) {
         setMessage(error.response.data.message);
@@ -58,67 +91,98 @@ const ChangePassword = () => {
     }
   };
 
+  const handleExit = () => {
+    // Điều hướng về trang trước đó
+    navigate(-1);
+    // Hoặc nếu bạn muốn điều hướng đến một trang cụ thể, ví dụ trang chủ:
+    // navigate('/');
+  };
   return (
     <div className="change-password-page">
       <div className="form-container">
-        <h1
-          style={{
-            display: "flex",
-            alignItems: "center",
-            fontSize: "2rem",
-            color: "#333",
-          }}
-        >
-          <FontAwesomeIcon
-            icon={faLock}
-            style={{
-              marginRight: "10px",
-              fontSize: "1.5rem",
-              color: "#4CAF50",
-              transition: "color 0.3s ease",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#45a049")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#4CAF50")}
-          />
-          <span
-            style={{
-              transition: "color 0.3s ease",
-              fontWeight: "bold",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#45a049")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#333")}
-          >
-            Đổi mật khẩu
-          </span>
+        <h1>
+          <FontAwesomeIcon icon={faLock} />
+          <span>Đổi mật khẩu</span>
         </h1>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>
-              <FontAwesomeIcon icon={faKey} style={{ marginRight: "8px" }} />
+              <FontAwesomeIcon icon={faKey} />
               Mật khẩu hiện tại:
             </label>
-            <input
-              type="password"
-              value={oldPassword}
-              onChange={(e) => setOldPassword(e.target.value)}
-              required
-            />
+            <div className="password-input">
+              <input
+                type={showOldPassword ? "text" : "password"}
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                required
+              />
+              <FontAwesomeIcon
+                icon={showOldPassword ? faEyeSlash : faEye}
+                onClick={() => togglePasswordVisibility("old")}
+                className="password-toggle"
+              />
+            </div>
           </div>
           <div className="form-group">
             <label>
-              <FontAwesomeIcon icon={faKey} style={{ marginRight: "8px" }} />
+              <FontAwesomeIcon icon={faKey} />
               Mật khẩu mới:
             </label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-            />
+            <div className="password-input">
+              <input
+                type={showNewPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+              />
+              <FontAwesomeIcon
+                icon={showNewPassword ? faEyeSlash : faEye}
+                onClick={() => togglePasswordVisibility("new")}
+                className="password-toggle"
+              />
+            </div>
           </div>
-          <button type="submit">Xác nhận</button>
+          <div className="form-group">
+            <label>
+              <FontAwesomeIcon icon={faKey} />
+              Xác nhận mật khẩu mới:
+            </label>
+            <div className="password-input">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+              <FontAwesomeIcon
+                icon={showConfirmPassword ? faEyeSlash : faEye}
+                onClick={() => togglePasswordVisibility("confirm")}
+                className="password-toggle"
+              />
+            </div>
+          </div>
+          {/* Nút quay lại và xác nhận */}
+          <div className="button-group">
+            <button type="submit" disabled={isLoading}>
+              {isLoading ? "Đang xử lý..." : "Xác nhận"}
+            </button>
+            <button type="button" onClick={handleExit} className="exit-button">
+              <FontAwesomeIcon icon={faArrowLeft} /> Quay lại
+            </button>
+          </div>
         </form>
-        {message && <p>{message}</p>} {/* Hiển thị thông báo phản hồi */}
+        {message && (
+          <p
+            className={
+              message.includes("thành công")
+                ? "success-message"
+                : "error-message"
+            }
+          >
+            {message}
+          </p>
+        )}
       </div>
     </div>
   );
