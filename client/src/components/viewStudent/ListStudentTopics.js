@@ -1,38 +1,155 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Table, Form, Button } from "react-bootstrap";
 import { Search } from "lucide-react";
-import { InputAdornment, TextField } from "@mui/material";
-import "../../css/ListStudentTopics.css"; // Import file CSS
+import { InputAdornment, TextField, TablePagination } from "@mui/material";
+import axios from "axios";
+import Swal from "sweetalert2";
+import "../../css/ListStudentTopics.css";
 
 export const ListStudentTopics = () => {
-  const [topics, setTopics] = useState([
-    {
-      id: 1,
-      name: "Phát triển ứng dụng web với React cho sinh viên có thể đăng ký mọi lúc mọi nơi trên thế giới trên vũ trụ androi , ios",
-      lecturer: "Đặng Thị Thu Hà",
-      registeredGroups: 2,
-    },
-    {
-      id: 2,
-      name: "Xây dựng hệ thống IoT",
-      lecturer: "Trần Thị B",
-      registeredGroups: 1,
-    },
-    {
-      id: 3,
-      name: "Nghiên cứu về Machine Learning",
-      lecturer: "Lê Văn C",
-      registeredGroups: 0,
-    },
-  ]);
-
+  const [topics, setTopics] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [groupId, setGroupId] = useState(null);
+
+  useEffect(() => {
+    const fetchTopics = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/topics/get-all-topics",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        setTopics(response.data.topics);
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to fetch topics. Please try again later.");
+        setLoading(false);
+      }
+    };
+
+    fetchTopics();
+  }, []);
+
+  //kiểm tra sinh viên đã có trong group chưa
+  useEffect(() => {
+    const fetchGroupId = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/studentGroups/get-group-id",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        if (response.data.success) {
+          setGroupId(response.data.groupId);
+        } else {
+          setError(response.data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching group ID:", error);
+        if (error.response && error.response.status === 404) {
+          setError(
+            "Bạn chưa có nhóm. Vui lòng tạo nhóm trước khi đăng ký đề tài."
+          );
+        } else {
+          setError("Lỗi khi lấy thông tin nhóm. Vui lòng thử lại sau.");
+        }
+      }
+    };
+
+    fetchGroupId();
+  }, []);
 
   const filteredTopics = topics.filter(
     (topic) =>
-      topic.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      topic.lecturer.toLowerCase().includes(searchTerm.toLowerCase())
+      topic.nameTopic.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (topic.teacher &&
+        topic.teacher.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleRegister = async (topicId, topicName) => {
+    if (!groupId) {
+      Swal.fire("Lỗi", "Không tìm thấy thông tin nhóm của bạn", "error");
+      return;
+    }
+
+    try {
+      // Confirmation dialog
+      const result = await Swal.fire({
+        title: "Xác nhận đăng ký",
+        text: `Bạn có chắc chắn muốn đăng ký đề tài "${topicName}"?`,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Đồng ý",
+        cancelButtonText: "Hủy",
+      });
+
+      if (result.isConfirmed) {
+        const response = await axios.post(
+          "http://localhost:5000/api/topics/register-topic",
+          {
+            groupId: groupId,
+            topicId: topicId,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          // Success notification
+          Swal.fire(
+            "Đăng ký thành công!",
+            "Bạn đã đăng ký đề tài thành công.",
+            "success"
+          );
+
+          // Refresh topics list
+          const updatedTopics = await axios.get(
+            "http://localhost:5000/api/topics/get-all-topics",
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+          setTopics(updatedTopics.data.topics);
+        }
+      }
+    } catch (error) {
+      // Error notification
+      Swal.fire(
+        "Đăng ký thất bại",
+        `Lỗi: ${error.response?.data?.message || "Đã có lỗi xảy ra"}`,
+        "error"
+      );
+    }
+  };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
     <div className="student-topics-list">
@@ -46,7 +163,7 @@ export const ListStudentTopics = () => {
             fullWidth
             margin="normal"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => setSearchTerm(e.target.animationName)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -65,26 +182,48 @@ export const ListStudentTopics = () => {
             <th>STT</th>
             <th>Tên đề tài</th>
             <th>Giảng viên HD</th>
-            <th>SL nhóm đã đăng ký</th>
+            <th>SL nhóm đã DK</th>
             <th>Hành động</th>
           </tr>
         </thead>
         <tbody>
-          {filteredTopics.map((topic, index) => (
-            <tr key={topic.id}>
-              <td>{index + 1}</td>
-              <td>{topic.name}</td>
-              <td>{topic.lecturer}</td>
-              <td>{topic.registeredGroups}</td>
-              <td>
-                <Button variant="primary" size="sm" className="custom-button">
-                  Đăng ký
-                </Button>
-              </td>
-            </tr>
-          ))}
+          {filteredTopics
+            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+            .map((topic, index) => (
+              <tr key={topic._id}>
+                <td>{index + 1 + page * rowsPerPage}</td>
+                <td>{topic.nameTopic}</td>
+                <td>{topic.teacher ? topic.teacher.name : "N/A"}</td>
+                <td>{topic.registeredGroupsCount || 0}</td>
+                {/* Thêm kiểm tra xem sinh viên đã có nhóm chưa trước khi hiển thị nút "Đăng ký" */}
+                <td>
+                  {groupId ? (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="custom-button"
+                      onClick={() => handleRegister(topic._id, topic.nameTopic)}
+                    >
+                      Đăng ký
+                    </Button>
+                  ) : (
+                    <span>Bạn chưa có nhóm</span>
+                  )}
+                </td>
+              </tr>
+            ))}
         </tbody>
       </Table>
+
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 25]}
+        component="div"
+        count={filteredTopics.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
     </div>
   );
 };

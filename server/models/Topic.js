@@ -24,6 +24,20 @@ const TopicSchema = new Schema({
     ref: "profileTeacher", // Đảm bảo đây là tên mô hình chính xác
     required: true, // Bắt buộc có liên kết với người dùng
   },
+
+  Groups: [
+    {
+      group: {
+        type: Schema.Types.ObjectId,
+        ref: "studentgroups", // Liên kết với đề tài
+        required: false,
+      },
+      registrationDate: {
+        type: Date,
+        default: Date.now, // Ngày đăng ký đề tài
+      },
+    },
+  ],
 });
 
 module.exports = mongoose.model("topics", TopicSchema);

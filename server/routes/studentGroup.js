@@ -487,4 +487,32 @@ router.post(
     }
   }
 );
+
+router.get("/get-group-id", verifyToken, async (req, res) => {
+  try {
+    const studentProfile = await ProfileStudent.findOne({ user: req.userId });
+    if (!studentProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy thông tin sinh viên",
+      });
+    }
+
+    const group = await StudentGroup.findOne({
+      "profileStudents.student": studentProfile._id,
+    });
+    if (!group) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Sinh viên chưa có nhóm" });
+    }
+
+    res.json({ success: true, groupId: group._id });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi Server", error: error.message });
+  }
+});
 module.exports = router;

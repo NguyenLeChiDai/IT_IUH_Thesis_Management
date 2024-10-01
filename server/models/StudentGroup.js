@@ -29,20 +29,6 @@ const StudentGroupSchema = new Schema({
       },
     },
   ],
-
-  topics: [
-    {
-      topic: {
-        type: Schema.Types.ObjectId,
-        ref: "topics", // Liên kết với đề tài
-        required: false,
-      },
-      registrationDate: {
-        type: Date,
-        default: Date.now, // Ngày đăng ký đề tài
-      },
-    },
-  ],
 });
 
 module.exports = mongoose.model("studentgroups", StudentGroupSchema);
