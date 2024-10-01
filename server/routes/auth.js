@@ -190,4 +190,86 @@ router.post("/change-password/:id", async (req, res) => {
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
 });
+
+// Endpoint để kiểm tra thông tin người dùng cho quên mật khẩu
+router.post("/check-user-for-reset", async (req, res) => {
+  const { id, phone } = req.body;
+
+  console.log("Received request:", { id, phone }); // Log để kiểm tra dữ liệu đầu vào
+
+  if (!id || !phone) {
+    return res.status(400).json({
+      success: false,
+      message: "Vui lòng cung cấp đầy đủ thông tin",
+    });
+  }
+
+  try {
+    let user;
+
+    // Kiểm tra ID trong bảng sinh viên
+    user = await Profile.findOne({ studentId: id, phone });
+    console.log("Student search result:", user);
+
+    // Nếu không tìm thấy, kiểm tra ID trong bảng giảng viên
+    if (!user) {
+      user = await ProfileTeacher.findOne({ teacherId: id, phone });
+      console.log("Teacher search result:", user);
+    }
+
+    // Nếu vẫn không tìm thấy, trả về lỗi
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Không tìm thấy thông tin người dùng",
+      });
+    }
+
+    // Populate thông tin user
+    await user.populate("user");
+
+    // Kiểm tra tham chiếu người dùng
+    if (!user.user) {
+      return res.status(400).json({
+        success: false,
+        message: "Lỗi dữ liệu: Không tìm thấy tham chiếu người dùng",
+      });
+    }
+
+    // Trả về thông tin cần thiết
+    res.json({
+      success: true,
+      message: "Thông tin người dùng hợp lệ",
+      userId: user.user._id,
+      phone: user.phone, // Trả về số điện thoại để sử dụng cho OTP
+    });
+  } catch (error) {
+    console.error("Error in check-user-for-reset route:", error);
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+});
+
+// Endpoint để đặt lại mật khẩu
+router.post("/reset-password", async (req, res) => {
+  const { userId, newPassword } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Không tìm thấy người dùng" });
+    }
+
+    const hashedPassword = await argon2.hash(newPassword);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({ success: true, message: "Mật khẩu đã được đặt lại thành công" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+});
+
 module.exports = router;

@@ -105,7 +105,7 @@ function LoginForm() {
 
         <p className="forgotpassword-link">
           Bạn quên mật khẩu?
-          <Link to="/forgotpassword">
+          <Link to="/forgot-password">
             <Button className="btn-register">Lấy lại mật khẩu</Button>
           </Link>
         </p>

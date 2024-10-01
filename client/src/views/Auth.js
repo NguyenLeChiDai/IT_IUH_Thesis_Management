@@ -10,6 +10,7 @@ import { useContext } from "react";
 import Spinner from "react-bootstrap/Spinner";
 import { Navigate } from "react-router-dom"; // Không cần import 'redirect' nữa
 import logo from "../assets/logo-iuh.jpg";
+import ForgotPassword from "../components/password/ForgotPassword";
 const Auth = ({ authRoute }) => {
   const {
     authState: { authLoading, isAuthenticated, user },
@@ -37,6 +38,7 @@ const Auth = ({ authRoute }) => {
       <>
         {authRoute === "login" && <LoginForm />}
         {authRoute === "register" && <RegisterForm />}
+        {authRoute === "forgot-password" && <ForgotPassword />}
       </>
     );
 

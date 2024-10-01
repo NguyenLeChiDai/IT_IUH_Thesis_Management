@@ -90,7 +90,6 @@ const ChangePassword = () => {
       setIsLoading(false);
     }
   };
-
   const handleExit = () => {
     // Điều hướng về trang trước đó
     navigate(-1);

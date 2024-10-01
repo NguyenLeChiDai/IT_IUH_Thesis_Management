@@ -31,6 +31,28 @@ router.get("/get-topic", verifyToken, async (req, res) => {
     });
   }
 });
+
+// Route để lấy tất cả đề tài cho sinh viên nằm ở đây
+router.get("/get-all-topics", verifyToken, async (req, res) => {
+  try {
+    // Lấy tất cả các đề tài và populate thông tin giảng viên
+    const topics = await Topic.find()
+      .populate("teacher", "name email")
+      .sort({ createdAt: -1 }); // Sắp xếp theo thời gian tạo mới nhất
+
+    res.json({
+      success: true,
+      topics: topics,
+    });
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách đề tài:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy danh sách đề tài",
+      error: error.message,
+    });
+  }
+});
 // Route để đăng tải đề tài
 router.post("/post", verifyToken, async (req, res) => {
   const { topicId, nameTopic, descriptionTopic } = req.body;
@@ -324,5 +346,72 @@ router.post(
     }
   }
 );
+
+// Đăng ký đề tài nó nằm ở đây nha
+router.post("/register-topic", verifyToken, async (req, res) => {
+  const { groupId, topicId } = req.body;
+
+  try {
+    // Tìm nhóm và đề tài theo ID
+    const group = await StudentGroup.findById(groupId);
+    const topic = await Topic.findById(topicId);
+
+    // Kiểm tra sự tồn tại của nhóm và đề tài
+    if (!group || !topic) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Nhóm hoặc đề tài không tồn tại" });
+    }
+
+    // Kiểm tra xem nhóm có đủ 2 thành viên chưa
+    if (group.profileStudents.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: "Nhóm phải có đủ 2 thành viên mới được đăng ký đề tài",
+      });
+    }
+
+    // Tìm thông tin của sinh viên dựa trên userId từ token
+    const studentProfile = await ProfileStudent.findOne({ user: req.userId });
+    if (!studentProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy thông tin sinh viên",
+      });
+    }
+
+    // Kiểm tra xem người dùng hiện tại có phải là nhóm trưởng không
+    const studentInGroup = group.profileStudents.find(
+      (s) => s.student.toString() === studentProfile._id.toString()
+    );
+    if (!studentInGroup || studentInGroup.role !== "Nhóm trưởng") {
+      return res.status(403).json({
+        success: false,
+        message: "Chỉ nhóm trưởng mới được phép đăng ký đề tài",
+      });
+    }
+
+    // Kiểm tra xem đề tài đã được đăng ký bởi nhóm này chưa
+    const alreadyRegistered = group.topics.some(
+      (t) => t.topic.toString() === topicId
+    );
+    if (alreadyRegistered) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Đề tài đã được đăng ký" });
+    }
+
+    // Thêm đề tài vào nhóm
+    group.topics.push({ topic: topic._id });
+    await group.save();
+
+    res.json({ success: true, message: "Đăng ký đề tài thành công", group });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi Server", error: error.message });
+  }
+});
 
 module.exports = router;

@@ -34,6 +34,14 @@ app.use(
   })
 );
 
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "frame-ancestors 'self' https://www.google.com https://*.google.com https://*.firebaseapp.com https://*.gstatic.com"
+  );
+  next();
+});
+
 app.use("/api/auth", authRouter);
 app.use("/api/studentgroups", StudentGroupRouter);
 app.use("/api/student", profileStudent);

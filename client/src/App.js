@@ -18,7 +18,6 @@ import StudentInfo from "./components/viewStudent/StudentInfo";
 import { ToastContainer } from "react-toastify";
 import { ListStudentTopics } from "./components/viewStudent/ListStudentTopics";
 import ChangePassword from "./components/password/ChangePassword";
-
 function App() {
   return (
     <AuthContextProvider>
@@ -26,8 +25,13 @@ function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Auth authRoute="login" />} />
+          <Route
+            path="/forgot-password"
+            element={<Auth authRoute={"forgot-password"} />}
+          />
           <Route path="/register" element={<Auth authRoute="register" />} />
           <Route path="/trangchu" element={<TrangChu />} />
+
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboardAdmin" element={<DashboardAdmin />}>
               <Route index element={<HomeAdmin />} />
