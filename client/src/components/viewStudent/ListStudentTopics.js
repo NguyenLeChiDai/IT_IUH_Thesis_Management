@@ -37,7 +37,6 @@ export const ListStudentTopics = () => {
     fetchTopics();
   }, []);
 
-  //kiểm tra sinh viên đã có trong group chưa
   useEffect(() => {
     const fetchGroupId = async () => {
       try {
@@ -51,18 +50,10 @@ export const ListStudentTopics = () => {
         );
         if (response.data.success) {
           setGroupId(response.data.groupId);
-        } else {
-          setError(response.data.message);
         }
       } catch (error) {
         console.error("Error fetching group ID:", error);
-        if (error.response && error.response.status === 404) {
-          setError(
-            "Bạn chưa có nhóm. Vui lòng tạo nhóm trước khi đăng ký đề tài."
-          );
-        } else {
-          setError("Lỗi khi lấy thông tin nhóm. Vui lòng thử lại sau.");
-        }
+        // We don't set an error state here to allow viewing topics without a group
       }
     };
 
@@ -87,12 +78,15 @@ export const ListStudentTopics = () => {
 
   const handleRegister = async (topicId, topicName) => {
     if (!groupId) {
-      Swal.fire("Lỗi", "Không tìm thấy thông tin nhóm của bạn", "error");
+      Swal.fire(
+        "Không thể đăng ký",
+        "Bạn cần tham gia nhóm trước khi đăng ký đề tài.",
+        "warning"
+      );
       return;
     }
 
     try {
-      // Confirmation dialog
       const result = await Swal.fire({
         title: "Xác nhận đăng ký",
         text: `Bạn có chắc chắn muốn đăng ký đề tài "${topicName}"?`,
@@ -119,14 +113,12 @@ export const ListStudentTopics = () => {
         );
 
         if (response.data.success) {
-          // Success notification
           Swal.fire(
             "Đăng ký thành công!",
             "Bạn đã đăng ký đề tài thành công.",
             "success"
           );
 
-          // Refresh topics list
           const updatedTopics = await axios.get(
             "http://localhost:5000/api/topics/get-all-topics",
             {
@@ -139,7 +131,6 @@ export const ListStudentTopics = () => {
         }
       }
     } catch (error) {
-      // Error notification
       Swal.fire(
         "Đăng ký thất bại",
         `Lỗi: ${error.response?.data?.message || "Đã có lỗi xảy ra"}`,
@@ -163,7 +154,7 @@ export const ListStudentTopics = () => {
             fullWidth
             margin="normal"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.animationName)}
+            onChange={(e) => setSearchTerm(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -195,20 +186,15 @@ export const ListStudentTopics = () => {
                 <td>{topic.nameTopic}</td>
                 <td>{topic.teacher ? topic.teacher.name : "N/A"}</td>
                 <td>{topic.registeredGroupsCount || 0}</td>
-                {/* Thêm kiểm tra xem sinh viên đã có nhóm chưa trước khi hiển thị nút "Đăng ký" */}
                 <td>
-                  {groupId ? (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="custom-button"
-                      onClick={() => handleRegister(topic._id, topic.nameTopic)}
-                    >
-                      Đăng ký
-                    </Button>
-                  ) : (
-                    <span>Bạn chưa có nhóm</span>
-                  )}
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="custom-button"
+                    onClick={() => handleRegister(topic._id, topic.nameTopic)}
+                  >
+                    Đăng ký
+                  </Button>
                 </td>
               </tr>
             ))}

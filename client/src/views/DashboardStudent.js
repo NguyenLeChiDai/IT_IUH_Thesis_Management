@@ -74,6 +74,11 @@ const DashboardStudent = () => {
           icon: <FontAwesomeIcon icon={faList} />,
           onClick: () => navigate("/dashboardStudent/list-student-topics"),
         },
+        {
+          text: "Đề Tài Của Tôi",
+          icon: <GroupIcon />,
+          onClick: () => navigate("/dashboardStudent/TopicStudent"),
+        },
       ],
     },
     { text: "Tiêu chí Đánh giá của học kỳ", icon: <GradeIcon /> },

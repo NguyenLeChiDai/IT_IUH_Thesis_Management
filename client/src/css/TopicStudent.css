@@ -1,0 +1,152 @@
+.topic-student {
+  max-width: 1000px; /* Đặt chiều rộng tối đa cho phần chứa */
+  margin: 0 auto; /* Căn giữa phần chứa */
+  padding: 20px; /* Thêm khoảng cách bên trong */
+  background-color: #f9f9f9; /* Màu nền nhẹ */
+  border-radius: 8px; /* Bo góc */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Đổ bóng nhẹ */
+}
+
+.topic-form {
+  border: 1px solid #ccc; /* Đường viền cho form */
+  border-radius: 8px; /* Bo góc cho form */
+  padding: 20px; /* Thêm khoảng cách bên trong form */
+}
+
+.topic-item {
+  margin-bottom: 15px; /* Khoảng cách giữa các đề tài */
+  padding: 10px; /* Khoảng cách bên trong mỗi đề tài */
+  border: 1px solid #eaeaea; /* Đường viền cho mỗi đề tài */
+  border-radius: 5px; /* Bo góc cho mỗi đề tài */
+  background-color: #fff; /* Màu nền trắng */
+  transition: max-height 0.3s ease; /* Hiệu ứng chuyển động cho độ cao */
+  overflow: hidden; /* Ẩn phần nội dung tràn ra ngoài */
+}
+
+.topic-item h3 {
+  margin: 0 0 5px; /* Khoảng cách cho tiêu đề đề tài */
+  color: #1976d2; /* Màu chữ */
+  cursor: pointer; /* Con trỏ khi di chuột qua tiêu đề */
+}
+
+.topic-item p {
+  margin: 5px 0; /* Khoảng cách cho các đoạn văn bản */
+  color: #555; /* Màu chữ */
+}
+
+.topic-description {
+  max-height: 200px; /* Chiều cao tối đa cho mô tả */
+  margin-top: 10px; /* Khoảng cách giữa tiêu đề và mô tả */
+  padding: 10px; /* Khoảng cách bên trong mô tả */
+  border: 1px solid #eaeaea; /* Đường viền cho mô tả */
+  border-radius: 5px; /* Bo góc cho mô tả */
+  background-color: #f1f1f1; /* Màu nền cho mô tả */
+  transition: max-height 0.3s ease, opacity 0.3s ease; /* Hiệu ứng chuyển động */
+  opacity: 1; /* Độ mờ ban đầu */
+}
+
+.topic-list ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.topic-item {
+  border: 1px solid #ddd;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.topic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.topic-header h3 {
+  margin: 0;
+}
+
+.toggle-icon {
+  font-size: 18px;
+}
+
+.topic-info {
+  margin-top: 10px;
+}
+
+/* .topic-description {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+} */
+
+.topic-description h4 {
+  margin-top: 0;
+}
+
+.leave-topic-button {
+  margin-top: 10px; /* Khoảng cách giữa mô tả và nút */
+  padding: 10px 15px; /* Khoảng cách bên trong nút */
+  background-color: #ff4d4d; /* Màu nền nút */
+  color: white; /* Màu chữ */
+  border: none; /* Không có đường viền */
+  border-radius: 5px; /* Bo góc cho nút */
+  cursor: pointer; /* Hiệu ứng con trỏ khi hover */
+  transition: background-color 0.3s ease; /* Hiệu ứng chuyển màu */
+  margin-left: 1px;
+}
+
+.leave-topic-button:hover {
+  background-color: #ff1a1a; /* Màu nền khi hover */
+}
+
+.project-title {
+  font-size: 24px; /* Kích thước chữ */
+  font-weight: bold; /* Độ đậm của chữ */
+  color: #2c3e50; /* Màu chữ */
+
+  padding-bottom: 10px; /* Khoảng cách giữa chữ và đường viền */
+  margin-bottom: 20px; /* Khoảng cách phía dưới */
+  text-align: left; /* Canh trái */
+  text-transform: uppercase; /* Chữ in hoa */
+}
+
+.error-container {
+  background-color: #f8d7da; /* Màu nền đỏ nhạt */
+  border: 1px solid #f5c6cb; /* Đường viền màu đỏ nhẹ */
+  color: #721c24; /* Màu chữ đỏ đậm */
+  padding: 16px;
+  border-radius: 8px; /* Bo tròn các góc */
+  margin: 20px 0;
+  font-family: "Arial", sans-serif; /* Font chữ dễ đọc */
+  display: flex;
+  align-items: center; /* Canh giữa theo chiều dọc */
+  justify-content: space-between; /* Chia khoảng cách giữa các thành phần */
+  position: relative; /* Thiết lập để chứa vị trí tuyệt đối */
+}
+
+.error-message {
+  font-size: 16px; /* Kích thước chữ */
+  font-weight: 700; /* Đậm chữ */
+  flex: 1; /* Đẩy nội dung sang trái để tạo khoảng trống cho nút X */
+}
+
+.close-icon {
+  font-size: 24px;
+  color: #721c24;
+  cursor: pointer;
+  position: absolute; /* Vị trí tuyệt đối để di chuyển đến góc phải */
+  top: 8px; /* Điều chỉnh khoảng cách từ trên xuống */
+  right: 8px; /* Điều chỉnh khoảng cách từ bên phải vào */
+}
+
+.toggle-icon {
+  font-size: 16px; /* Kích thước chữ */
+  font-weight: bold; /* Đậm chữ */
+  color: #007bff; /* Màu sắc */
+  cursor: pointer; /* Con trỏ tay khi di chuột qua */
+  transition: color 0.3s; /* Hiệu ứng chuyển màu */
+}

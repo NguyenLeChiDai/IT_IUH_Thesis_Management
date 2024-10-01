@@ -18,6 +18,8 @@ import StudentInfo from "./components/viewStudent/StudentInfo";
 import { ToastContainer } from "react-toastify";
 import { ListStudentTopics } from "./components/viewStudent/ListStudentTopics";
 import ChangePassword from "./components/password/ChangePassword";
+import TopicStudent from "./components/viewStudent/TopicStudent";
+
 function App() {
   return (
     <AuthContextProvider>
@@ -62,6 +64,7 @@ function App() {
                 path="list-student-topics"
                 element={<ListStudentTopics />}
               />{" "}
+              <Route path="TopicStudent" element={<TopicStudent />} />{" "}
             </Route>
 
             <Route path="/dashboardTeacher" element={<DashboardTeacher />}>

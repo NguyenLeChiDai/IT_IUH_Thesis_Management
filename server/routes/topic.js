@@ -13,31 +13,69 @@ const xlsx = require("xlsx");
 const path = require("path");
 const fs = require("fs");
 
-// @route GET api/studentGroups/:groupId/topics
-// @desc Lấy danh sách đề tài đã đăng ký của nhóm
+//Get topicGroup
 router.get("/:groupId/topics", verifyToken, async (req, res) => {
   try {
     const { groupId } = req.params;
 
-    if (!groupId || groupId === "undefined") {
+    if (!groupId) {
       return res
         .status(400)
         .json({ success: false, message: "ID nhóm không hợp lệ" });
     }
 
-    // Tìm các đề tài có liên kết với groupId
-    const topics = await Topic.find({ "Groups.group": groupId }).populate(
-      "teacher",
-      "name"
-    );
+    const group = await StudentGroup.findById(groupId);
+    if (!group) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Nhóm không tồn tại" });
+    }
 
-    if (!topics || topics.length === 0) {
+    const registeredTopics = await Topic.find({
+      "Groups.group": groupId,
+    })
+      .populate({
+        path: "teacher",
+        select: "name email",
+        model: "profileTeacher",
+      })
+      .populate({
+        path: "user",
+        select: "username email",
+        model: "users",
+      });
+
+    if (registeredTopics.length === 0) {
       return res
         .status(404)
         .json({ success: false, message: "Nhóm chưa đăng ký đề tài nào" });
     }
 
-    res.json({ success: true, topics });
+    const topics = registeredTopics.map((topic) => {
+      const groupRegistration = topic.Groups.find(
+        (g) => g.group.toString() === groupId
+      );
+      return {
+        topicId: topic._id,
+        nameTopic: topic.nameTopic,
+        descriptionTopic: topic.descriptionTopic,
+        user: {
+          id: topic.user._id,
+          username: topic.user.username,
+          email: topic.user.email,
+        },
+        teacher: {
+          id: topic.teacher._id,
+          fullName: topic.teacher.name,
+          email: topic.teacher.email,
+        },
+        registrationDate: groupRegistration
+          ? groupRegistration.registrationDate
+          : null,
+      };
+    });
+
+    res.json({ success: true, groupId: group._id, topics });
   } catch (error) {
     console.error("Server error:", error);
     res
