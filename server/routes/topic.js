@@ -452,6 +452,17 @@ router.post("/register-topic", verifyToken, async (req, res) => {
       });
     }
 
+    // Kiểm tra xem nhóm đã đăng ký bất kỳ đề tài nào chưa
+    const existingRegistration = await Topic.findOne({
+      "Groups.group": groupId,
+    });
+    if (existingRegistration) {
+      return res.status(400).json({
+        success: false,
+        message: "Nhóm đã đăng ký một đề tài khác. Không thể đăng ký thêm.",
+      });
+    }
+
     // Kiểm tra xem nhóm đã đăng ký đề tài này chưa
     const alreadyRegistered = topic.Groups.some(
       (g) => g.group.toString() === groupId

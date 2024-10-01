@@ -14,6 +14,7 @@ export const ListStudentTopics = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [groupId, setGroupId] = useState(null);
+  const [registeredTopicId, setRegisteredTopicId] = useState(null);
 
   useEffect(() => {
     const fetchTopics = async () => {
@@ -38,7 +39,7 @@ export const ListStudentTopics = () => {
   }, []);
 
   useEffect(() => {
-    const fetchGroupId = async () => {
+    const fetchGroupInfo = async () => {
       try {
         const response = await axios.get(
           "http://localhost:5000/api/studentGroups/get-group-id",
@@ -50,14 +51,28 @@ export const ListStudentTopics = () => {
         );
         if (response.data.success) {
           setGroupId(response.data.groupId);
+          // Fetch registered topic for the group
+          const topicResponse = await axios.get(
+            `http://localhost:5000/api/topics/${response.data.groupId}/topics`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+          if (
+            topicResponse.data.success &&
+            topicResponse.data.topics.length > 0
+          ) {
+            setRegisteredTopicId(topicResponse.data.topics[0].topicId);
+          }
         }
       } catch (error) {
-        console.error("Error fetching group ID:", error);
-        // We don't set an error state here to allow viewing topics without a group
+        console.error("Error fetching group info:", error);
       }
     };
 
-    fetchGroupId();
+    fetchGroupInfo();
   }, []);
 
   const filteredTopics = topics.filter(
@@ -81,6 +96,15 @@ export const ListStudentTopics = () => {
       Swal.fire(
         "Không thể đăng ký",
         "Bạn cần tham gia nhóm trước khi đăng ký đề tài.",
+        "warning"
+      );
+      return;
+    }
+
+    if (registeredTopicId) {
+      Swal.fire(
+        "Không thể đăng ký",
+        "Nhóm của bạn đã đăng ký một đề tài. Không thể đăng ký thêm.",
         "warning"
       );
       return;
@@ -118,6 +142,8 @@ export const ListStudentTopics = () => {
             "Bạn đã đăng ký đề tài thành công.",
             "success"
           );
+
+          setRegisteredTopicId(topicId);
 
           const updatedTopics = await axios.get(
             "http://localhost:5000/api/topics/get-all-topics",
@@ -188,12 +214,15 @@ export const ListStudentTopics = () => {
                 <td>{topic.registeredGroupsCount || 0}</td>
                 <td>
                   <Button
-                    variant="primary"
+                    variant={
+                      registeredTopicId === topic._id ? "danger" : "primary"
+                    } // Sử dụng variant "danger" cho nút màu đỏ
                     size="sm"
                     className="custom-button"
                     onClick={() => handleRegister(topic._id, topic.nameTopic)}
+                    disabled={registeredTopicId !== null}
                   >
-                    Đăng ký
+                    {registeredTopicId === topic._id ? "Đã đăng ký" : "Đăng ký"}
                   </Button>
                 </td>
               </tr>
