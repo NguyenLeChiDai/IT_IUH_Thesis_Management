@@ -9,6 +9,9 @@ const { verifyToken, checkRole } = require("../middleware/auth");
 const Profile = require("../models/ProfileStudent");
 const ProfileTeacher = require("../models/ProfileTeacher");
 
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
+
 // Route để lấy danh sách người dùng (chỉ dành cho admin)
 router.get("/users", verifyToken, checkRole("admin"), async (req, res) => {
   try {
@@ -192,7 +195,7 @@ router.post("/change-password/:id", async (req, res) => {
 });
 
 // Endpoint để kiểm tra thông tin người dùng cho quên mật khẩu
-router.post("/check-user-for-reset", async (req, res) => {
+/* router.post("/check-user-for-reset", async (req, res) => {
   const { id, phone } = req.body;
 
   console.log("Received request:", { id, phone }); // Log để kiểm tra dữ liệu đầu vào
@@ -247,10 +250,10 @@ router.post("/check-user-for-reset", async (req, res) => {
     console.error("Error in check-user-for-reset route:", error);
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
-});
+}); */
 
 // Endpoint để đặt lại mật khẩu
-router.post("/reset-password", async (req, res) => {
+/* router.post("/reset-password", async (req, res) => {
   const { userId, newPassword } = req.body;
 
   try {
@@ -270,6 +273,156 @@ router.post("/reset-password", async (req, res) => {
     console.error(error);
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
+}); */
+
+// Cấu hình transporter cho Nodemailer
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
 });
 
+// Hàm tạo OTP
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Thêm route mới để xác minh OTP
+router.post("/verify-otp", async (req, res) => {
+  const { id, otp } = req.body;
+
+  try {
+    let profile = await Profile.findOne({ studentId: id }).populate("user");
+    if (!profile) {
+      profile = await ProfileTeacher.findOne({ teacherId: id }).populate(
+        "user"
+      );
+    }
+
+    if (!profile || !profile.user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy người dùng" });
+    }
+
+    const user = profile.user;
+
+    if (
+      user.resetPasswordOTP !== otp ||
+      user.resetPasswordOTPExpires < Date.now()
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "OTP không hợp lệ hoặc đã hết hạn" });
+    }
+
+    res.json({ success: true, message: "OTP hợp lệ" });
+  } catch (error) {
+    console.error("Lỗi xác minh OTP:", error);
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+});
+
+// Route để gửi OTP
+router.post("/forgot-password", async (req, res) => {
+  const { id } = req.body;
+
+  try {
+    let profile = await Profile.findOne({ studentId: id }).populate("user");
+    if (!profile) {
+      profile = await ProfileTeacher.findOne({ teacherId: id }).populate(
+        "user"
+      );
+    }
+
+    if (!profile || !profile.email) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy email cho ID này" });
+    }
+
+    const user = profile.user;
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy tài khoản người dùng",
+      });
+    }
+
+    const otp = generateOTP();
+    user.resetPasswordOTP = otp;
+    user.resetPasswordOTPExpires = Date.now() + 600000; // OTP hết hạn sau 10 phút
+
+    await user.save();
+
+    const mailOptions = {
+      to: profile.email,
+      from: process.env.EMAIL_USER,
+      subject: "Mã OTP để đặt lại mật khẩu",
+      text: `Mã OTP của bạn để đặt lại mật khẩu là: ${otp}. Mã này sẽ hết hạn sau 10 phút.`,
+    };
+
+    transporter.sendMail(mailOptions, (err) => {
+      if (err) {
+        console.error("Lỗi gửi email:", err);
+        return res
+          .status(500)
+          .json({ success: false, message: "Lỗi khi gửi email" });
+      }
+      res.json({
+        success: true,
+        message: "Mã OTP đã được gửi đến email của bạn",
+      });
+    });
+  } catch (error) {
+    console.error("Lỗi xử lý yêu cầu quên mật khẩu:", error);
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+});
+
+// Cập nhật route reset-password
+router.post("/reset-password", async (req, res) => {
+  const { id, otp, newPassword } = req.body;
+
+  try {
+    let profile = await Profile.findOne({ studentId: id }).populate("user");
+    if (!profile) {
+      profile = await ProfileTeacher.findOne({ teacherId: id }).populate(
+        "user"
+      );
+    }
+
+    if (!profile || !profile.user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy người dùng" });
+    }
+
+    const user = profile.user;
+
+    if (
+      user.resetPasswordOTP !== otp ||
+      user.resetPasswordOTPExpires < Date.now()
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "OTP không hợp lệ hoặc đã hết hạn" });
+    }
+
+    // Đặt mật khẩu mới
+    const hashedPassword = await argon2.hash(newPassword);
+    user.password = hashedPassword;
+    user.resetPasswordOTP = undefined;
+    user.resetPasswordOTPExpires = undefined;
+
+    await user.save();
+
+    res.json({ success: true, message: "Mật khẩu đã được đặt lại thành công" });
+  } catch (error) {
+    console.error("Lỗi đặt lại mật khẩu:", error);
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+});
 module.exports = router;

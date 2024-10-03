@@ -21,6 +21,9 @@ const UserSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+
+  resetPasswordOTP: String,
+  resetPasswordOTPExpiry: Date,
 });
 
 module.exports = mongoose.model("users", UserSchema);
