@@ -724,14 +724,18 @@ const ManageStudentAccounts = () => {
         </Table>
       </TableContainer>
 
-      <TablePagination //chuyển trang
-        rowsPerPageOptions={[5, 10, 25]} // lựa chọn số dòng trên trang
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 25]}
         component="div"
         count={filteredUsers.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+        labelRowsPerPage="Số dòng trên trang:"
+        labelDisplayedRows={({ from, to, count }) =>
+          `${from}-${to} của tổng ${count !== -1 ? count : `hơn ${to}`}`
+        }
       />
     </div>
   );

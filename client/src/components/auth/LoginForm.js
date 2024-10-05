@@ -8,7 +8,11 @@ import AlertMessage from "../layout/AlertMessage";
 import "../../css/LoginForm.css";
 import "font-awesome/css/font-awesome.min.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faRightToBracket } from "@fortawesome/free-solid-svg-icons";
+import {
+  faEye,
+  faEyeSlash,
+  faRightToBracket,
+} from "@fortawesome/free-solid-svg-icons";
 import { faLock } from "@fortawesome/free-solid-svg-icons";
 function LoginForm() {
   // Context
@@ -21,6 +25,14 @@ function LoginForm() {
     username: "",
     password: "",
   });
+
+  //hiển thị pass
+  const [showPassword, setShowPassword] = useState(false);
+
+  //hàm hiển thị pass
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
   const [alert, setAlert] = useState(null);
 
@@ -76,21 +88,30 @@ function LoginForm() {
                 icon={faLock}
                 style={{
                   marginRight: "10px",
-                  fontSize: "1.0rem", // Điều chỉnh kích thước icon tại đây
+                  fontSize: "1.0rem",
                 }}
               />
               Mật khẩu
             </h6>
-            <Form.Control
-              type="password"
-              placeholder="Mật khẩu"
-              name="password"
-              required
-              value={password}
-              onChange={onChangeLoginForm}
-            />
+            <div className="password-input">
+              <Form.Control
+                type={showPassword ? "text" : "password"} // Thay đổi type dựa trên state
+                placeholder="Mật khẩu"
+                name="password"
+                required
+                value={password}
+                onChange={onChangeLoginForm}
+              />
+              <FontAwesomeIcon
+                icon={showPassword ? faEyeSlash : faEye}
+                onClick={togglePasswordVisibility}
+                className="password-toggle"
+                style={{ cursor: "pointer", marginLeft: "10px" }} // Thêm style tùy chỉnh
+              />
+            </div>
           </Form.Group>
-          <Button className="btn-login" type="submit">
+
+          <Button className="btn-login1" type="submit">
             Đăng nhập
           </Button>
         </Form>
@@ -106,7 +127,7 @@ function LoginForm() {
         <p className="forgotpassword-link">
           Bạn quên mật khẩu?
           <Link to="/forgot-password">
-            <Button className="btn-register">Lấy lại mật khẩu</Button>
+            <Button className="btn-forgotpassword">Lấy lại mật khẩu</Button>
           </Link>
         </p>
       </div>

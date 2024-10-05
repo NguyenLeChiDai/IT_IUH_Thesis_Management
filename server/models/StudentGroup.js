@@ -12,7 +12,7 @@ const StudentGroupSchema = new Schema({
   },
   groupStatus: {
     type: String,
-    enum: ["0/2", "1/2", "2/2"], // Chỉ cho phép 'Sinh Viên' hoặc 'admin', "teacher"
+    enum: ["0/2", "1/2", "2/2"], // Chỉ cho phép 0-2 thành viên trong nhóm
     default: "0/2",
   },
   profileStudents: [

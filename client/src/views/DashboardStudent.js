@@ -81,6 +81,17 @@ const DashboardStudent = () => {
         },
       ],
     },
+    {
+      text: "Báo cáo khóa luận",
+      icon: <GroupIcon />,
+      subMenu: [
+        {
+          text: "Đăng báo cáo khóa luận",
+          icon: <FontAwesomeIcon icon={faList} />,
+          onClick: () => navigate("/dashboardStudent/list-student-groups"),
+        },
+      ],
+    },
     { text: "Tiêu chí Đánh giá của học kỳ", icon: <GradeIcon /> },
     { text: "Bảng điểm của tôi", icon: <ScoreIcon /> },
   ];

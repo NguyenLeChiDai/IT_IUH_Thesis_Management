@@ -17,13 +17,16 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import ExpandLess from "@mui/icons-material/ExpandLess"; // Icon mở rộng
 import ExpandMore from "@mui/icons-material/ExpandMore"; // Icon thu gọn
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SchoolIcon from "@mui/icons-material/School";
 import HomeIcon from "@mui/icons-material/Home";
-import AccountBoxIcon from "@mui/icons-material/AccountBox";
+import GroupsIcon from "@mui/icons-material/Groups";
 import UserMenu from "../components/viewStudent/UserMenu";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { Outlet, useNavigate } from "react-router-dom";
-import { HomeAdmin } from "../components/viewsAdmin/HomeAdmin";
+import TopicIcon from "@mui/icons-material/Topic";
+import ArticleIcon from "@mui/icons-material/Article";
+import ListAltIcon from "@mui/icons-material/ListAlt";
+import AccountBoxIcon from "@mui/icons-material/AccountBox";
 
 const drawerWidth = 240;
 
@@ -57,29 +60,40 @@ const DashboardAdmin = () => {
       subMenu: [
         {
           text: "Quản lý tài khoản giảng viên",
-          icon: <AccountBoxIcon />,
+          icon: <AccountCircleIcon />,
           onClick: () => navigate("/dashboardAdmin/manage-teacher-accounts"),
-        },
-        {
-          text: "Quản lý bằng cấp giảng viên",
-          icon: <AccountBoxIcon />,
-          onClick: () => navigate("/dashboardAdmin"),
         },
       ],
     },
     {
       text: "Quản lý sinh viên",
-      icon: <AccountCircleIcon />,
+      icon: <AccountBoxIcon />,
       subMenu: [
         {
           text: "Quản lý tài khoản sinh viên",
-          icon: <AccountBoxIcon />,
+          icon: <AccountCircleIcon />,
           onClick: () => navigate("/dashboardAdmin/manage-student-accounts"),
         },
         {
           text: "Nhóm sinh viên", // Thêm mục "Nhóm sinh viên"
-          icon: <AccountBoxIcon />,
+          icon: <GroupsIcon />,
           onClick: () => navigate("/dashboardAdmin/student-groups"), // Chuyển đến trang "Nhóm sinh viên"
+        },
+      ],
+    },
+    {
+      text: "Quản lý đề tài",
+      icon: <ArticleIcon />,
+      subMenu: [
+        {
+          text: "Đề tài của giảng viên",
+          icon: <TopicIcon />,
+          onClick: () => navigate("/dashboardAdmin"),
+        },
+        {
+          text: "Danh sách đề tài", // Thêm mục "Nhóm sinh viên"
+          icon: <ListAltIcon />,
+          onClick: () => navigate("/dashboardAdmin"), // Chuyển đến trang "Nhóm sinh viên"
         },
       ],
     },

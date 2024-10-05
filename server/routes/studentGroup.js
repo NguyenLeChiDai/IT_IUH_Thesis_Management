@@ -2,19 +2,21 @@ const express = require("express");
 const router = express.Router();
 const { verifyToken, checkRole } = require("../middleware/auth");
 const StudentGroup = require("../models/StudentGroup");
-const ProfileStudent = require("../models/ProfileStudent"); // Thêm dòng này
+const ProfileStudent = require("../models/ProfileStudent");
+const GroupCreationInfo = require("../models/GroupCreationInfo");
 //@route GET api/studentGroups
 //@desc GET studentGroups
 //@access private
 
 router.get("/list-groups", verifyToken, async (req, res) => {
   try {
-    // Thay vì tìm theo user, ta lấy toàn bộ nhóm sinh viên
     const studentgroups = await StudentGroup.find();
 
     if (!studentgroups || studentgroups.length === 0) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        // Chuyển từ 400 sang 200
+        success: true,
+        groups: [], // Đảm bảo groups là một mảng rỗng
         message: "Không có nhóm nào",
       });
     }
@@ -488,6 +490,149 @@ router.post(
   }
 );
 
+// @route POST api/studentGroups/auto-create-groups
+// @desc Tự động tạo nhóm cho sinh viên
+// @access private (admin only)
+router.post(
+  "/auto-create-groups",
+  verifyToken,
+  checkRole("admin"),
+  async (req, res) => {
+    try {
+      // Đếm số lượng sinh viên
+      const studentCount = await ProfileStudent.countDocuments();
+
+      // Lấy thông tin về lần tạo nhóm gần nhất
+      let creationInfo = await GroupCreationInfo.findOne();
+      if (!creationInfo) {
+        creationInfo = new GroupCreationInfo();
+      }
+
+      // Tính số nhóm cần có
+      const groupsNeeded = Math.ceil(studentCount / 2);
+
+      // Đếm số nhóm hiện tại
+      const existingGroupsCount = await StudentGroup.countDocuments();
+
+      // Tính số nhóm cần tạo thêm
+      const groupsToCreate = groupsNeeded - existingGroupsCount;
+
+      if (groupsToCreate > 0) {
+        const lastGroup = await StudentGroup.findOne().sort({ groupId: -1 });
+        let lastGroupId = lastGroup ? parseInt(lastGroup.groupId) : 0;
+
+        for (let i = 1; i <= groupsToCreate; i++) {
+          lastGroupId++;
+          const groupId = lastGroupId.toString().padStart(3, "0");
+          const newGroup = new StudentGroup({
+            groupId,
+            groupName: `Nhóm ${groupId}`,
+            groupStatus: "0/2",
+          });
+          await newGroup.save();
+        }
+
+        // Cập nhật thông tin tạo nhóm
+        creationInfo.lastCreatedCount += groupsToCreate;
+        creationInfo.lastStudentCount = studentCount;
+        creationInfo.lastCreatedAt = new Date();
+        await creationInfo.save();
+
+        res.json({
+          success: true,
+          message: `Đã tạo thêm ${groupsToCreate} nhóm mới`,
+          totalGroups: groupsNeeded,
+        });
+      } else {
+        res.json({
+          success: true,
+          message: "Số nhóm hiện tại đã đủ cho sinh viên đăng ký",
+          totalGroups: existingGroupsCount,
+        });
+      }
+    } catch (error) {
+      console.error("Lỗi khi tự động tạo nhóm:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Lỗi server khi tạo nhóm tự động" });
+    }
+  }
+);
+
+// router.post(
+//   "/auto-create-groups",
+//   verifyToken,
+//   checkRole("admin"),
+//   async (req, res) => {
+//     try {
+//       // Đếm số lượng sinh viên
+//       const studentCount = await ProfileStudent.countDocuments();
+
+//       // Lấy thông tin về lần tạo nhóm gần nhất
+//       let creationInfo = await GroupCreationInfo.findOne();
+//       if (!creationInfo) {
+//         creationInfo = new GroupCreationInfo();
+//       }
+
+//       // Tính số nhóm cần tạo
+//       const groupsNeeded = Math.ceil(studentCount / 2);
+//       const existingGroups = await StudentGroup.countDocuments();
+
+//       if (studentCount <= creationInfo.lastStudentCount) {
+//         return res.json({
+//           success: true,
+//           message: "Số nhóm hiện tại đã đủ cho sinh viên đăng ký",
+//           groupCount: existingGroups,
+//         });
+//       }
+
+//       // Tạo thêm nhóm nếu cần
+//       const groupsToCreate = groupsNeeded - existingGroups;
+//       if (groupsToCreate > 0) {
+//         const lastGroup = await StudentGroup.findOne().sort({ groupId: -1 });
+//         let lastGroupId = lastGroup ? parseInt(lastGroup.groupId) : 0;
+
+//         for (let i = 1; i <= groupsToCreate; i++) {
+//           lastGroupId++;
+//           const groupId = lastGroupId.toString().padStart(3, "0");
+//           const newGroup = new StudentGroup({
+//             groupId,
+//             groupName: `Nhóm ${groupId}`,
+//             groupStatus: "0/2",
+//           });
+//           await newGroup.save();
+//         }
+
+//         // Cập nhật thông tin tạo nhóm
+//         creationInfo.lastCreatedCount = groupsToCreate;
+//         creationInfo.lastStudentCount = studentCount;
+//         creationInfo.lastCreatedAt = new Date();
+//         await creationInfo.save();
+
+//         res.json({
+//           success: true,
+//           message: `Đã tạo thêm ${groupsToCreate} nhóm mới`,
+//           totalGroups: groupsNeeded,
+//         });
+//       } else {
+//         res.json({
+//           success: true,
+//           message: "Không cần tạo thêm nhóm mới",
+//           totalGroups: existingGroups,
+//         });
+//       }
+//     } catch (error) {
+//       console.error("Lỗi khi tự động tạo nhóm:", error);
+//       res
+//         .status(500)
+//         .json({ success: false, message: "Lỗi server khi tạo nhóm tự động" });
+//     }
+//   }
+// );
+
+// @route POST api/studentGroups//get-group-id
+// @desc Lấy id nhóm để đăng ký đề tài
+// @access private (Sinh viên)
 router.get("/get-group-id", verifyToken, async (req, res) => {
   try {
     const studentProfile = await ProfileStudent.findOne({ user: req.userId });

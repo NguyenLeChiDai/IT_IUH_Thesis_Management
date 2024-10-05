@@ -55,7 +55,11 @@ const Auth = ({ authRoute }) => {
             Trang Quản lý khóa luận dành cho sinh viên Khoa Công Nghệ Thông Tin
           </h5> */}
           <h2 className="auth-title">
-            <strong>ĐĂNG NHẬP</strong>
+            <strong>
+              {authRoute === "forgot-password"
+                ? "LẤY LẠI MẬT KHẨU"
+                : "ĐĂNG NHẬP"}
+            </strong>
           </h2>
 
           {body}

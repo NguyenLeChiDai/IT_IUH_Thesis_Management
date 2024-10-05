@@ -23,6 +23,7 @@ import {
 
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { toast } from "react-toastify";
 
 const ManageStudentGroups = () => {
   const [groups, setGroups] = useState([]);
@@ -45,18 +46,19 @@ const ManageStudentGroups = () => {
       const response = await axios.get(
         "http://localhost:5000/api/studentgroups/list-groups"
       );
+
       if (response.data.success) {
         setGroups(response.data.groups);
       } else {
-        alert("Không có nhóm nào.");
         setGroups([]);
       }
     } catch (error) {
       console.error("Lỗi khi tải nhóm:", error);
-      alert("Lỗi khi tải nhóm.");
+      setGroups([]); // Đặt mảng nhóm rỗng nếu có lỗi
     }
   };
 
+  //Tạo nhóm cho sinh viên bằng cách nhập tay
   const handleCreateGroup = async () => {
     try {
       const response = await axios.post(
@@ -80,6 +82,42 @@ const ManageStudentGroups = () => {
     }
   };
 
+  //Tự động tạo nhóm dựa trên số lượng sinh viên
+  // const handleAutoCreateGroups = async () => {
+  //   try {
+  //     const response = await axios.post(
+  //       "http://localhost:5000/api/studentgroups/auto-create-groups"
+  //     );
+
+  //     if (response.data.success) {
+  //       toast.success("Đã tạo nhóm thành công!");
+  //       fetchGroups();
+  //     } else {
+  //       toast.error(response.data.message);
+  //     }
+  //   } catch (error) {
+  //     console.error("Lỗi khi tạo nhóm tự động:", error);
+  //     toast.error(error.response?.data?.message || "Lỗi khi tạo nhóm tự động.");
+  //   }
+  // };
+  const handleAutoCreateGroups = async () => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/studentgroups/auto-create-groups"
+      );
+
+      if (response.data.success) {
+        toast.success(response.data.message);
+        fetchGroups();
+      } else {
+        toast.error("Tạo nhóm tự động thất bại: " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Lỗi khi tạo nhóm tự động:", error);
+      toast.error("Lỗi khi tạo nhóm tự động.");
+    }
+  };
+
   const handleDeleteGroup = async (groupId) => {
     if (!window.confirm("Bạn có chắc chắn muốn xóa nhóm này?")) return;
 
@@ -99,6 +137,7 @@ const ManageStudentGroups = () => {
     }
   };
 
+  // cập nhật lại các trường của nhóm
   const handleUpdateGroup = async () => {
     try {
       const response = await axios.put(
@@ -127,53 +166,70 @@ const ManageStudentGroups = () => {
         Quản lý nhóm sinh viên
       </Typography>
 
+      {/* Các button tạo nhóm */}
       <Button
         variant="contained"
         color="primary"
         onClick={() => setOpenCreateDialog(true)}
-        style={{ marginBottom: "20px" }}
+        style={{ marginRight: "10px", marginBottom: "20px" }}
       >
         Tạo nhóm
       </Button>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID Nhóm</TableCell>
-              <TableCell>Tên Nhóm</TableCell>
-              <TableCell>Trạng thái</TableCell>
-              <TableCell>Hành động</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {groups.map((group) => (
-              <TableRow key={group._id}>
-                <TableCell>{group.groupId}</TableCell>
-                <TableCell>{group.groupName}</TableCell>
-                <TableCell>{group.groupStatus}</TableCell>
-                <TableCell>
-                  <IconButton
-                    onClick={() => {
-                      setEditGroup(group);
-                      setOpenEditDialog(true);
-                    }}
-                    color="primary"
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    onClick={() => handleDeleteGroup(group._id)}
-                    color="secondary"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
+      <Button
+        variant="contained"
+        color="secondary"
+        onClick={handleAutoCreateGroups}
+        style={{ marginBottom: "20px" }}
+      >
+        Tự động tạo nhóm
+      </Button>
+
+      {/* Kiểm tra nếu không có nhóm, hiển thị thông báo */}
+      {groups.length === 0 ? (
+        <Typography variant="body1" color="textSecondary">
+          Không có nhóm nào được tạo.
+        </Typography>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>ID Nhóm</TableCell>
+                <TableCell>Tên Nhóm</TableCell>
+                <TableCell>Trạng thái</TableCell>
+                <TableCell>Hành động</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {groups.map((group) => (
+                <TableRow key={group._id}>
+                  <TableCell>{group.groupId}</TableCell>
+                  <TableCell>{group.groupName}</TableCell>
+                  <TableCell>{group.groupStatus}</TableCell>
+                  <TableCell>
+                    <IconButton
+                      onClick={() => {
+                        setEditGroup(group);
+                        setOpenEditDialog(true);
+                      }}
+                      color="primary"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => handleDeleteGroup(group._id)}
+                      color="secondary"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       <Dialog
         open={openCreateDialog}

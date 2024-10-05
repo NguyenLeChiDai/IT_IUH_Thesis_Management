@@ -381,26 +381,19 @@ router.post(
           });
         }
 
-        // Kiểm tra nếu trùng topicId hoặc nameTopic
-        const existingTopic = await Topic.findOne({
-          $or: [{ topicId: row.topicId }, { nameTopic: row.nameTopic }],
-        });
+        // Kiểm tra nếu trùng nameTopic
+        const existingTopic = await Topic.findOne({ nameTopic: row.nameTopic });
 
         if (existingTopic) {
           // Nếu trùng, thêm vào danh sách duplicate và tiếp tục lặp
           duplicateTopics.push({
-            topicId: row.topicId,
             nameTopic: row.nameTopic,
-            reason:
-              existingTopic.topicId === row.topicId
-                ? "Trùng topicId"
-                : "Trùng nameTopic",
+            reason: "Trùng nameTopic",
           });
           continue;
         }
 
         const newTopic = new Topic({
-          topicId: row.topicId,
           nameTopic: row.nameTopic,
           descriptionTopic: row.descriptionTopic,
           user: req.userId, // Giả sử req.userId được set bởi middleware xác thực
