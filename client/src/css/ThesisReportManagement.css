@@ -1,0 +1,104 @@
+/* ThesisReportManagement.css */
+
+.thesis-report-container {
+  font-family: Arial, sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.thesis-report-container h2 {
+  color: #024995;
+  font-weight: bold;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.search-container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  flex: 1;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.custom-table {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.custom-table th {
+  background-color: #007bff;
+  color: white;
+  text-align: center;
+  padding: 12px;
+}
+
+.custom-table td {
+  padding: 12px;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+.status-badge.reviewed {
+  background-color: #28a745;
+  color: white;
+}
+
+.status-badge.pending {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.btn-sm {
+  margin-right: 5px;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+.report-details h4 {
+  color: #024995;
+  margin-bottom: 20px;
+}
+
+.report-details p {
+  margin-bottom: 10px;
+}
+
+.report-details strong {
+  color: #495057;
+}
+
+@media (max-width: 768px) {
+  .search-container {
+    flex-direction: column;
+  }
+}
+
+.report-row {
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.report-row:hover {
+  background-color: #f1f3f5;
+}

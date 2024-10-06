@@ -88,7 +88,7 @@ const DashboardStudent = () => {
         {
           text: "Đăng báo cáo khóa luận",
           icon: <FontAwesomeIcon icon={faList} />,
-          onClick: () => navigate("/dashboardStudent/list-student-groups"),
+          onClick: () => navigate("/dashboardStudent/submit-report"),
         },
       ],
     },

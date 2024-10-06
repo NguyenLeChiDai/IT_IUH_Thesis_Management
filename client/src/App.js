@@ -19,6 +19,7 @@ import { ToastContainer } from "react-toastify";
 import { ListStudentTopics } from "./components/viewStudent/ListStudentTopics";
 import ChangePassword from "./components/password/ChangePassword";
 import TopicStudent from "./components/viewStudent/TopicStudent";
+import ThesisReportManagement from "./components/viewStudent/ThesisReportManagement";
 
 function App() {
   return (
@@ -65,6 +66,10 @@ function App() {
                 element={<ListStudentTopics />}
               />{" "}
               <Route path="TopicStudent" element={<TopicStudent />} />{" "}
+              <Route
+                path="submit-report"
+                element={<ThesisReportManagement />}
+              />{" "}
             </Route>
 
             <Route path="/dashboardTeacher" element={<DashboardTeacher />}>
