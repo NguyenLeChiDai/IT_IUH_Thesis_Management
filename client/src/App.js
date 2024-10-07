@@ -20,6 +20,7 @@ import { ListStudentTopics } from "./components/viewStudent/ListStudentTopics";
 import ChangePassword from "./components/password/ChangePassword";
 import TopicStudent from "./components/viewStudent/TopicStudent";
 import ThesisReportManagement from "./components/viewStudent/ThesisReportManagement";
+import ManageTopic from "./components/viewsAdmin/ManageTopic";
 
 function App() {
   return (
@@ -53,6 +54,7 @@ function App() {
                 element={<ManageStudentGroups />}
               />{" "}
               {/* Đường dẫn cho "Nhóm sinh viên" */}
+              <Route path="manage-topics" element={<ManageTopic />} />{" "}
             </Route>
 
             <Route path="/dashboardStudent" element={<DashboardStudent />}>

@@ -24,7 +24,11 @@ const TopicSchema = new Schema({
     ref: "profileTeacher", // Đảm bảo đây là tên mô hình chính xác
     required: true, // Bắt buộc có liên kết với người dùng
   },
-
+  status: {
+    type: String,
+    enum: ["Chưa phê duyệt", "Đã phê duyệt", "Từ chối"],
+    default: "Chưa phê duyệt",
+  },
   Groups: [
     {
       group: {

@@ -1,0 +1,47 @@
+/* TopicDetailForm.css */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Màu nền mờ */
+  z-index: 999; /* Nằm dưới modal */
+  overflow: auto;
+}
+
+.modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px; /* Bo góc cho modal */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Đổ bóng cho modal */
+  width: 85%; /* Chiều rộng của modal, có thể điều chỉnh */
+  max-width: 900px; /* Chiều rộng tối đa */
+  z-index: 1000; /* Nằm trên overlay */
+  max-height: 80%; /* Chiều cao tối đa của modal */
+  overflow-y: auto; /* Thêm thanh cuộn dọc nếu nội dung vượt quá chiều cao tối đa */
+}
+
+.modal-content p {
+  color: #666; /* Màu chữ cho nội dung */
+  line-height: 1.5; /* Khoảng cách dòng */
+}
+
+.modal-content button {
+  background-color: #4caf50; /* Màu nền của nút */
+  color: white; /* Màu chữ của nút */
+  padding: 10px 15px; /* Khoảng cách bên trong nút */
+  border: none;
+  border-radius: 5px; /* Bo góc cho nút */
+  cursor: pointer; /* Con trỏ chuột khi di chuột lên nút */
+  transition: background-color 0.3s; /* Hiệu ứng chuyển màu */
+}
+
+.modal-content button:hover {
+  background-color: #45a049; /* Màu nền khi di chuột lên nút */
+}

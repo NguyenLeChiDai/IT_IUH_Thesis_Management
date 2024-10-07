@@ -1,6 +1,6 @@
 .post-the-topic {
   width: 75%; /* Chiếm 75% chiều rộng của container */
-  margin-left: 20px; /* Cách lề trái 20px */
+  margin-left: 60px; /* Cách lề trái 20px */
   font-family: bold; /* Sử dụng font Arial, nếu không có thì dùng sans-serif */
 }
 
@@ -154,12 +154,15 @@ h2 {
   background-color: #28a745; /* Màu nền xanh lá cho nút update */
   margin-left: 10px;
   flex-shrink: 0; /* Ngăn nút bị co lại khi tên đề tài quá dài */
+  margin-top: 9px;
+  height: 45px;
 }
 
 .manage-topic .delete {
   background-color: #dc3545; /* Màu nền đỏ cho nút delete */
   margin-right: 10px;
   flex-shrink: 0; /* Ngăn nút bị co lại khi tên đề tài quá dài */
+  height: 45px;
 }
 
 .manage-topic .update:hover {
@@ -287,23 +290,26 @@ textarea:focus {
   height: 100%; /* Toàn bộ chiều cao */
   background-color: rgba(0, 0, 0, 0.6); /* Nền đen mờ đậm hơn */
   transition: opacity 0.3s ease; /* Hiệu ứng mở modal */
+  overflow: hidden; /* Ngăn không cho phần tử bị tràn */
 }
 
 .modal-topic {
   background-color: white;
-  padding: 20px;
-  border-radius: 12px; /* Bo tròn góc lớn hơn */
-  width: 100%;
-  max-width: 600px; /* Điều chỉnh max-width để modal rộng hơn */
-  max-height: 80vh; /* Giới hạn chiều cao modal */
-  overflow-y: auto; /* Cho phép cuộn dọc nếu nội dung vượt quá */
-  word-wrap: break-word; /* Cho phép xuống dòng nếu từ quá dài */
+  padding: 30px; /* Tăng padding để form rộng hơn */
+  border-radius: 12px; /* Bo tròn góc */
+  width: 90%; /* Điều chỉnh độ rộng theo tỉ lệ màn hình */
+  max-width: 1000px; /* Độ rộng tối đa lớn hơn */
+  max-height: 90vh; /* Tăng chiều cao tối đa của form */
+  overflow-y: auto; /* Cuộn dọc nếu nội dung quá dài */
+  word-wrap: break-word; /* Xuống dòng khi từ quá dài */
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Đổ bóng tạo chiều sâu */
-  transform: scale(0.95); /* Hiệu ứng thu nhỏ khi mở */
+  transform: scale(0.95); /* Hiệu ứng khi mở */
   transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
   display: flex;
   flex-direction: column; /* Sắp xếp các phần tử theo chiều dọc */
-  border: 1px silver;
+  border: 1px solid silver;
+  margin: 0; /* Loại bỏ margin */
+  box-sizing: border-box; /* Đảm bảo padding và border không làm giảm kích thước */
 }
 
 .modal-topic-parent.show {
@@ -384,4 +390,65 @@ textarea:focus {
 
 button {
   margin: 10px;
+}
+
+/* Điều chỉnh cho màn hình nhỏ hơn */
+@media (max-width: 768px) {
+  .topic-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .topic-content div {
+    margin-bottom: 0.5rem;
+  }
+
+  .topic h2 {
+    font-size: 1.1rem;
+  }
+
+  button {
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    font-size: 1rem;
+  }
+
+  /* Điều chỉnh modal mô tả chi tiết */
+  .topic-details {
+    margin-top: 1rem;
+    background-color: #f7f7f7;
+    padding: 1rem;
+    border-radius: 0.25rem;
+  }
+}
+
+/* Điều chỉnh cho màn hình rất nhỏ (mobile) */
+@media (max-width: 576px) {
+  .container {
+    padding: 0.5rem;
+  }
+
+  input[type="text"] {
+    padding: 0.5rem;
+    font-size: 1rem;
+  }
+
+  .topic h2 {
+    font-size: 1rem;
+  }
+
+  .topic-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .topic-content div {
+    margin-bottom: 0.5rem;
+  }
+
+  button {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
 }

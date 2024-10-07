@@ -20,7 +20,7 @@ export const ListStudentTopics = () => {
     const fetchTopics = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/topics/get-all-topics",
+          "http://localhost:5000/api/topics/approved-topics-student",
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -145,8 +145,9 @@ export const ListStudentTopics = () => {
 
           setRegisteredTopicId(topicId);
 
+          // Fetch updated topics list after registration
           const updatedTopics = await axios.get(
-            "http://localhost:5000/api/topics/get-all-topics",
+            "http://localhost:5000/api/topics/approved-topics-student",
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,

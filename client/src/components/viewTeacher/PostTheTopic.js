@@ -10,7 +10,7 @@ import ReactPaginate from "react-paginate";
 import "font-awesome/css/font-awesome.min.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
-
+//import { TablePagination } from '@mui/material';
 const PostTheTopic = () => {
   const [activeTab, setActiveTab] = useState("add");
   const [topicTitle, setTopicTitle] = useState("");
@@ -54,7 +54,7 @@ const PostTheTopic = () => {
   const fetchTopics = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/topics/get-topic",
+        "http://localhost:5000/api/topics/teacher-topics",
         {
           params: { nameTopic: searchTerm },
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -578,16 +578,45 @@ const PostTheTopic = () => {
                         wordBreak: "break-word",
                         maxWidth: "800px",
                         overflow: "hidden",
+                        fontSize: "18px", // Kích thước font lớn hơn
+                        fontWeight: "bold", // Tăng trọng lượng font
+                        color: "#333", // Màu chữ tối hơn
+                        textTransform: "capitalize", // Chữ cái đầu tiên của mỗi từ viết hoa
+                        letterSpacing: "0.5px", // Khoảng cách giữa các chữ cái
+                        margin: "8px 0", // Tạo khoảng cách cho phần tên
+                        padding: "10px", // Thêm khoảng đệm cho tên
+                        border: "1px solid #007bff", // Khung viền màu xanh
+                        borderRadius: "5px", // Bo tròn góc
+                        backgroundColor: "#f8f9fa", // Màu nền nhẹ
+                        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // Thêm bóng cho khung
+                        display: "inline-block", // Đặt chế độ hiển thị thành inline-block
                       }}
                     >
                       {t.nameTopic}
                     </strong>
                     {t.teacher && (
-                      <p style={{ margin: "0", marginLeft: "0" }}>
+                      <p style={{ margin: "5px 0", marginLeft: "0" }}>
                         <strong>Giảng Viên:</strong>{" "}
                         {t.teacher.name || "Chưa có thông tin"}
                       </p>
                     )}
+                    <p
+                      style={{
+                        wordBreak: "break-word",
+                        maxWidth: "800px",
+                        overflow: "hidden",
+                        margin: "5px 0", // Thêm khoảng cách trên và dưới
+                      }}
+                    >
+                      <strong>Trạng Thái:</strong>{" "}
+                      <span
+                        style={{
+                          color: t.status === "Đã phê duyệt" ? "green" : "red", // Màu sắc dựa trên trạng thái
+                        }}
+                      >
+                        {t.status}
+                      </span>
+                    </p>
                   </div>
 
                   <div>
@@ -633,10 +662,9 @@ const PostTheTopic = () => {
               marginTop: "20px",
             }}
           >
-            {/* Pagination */}
             <ReactPaginate
-              previousLabel={"← Trước"}
-              nextLabel={"Sau →"}
+              previousLabel={"Trước"}
+              nextLabel={"Sau"}
               pageCount={pageCount}
               onPageChange={handlePageClick}
               containerClassName={"pagination"}
@@ -650,6 +678,15 @@ const PostTheTopic = () => {
               marginPagesDisplayed={0} // Ẩn các trang lân cận
               pageRangeDisplayed={0} // Ẩn số trang
             />
+            {/* <TablePagination
+              rowsPerPageOptions={[5, 10, 25]}
+              component="div"
+              count={filteredTopics.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            /> */}
 
             {/* Hiển thị trang hiện tại */}
             <span style={{ margin: "0 15px" }}>Page: {currentPage}</span>
@@ -664,7 +701,7 @@ const PostTheTopic = () => {
                 position: "fixed",
                 top: 0,
                 left: 0,
-                width: "100%",
+                width: "1500px",
                 height: "100%",
                 backgroundColor: "rgba(0,0,0,0.5)",
                 zIndex: 1000,
@@ -673,14 +710,16 @@ const PostTheTopic = () => {
               <div
                 className="modal-topic"
                 style={{
-                  margin: "15% auto",
+                  margin: "7% auto",
                   padding: "20px",
                   backgroundColor: "white",
                   borderRadius: "8px",
                   width: "80%",
-                  maxWidth: "500px",
+                  maxWidth: "1000px",
+                  minWidth: "300px", // Thiết lập chiều rộng tối thiểu
                   maxHeight: "80vh",
                   overflowY: "auto",
+                  // marginRight: "70px",
                 }}
               >
                 <h3 style={{ wordBreak: "break-word", fontWeight: "bold" }}>
@@ -698,6 +737,9 @@ const PostTheTopic = () => {
                     {selectedTopic.teacher.name || "Chưa có thông tin"}
                   </p>
                 )}
+                <p>
+                  <strong>Trạng Thái:</strong> {selectedTopic.status}
+                </p>
                 <button
                   style={{
                     fontFamily: "'Roboto', sans-serif",
@@ -718,7 +760,20 @@ const PostTheTopic = () => {
 
       {isUpdating && (
         <div className="modal">
-          <div className="modal-content">
+          <div
+            className="modal-content"
+            style={{
+              margin: "5% auto",
+              padding: "20px",
+              backgroundColor: "white",
+              borderRadius: "8px",
+              width: "80%",
+              maxWidth: "1000px",
+              minWidth: "300px", // Thiết lập chiều rộng tối thiểu
+              maxHeight: "80vh",
+              overflowY: "auto",
+            }}
+          >
             <span className="close" onClick={() => setIsUpdating(false)}>
               &times;
             </span>
@@ -756,7 +811,7 @@ const PostTheTopic = () => {
                   value={updateDescription}
                   onChange={(e) => setUpdateDescription(e.target.value)}
                   placeholder="Nhập mô tả đề tài"
-                  rows="6"
+                  rows="12"
                 />
               </div>
 

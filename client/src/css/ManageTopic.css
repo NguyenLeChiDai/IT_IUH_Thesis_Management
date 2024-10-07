@@ -1,0 +1,83 @@
+/* ManageTopic.css */
+
+/* Phong cách mặc định cho các màn hình lớn */
+.container {
+  padding: 1rem;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.topic {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+}
+
+/* Để thông tin và các nút điều chỉnh theo chiều ngang */
+.topic-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Điều chỉnh cho màn hình nhỏ hơn */
+@media (max-width: 768px) {
+  .topic-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .topic-content div {
+    margin-bottom: 0.5rem;
+  }
+
+  .topic h2 {
+    font-size: 1.1rem;
+  }
+
+  button {
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    font-size: 1rem;
+  }
+
+  /* Điều chỉnh modal mô tả chi tiết */
+  .topic-details {
+    margin-top: 1rem;
+    background-color: #f7f7f7;
+    padding: 1rem;
+    border-radius: 0.25rem;
+  }
+}
+
+/* Điều chỉnh cho màn hình rất nhỏ (mobile) */
+@media (max-width: 576px) {
+  .container {
+    padding: 0.5rem;
+  }
+
+  input[type="text"] {
+    padding: 0.5rem;
+    font-size: 1rem;
+  }
+
+  .topic h2 {
+    font-size: 1rem;
+  }
+
+  .topic-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .topic-content div {
+    margin-bottom: 0.5rem;
+  }
+
+  button {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}

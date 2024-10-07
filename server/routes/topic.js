@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Topic = require("../models/Topic");
-const { verifyToken } = require("../middleware/auth");
+const { verifyToken, checkRole } = require("../middleware/auth");
 const User = require("../models/User");
 const ProfileTeacher = require("../models/ProfileTeacher"); // Import model profile
 
@@ -83,6 +83,76 @@ router.get("/:groupId/topics", verifyToken, async (req, res) => {
       .json({ success: false, message: "Lỗi Server", error: error.message });
   }
 });
+// Chỉ get những đề tài đã được phê duyệt (dành cho sinh viên)
+router.get(
+  "/approved-topics-student",
+  verifyToken,
+  checkRole("Sinh viên"),
+  async (req, res) => {
+    try {
+      const approvedTopics = await Topic.find({
+        status: "Đã phê duyệt",
+      })
+        .populate("teacher", "name")
+        .sort({ createdAt: -1 });
+
+      // Thêm thuộc tính "registeredGroupsCount" để đếm số nhóm đã đăng ký cho mỗi đề tài
+      const topicsWithGroupCount = approvedTopics.map((topic) => ({
+        ...topic._doc,
+        registeredGroupsCount: topic.Groups.length,
+      }));
+
+      res.json({ success: true, topics: topicsWithGroupCount });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Lỗi server",
+        error: error.message,
+      });
+    }
+  }
+);
+
+// Route để lấy danh sách đề tài của giảng viên
+router.get("/teacher-topics", verifyToken, async (req, res) => {
+  try {
+    // Tìm tất cả các đề tài mà giảng viên đã đăng
+    const topics = await Topic.find({ user: req.userId }).populate(
+      "teacher",
+      "name"
+    );
+
+    // Kiểm tra nếu không tìm thấy đề tài nào
+    if (topics.length === 0) {
+      return res.json({
+        success: true,
+        topics: [],
+        message: "Không có đề tài nào được tìm thấy.",
+      });
+    }
+
+    // Format lại thông tin của từng đề tài với trạng thái phê duyệt
+    const formattedTopics = topics.map((topic) => ({
+      _id: topic._id, // Giữ lại id
+      nameTopic: topic.nameTopic, // Tên đề tài
+      descriptionTopic: topic.descriptionTopic, // Mô tả đề tài
+      teacher: topic.teacher, // Thông tin giảng viên
+      status: topic.status, // Trạng thái phê duyệt
+      // Bạn có thể thêm các trường khác nếu cần
+    }));
+
+    res.json({
+      success: true,
+      topics: formattedTopics,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy danh sách đề tài",
+      error: error.message,
+    });
+  }
+});
 
 // Route để lấy danh sách đề tài
 router.get("/get-topic", verifyToken, async (req, res) => {
@@ -107,7 +177,7 @@ router.get("/get-topic", verifyToken, async (req, res) => {
 });
 
 //Get all topic
-router.get("/get-all-topics", verifyToken, async (req, res) => {
+/* router.get("/get-all-topics", verifyToken, async (req, res) => {
   try {
     // Lấy tất cả các đề tài và populate thông tin giảng viên
     const topics = await Topic.find()
@@ -134,7 +204,7 @@ router.get("/get-all-topics", verifyToken, async (req, res) => {
       error: error.message,
     });
   }
-});
+}); */
 // Route để đăng tải đề tài
 router.post("/post", verifyToken, async (req, res) => {
   const { topicId, nameTopic, descriptionTopic } = req.body;
@@ -168,13 +238,12 @@ router.post("/post", verifyToken, async (req, res) => {
 
     // Tạo mới đề tài
     const newTopic = new Topic({
-      topicId, // topicId không bắt buộc
+      topicId,
       nameTopic,
       descriptionTopic,
-      user: req.userId, // Lấy ID người dùng từ token đã xác thực
-      teacher: teacher._id, // Gán ID giảng viên từ profileTeacher
-      // Nếu bạn không cần trường visibleTo, có thể bỏ qua
-      // visibleTo: req.userId
+      user: req.userId,
+      teacher: teacher._id,
+      status: "Chưa phê duyệt", // Thêm trường status với giá trị mặc định là "pending"
     });
 
     // Lưu đề tài vào cơ sở dữ liệu
@@ -303,6 +372,7 @@ router.delete("/delete/:id", verifyToken, async (req, res) => {
     });
   }
 });
+
 router.get("/topic-teacher", async (req, res) => {
   try {
     const topics = await Topic.find().populate({
@@ -341,6 +411,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Upload Topic Excel
 router.post(
   "/upload-excel",
   verifyToken,
@@ -398,6 +469,7 @@ router.post(
           descriptionTopic: row.descriptionTopic,
           user: req.userId, // Giả sử req.userId được set bởi middleware xác thực
           teacher: teacher._id, // Gán ObjectId của giáo viên từ kết quả truy vấn
+          status: "Chưa phê duyệt", // Thêm trạng thái mặc định cho đề tài
         });
 
         // Lưu đề tài vào cơ sở dữ liệu
@@ -541,5 +613,48 @@ router.delete("/leave-topic", verifyToken, async (req, res) => {
       .json({ success: false, message: "Lỗi Server", error: error.message });
   }
 });
+
+// Duyệt đề tài của Admin
+router.put(
+  "/approve/:topicId",
+  verifyToken,
+  checkRole("admin"),
+  async (req, res) => {
+    try {
+      const { topicId } = req.params;
+      const { status } = req.body; // 'approved' hoặc 'rejected'
+
+      if (!["Đã phê duyệt", "Chưa phê duyệt", "Từ chối"].includes(status)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Trạng thái không hợp lệ" });
+      }
+
+      const updatedTopic = await Topic.findByIdAndUpdate(
+        topicId,
+        { status },
+        { new: true }
+      );
+
+      if (!updatedTopic) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy đề tài" });
+      }
+
+      res.json({
+        success: true,
+        message: `Đề tài đã được ${
+          status === "approved" ? "duyệt" : "từ chối"
+        }`,
+        topic: updatedTopic,
+      });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ success: false, message: "Lỗi server", error: error.message });
+    }
+  }
+);
 
 module.exports = router;

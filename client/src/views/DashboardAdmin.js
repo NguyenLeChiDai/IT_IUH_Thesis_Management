@@ -88,7 +88,7 @@ const DashboardAdmin = () => {
         {
           text: "Đề tài của giảng viên",
           icon: <TopicIcon />,
-          onClick: () => navigate("/dashboardAdmin"),
+          onClick: () => navigate("/dashboardAdmin/manage-topics"),
         },
         {
           text: "Danh sách đề tài", // Thêm mục "Nhóm sinh viên"
