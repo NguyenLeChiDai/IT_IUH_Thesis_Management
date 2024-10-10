@@ -54,6 +54,8 @@
   border-radius: 20px;
   font-size: 0.8em;
   font-weight: bold;
+  display: inline-block;
+  min-width: 80px;
 }
 
 .status-badge.reviewed {
@@ -75,23 +77,19 @@
   transition: all 0.3s ease;
 }
 
-.report-details h4 {
+.report-detail-title {
   color: #024995;
   margin-bottom: 20px;
 }
 
-.report-details p {
-  margin-bottom: 10px;
+.report-detail-divider {
+  margin: 16px 0;
 }
 
-.report-details strong {
-  color: #495057;
-}
-
-@media (max-width: 768px) {
-  .search-container {
-    flex-direction: column;
-  }
+.report-detail-content {
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
 }
 
 .report-row {
@@ -101,4 +99,95 @@
 
 .report-row:hover {
   background-color: #f1f3f5;
+}
+
+/* Dialog styles */
+.MuiDialog-paper {
+  padding: 24px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .search-container {
+    flex-direction: column;
+  }
+
+  .custom-table td:nth-child(2),
+  .custom-table td:nth-child(3) {
+    width: auto;
+  }
+
+  .MuiDialog-paper {
+    margin: 16px;
+    padding: 16px;
+  }
+
+  .report-detail-content {
+    padding: 12px;
+  }
+}
+
+/* Adjust content when sidebar is open */
+.sidebar-open .thesis-report-container {
+  margin-right: 250px;
+  transition: margin-right 0.3s ease-in-out;
+}
+
+/* Tăng kích thước chữ của mô tả */
+.report-detail-content pre {
+  font-size: 16px; /* Tăng kích thước chữ */
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.5;
+}
+/* Styles for ThesisReportManagement Modal */
+.thesis-report-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  z-index: 1050;
+}
+
+.thesis-report-modal .modal-dialog {
+  margin-top: 50px;
+  max-width: 800px;
+  width: 90%;
+}
+
+.thesis-report-modal .modal-content {
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.thesis-report-modal .modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem;
+}
+
+.thesis-report-modal .modal-body {
+  padding: 1.5rem;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+.thesis-report-modal .modal-footer {
+  border-top: 1px solid #dee2e6;
+  padding: 1rem;
+}
+
+/* Ensure the modal is above everything else */
+.thesis-report-modal {
+  z-index: 9999;
+}
+
+/* Adjust content when modal is open */
+body.modal-open {
+  overflow: hidden;
 }

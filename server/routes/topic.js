@@ -177,7 +177,7 @@ router.get("/get-topic", verifyToken, async (req, res) => {
 });
 
 //Get all topic
-/* router.get("/get-all-topics", verifyToken, async (req, res) => {
+router.get("/get-all-topics", verifyToken, async (req, res) => {
   try {
     // Lấy tất cả các đề tài và populate thông tin giảng viên
     const topics = await Topic.find()
@@ -204,7 +204,7 @@ router.get("/get-topic", verifyToken, async (req, res) => {
       error: error.message,
     });
   }
-}); */
+});
 // Route để đăng tải đề tài
 router.post("/post", verifyToken, async (req, res) => {
   const { topicId, nameTopic, descriptionTopic } = req.body;

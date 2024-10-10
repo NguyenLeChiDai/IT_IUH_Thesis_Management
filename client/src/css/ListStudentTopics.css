@@ -84,6 +84,63 @@
   transform: translateY(-2px);
 }
 
+/* Dialog styles */
+.MuiDialog-paper {
+  padding: 24px;
+}
+
+.topic-detail-title {
+  color: #024995;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+.topic-detail-divider {
+  margin: 16px 0;
+}
+
+.topic-detail-content {
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.topic-name {
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+/* Tùy chỉnh cho màn hình nhỏ */
+@media (max-width: 600px) {
+  .MuiDialog-paper {
+    margin: 16px;
+    padding: 16px;
+  }
+
+  .topic-detail-content {
+    padding: 12px;
+  }
+}
+
+/* Tùy chỉnh cho table */
+.custom-table {
+  cursor: pointer;
+}
+
+.custom-table tr:hover {
+  background-color: #e9ecef;
+}
+
+/* Button trong dialog */
+.MuiDialogActions-root .MuiButton-containedPrimary {
+  background-color: #007bff;
+  color: white;
+}
+
+.MuiDialogActions-root .MuiButton-containedPrimary:hover {
+  background-color: #0056b3;
+}
+
 /* Thiết kế responsive */
 @media (max-width: 768px) {
   .search-container {

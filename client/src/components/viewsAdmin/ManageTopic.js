@@ -289,14 +289,32 @@ const ManageTopic = () => {
             style={{
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center",
+              alignItems: "flex-start", // Sửa đổi: Đảm bảo các phần tử bắt đầu ở đầu hàng dọc
             }}
           >
             <div
               onClick={() => handleTopicClick(topic)}
-              style={{ cursor: "pointer" }}
+              style={{
+                cursor: "pointer",
+                flexGrow: 1, // Sửa đổi: Để nội dung này có thể mở rộng khi tiêu đề dài
+              }}
             >
-              <h2 style={{ fontSize: "1.25rem", fontWeight: "bold" }}>
+              <h2
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "bold",
+                  wordBreak: "break-word",
+                  overflowWrap: "break-word",
+                  hyphens: "auto",
+                  marginBottom: "12px",
+                  lineHeight: "1.4",
+                  textAlign: "left",
+                  width: "100%",
+                  whiteSpace: "normal",
+                  display: "block",
+                  maxWidth: "90%",
+                }}
+              >
                 {topic.nameTopic || "Không có tiêu đề"}
               </h2>
               {topic.teacher && (
@@ -315,7 +333,13 @@ const ManageTopic = () => {
               </span>
             </div>
 
-            <div>
+            <div
+              style={{
+                display: "flex", // Giữ cho các nút nằm ngang
+                flexShrink: 0, // Đảm bảo các nút không bị thu nhỏ khi tiêu đề dài
+                gap: "0.5rem", // Khoảng cách giữa các nút
+              }}
+            >
               <button
                 onClick={() => handleApprove(topic._id, topic.status)}
                 style={{
@@ -327,9 +351,9 @@ const ManageTopic = () => {
                   border: "none",
                   borderRadius: "0.25rem",
                   cursor: "pointer",
-                  display: "inline-flex", // Aligns icon and text in a row
-                  alignItems: "center", // Vertically centers the content
-                  gap: "0.5rem", // Adds space between icon and text
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
                 }}
               >
                 <CheckCircleIcon />
@@ -346,9 +370,9 @@ const ManageTopic = () => {
                   border: "none",
                   borderRadius: "0.25rem",
                   cursor: "pointer",
-                  display: "inline-flex", // Aligns icon and text in a row
-                  alignItems: "center", // Vertically centers the content
-                  gap: "0.5rem", // Adds space between icon and text
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
                 }}
               >
                 <CancelIcon />

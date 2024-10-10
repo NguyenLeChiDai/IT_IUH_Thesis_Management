@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Table, Form, Button } from "react-bootstrap";
 import { Search } from "lucide-react";
-import { InputAdornment, TextField, TablePagination } from "@mui/material";
+import {
+  InputAdornment,
+  TextField,
+  TablePagination,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Typography,
+  Box,
+  Divider,
+} from "@mui/material";
 import axios from "axios";
 import Swal from "sweetalert2";
 import "../../css/ListStudentTopics.css";
@@ -15,6 +26,8 @@ export const ListStudentTopics = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [groupId, setGroupId] = useState(null);
   const [registeredTopicId, setRegisteredTopicId] = useState(null);
+  const [selectedTopic, setSelectedTopic] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
 
   useEffect(() => {
     const fetchTopics = async () => {
@@ -51,7 +64,6 @@ export const ListStudentTopics = () => {
         );
         if (response.data.success) {
           setGroupId(response.data.groupId);
-          // Fetch registered topic for the group
           const topicResponse = await axios.get(
             `http://localhost:5000/api/topics/${response.data.groupId}/topics`,
             {
@@ -145,7 +157,6 @@ export const ListStudentTopics = () => {
 
           setRegisteredTopicId(topicId);
 
-          // Fetch updated topics list after registration
           const updatedTopics = await axios.get(
             "http://localhost:5000/api/topics/approved-topics-student",
             {
@@ -164,6 +175,15 @@ export const ListStudentTopics = () => {
         "error"
       );
     }
+  };
+
+  const handleRowClick = (topic) => {
+    setSelectedTopic(topic);
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
   };
 
   if (loading) return <div>Loading...</div>;
@@ -208,19 +228,22 @@ export const ListStudentTopics = () => {
           {filteredTopics
             .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
             .map((topic, index) => (
-              <tr key={topic._id}>
+              <tr key={topic._id} onClick={() => handleRowClick(topic)}>
                 <td>{index + 1 + page * rowsPerPage}</td>
-                <td>{topic.nameTopic}</td>
+                <td className="topic-name">{topic.nameTopic}</td>
                 <td>{topic.teacher ? topic.teacher.name : "N/A"}</td>
                 <td>{topic.registeredGroupsCount || 0}</td>
                 <td>
                   <Button
                     variant={
                       registeredTopicId === topic._id ? "danger" : "primary"
-                    } // Sử dụng variant "danger" cho nút màu đỏ
+                    }
                     size="sm"
                     className="custom-button"
-                    onClick={() => handleRegister(topic._id, topic.nameTopic)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRegister(topic._id, topic.nameTopic);
+                    }}
                     disabled={registeredTopicId !== null}
                   >
                     {registeredTopicId === topic._id ? "Đã đăng ký" : "Đăng ký"}
@@ -240,6 +263,56 @@ export const ListStudentTopics = () => {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
+
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Typography variant="h4" component="div" gutterBottom>
+            Chi tiết đề tài
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          {selectedTopic && (
+            <Box>
+              <Typography
+                variant="h5"
+                gutterBottom
+                className="topic-detail-title"
+              >
+                {selectedTopic.nameTopic}
+              </Typography>
+              <Divider className="topic-detail-divider" />
+              <Box className="topic-detail-content">
+                <Typography variant="body1" paragraph>
+                  <strong>Giảng viên hướng dẫn:</strong>{" "}
+                  {selectedTopic.teacher ? selectedTopic.teacher.name : "N/A"}
+                </Typography>
+                <Typography variant="body1" paragraph>
+                  <strong>Mô tả:</strong>{" "}
+                  {selectedTopic.descriptionTopic || "Không có mô tả"}
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Số lượng nhóm đã đăng ký:</strong>{" "}
+                  {selectedTopic.registeredGroupsCount || 0}
+                </Typography>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseDialog}
+            variant="contained"
+            color="primary"
+          >
+            Đóng
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

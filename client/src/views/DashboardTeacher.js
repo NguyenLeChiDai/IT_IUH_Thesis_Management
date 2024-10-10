@@ -18,32 +18,36 @@ import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
 import GroupIcon from "@mui/icons-material/Group";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import GradeIcon from "@mui/icons-material/Grade";
-import ScoreIcon from "@mui/icons-material/Score";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import TeacherInfo from "../components/viewTeacher/TeacherInfo";
 import UserMenu from "../components/viewStudent/UserMenu";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-
+import StarIcon from "@mui/icons-material/Star";
+import EditIcon from "@mui/icons-material/Edit";
+import PeopleIcon from "@mui/icons-material/People";
+import ListAltIcon from "@mui/icons-material/ListAlt";
 import "../css/DashboardTeacher.css";
 
 const drawerWidth = 240;
 
 const DashboardTeacher = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [openQuảnLýĐềTài, setOpenQuảnLýĐềTài] = useState(false);
+  const [openSubMenu, setOpenSubMenu] = useState({});
   const navigate = useNavigate();
-  const location = useLocation(); // Hook để lấy đường dẫn hiện tại
-  const isMobile = useMediaQuery("(max-width:600px)"); // Xác định nếu là màn hình nhỏ
+  const location = useLocation();
+  const isMobile = useMediaQuery("(max-width:600px)");
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
-  const toggleQuảnLýĐềTài = () => {
-    setOpenQuảnLýĐềTài(!openQuảnLýĐềTài);
+  const handleToggleSubMenu = (index) => {
+    setOpenSubMenu((prevState) => ({
+      ...prevState,
+      [index]: !prevState[index],
+    }));
   };
 
   const menuItems = [
@@ -56,7 +60,6 @@ const DashboardTeacher = () => {
     {
       text: "Đề Tài",
       icon: <AssignmentIcon />,
-      onClick: toggleQuảnLýĐềTài,
       submenu: [
         {
           text: "Quản Lý Đề Tài",
@@ -65,8 +68,28 @@ const DashboardTeacher = () => {
         },
       ],
     },
-    { text: "Quản Lý Sinh Viên", icon: <GradeIcon /> },
-    { text: "Chấm Điểm", icon: <ScoreIcon /> },
+    {
+      text: "Quản Lý Sinh Viên",
+      icon: <PeopleIcon />,
+      submenu: [
+        {
+          text: "Danh Sách Sinh Viên",
+          icon: <ListAltIcon />,
+          onClick: () => navigate("/dashboardTeacher/input-score"),
+        },
+      ],
+    },
+    {
+      text: "Điểm",
+      icon: <StarIcon />,
+      submenu: [
+        {
+          text: "Nhập Điểm",
+          icon: <EditIcon />,
+          onClick: () => navigate("/dashboardTeacher/upload-topic"),
+        },
+      ],
+    },
   ];
 
   return (
@@ -78,7 +101,7 @@ const DashboardTeacher = () => {
           width:
             sidebarOpen && !isMobile ? `calc(100% - ${drawerWidth}px)` : "100%",
           ml: sidebarOpen && !isMobile ? `${drawerWidth}px` : 0,
-          height: "70px", // Giảm chiều cao của AppBar
+          height: "70px",
         }}
       >
         <Toolbar>
@@ -100,7 +123,7 @@ const DashboardTeacher = () => {
           </Typography>
           <Box sx={{ flexGrow: 1 }} />
           <Box
-            sx={{ display: "flex", alignItems: "center", marginBottom: "10px" }}
+            sx={{ display: "flex", alignItems: "center", marginBottom: "16px" }}
           >
             <UserMenu />
           </Box>
@@ -123,19 +146,23 @@ const DashboardTeacher = () => {
         <List>
           {menuItems.map((item, index) => (
             <div key={index}>
-              <ListItem button onClick={item.onClick || null}>
+              <ListItem
+                button
+                onClick={() => {
+                  if (item.submenu) {
+                    handleToggleSubMenu(index);
+                  } else if (item.onClick) {
+                    item.onClick();
+                  }
+                }}
+              >
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text} />
-                {item.submenu ? (
-                  openQuảnLýĐềTài ? (
-                    <ExpandLess />
-                  ) : (
-                    <ExpandMore />
-                  )
-                ) : null}
+                {item.submenu &&
+                  (openSubMenu[index] ? <ExpandLess /> : <ExpandMore />)}
               </ListItem>
               {item.submenu && (
-                <Collapse in={openQuảnLýĐềTài} timeout="auto" unmountOnExit>
+                <Collapse in={openSubMenu[index]} timeout="auto" unmountOnExit>
                   <List component="div" disablePadding>
                     {item.submenu.map((subItem, subIndex) => (
                       <ListItem
@@ -177,7 +204,7 @@ const DashboardTeacher = () => {
               <TeacherInfo />
             </>
           )}
-          <Outlet /> {/* Nội dung của route con sẽ hiển thị ở đây */}
+          <Outlet />
         </Box>
       </Box>
     </Box>

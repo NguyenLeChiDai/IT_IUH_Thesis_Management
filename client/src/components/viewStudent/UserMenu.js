@@ -38,6 +38,7 @@ const UserMenu = () => {
           height: "50px",
           borderRadius: "50%",
           objectFit: "cover",
+          marginTop: "20px",
         }}
       />
       <Dropdown>

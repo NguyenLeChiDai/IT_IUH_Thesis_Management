@@ -124,7 +124,7 @@ const DashboardStudent = () => {
           <Box sx={{ flexGrow: 1 }} />
 
           <Box
-            sx={{ display: "flex", alignItems: "center", marginBottom: "10px" }}
+            sx={{ display: "flex", alignItems: "center", marginBottom: "16px" }}
           >
             <UserMenu />
           </Box>
