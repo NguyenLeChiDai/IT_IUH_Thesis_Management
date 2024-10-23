@@ -19,8 +19,11 @@ import { ToastContainer } from "react-toastify";
 import { ListStudentTopics } from "./components/viewStudent/ListStudentTopics";
 import ChangePassword from "./components/password/ChangePassword";
 import TopicStudent from "./components/viewStudent/TopicStudent";
-import ThesisReportManagement from "./components/viewStudent/ThesisReportManagement";
+import ThesisReport from "./components/viewStudent/ThesisReport";
 import ManageTopic from "./components/viewsAdmin/ManageTopic";
+import ThesisReportManagement from "./components/viewTeacher/ThesisReportManagement";
+import FolderContent from "./components/viewTeacher/FolderContent";
+import SubmissionDetail from "./components/viewTeacher/SubmissionDetail";
 
 function App() {
   return (
@@ -68,13 +71,19 @@ function App() {
                 element={<ListStudentTopics />}
               />{" "}
               <Route path="TopicStudent" element={<TopicStudent />} />{" "}
-              <Route
-                path="submit-report"
-                element={<ThesisReportManagement />}
-              />{" "}
+              <Route path="submit-report" element={<ThesisReport />} />{" "}
             </Route>
 
             <Route path="/dashboardTeacher" element={<DashboardTeacher />}>
+              <Route
+                path="manage-report-student"
+                element={<ThesisReportManagement />}
+              />{" "}
+              <Route path="folder/:folderId" element={<FolderContent />} />
+              <Route
+                path="submission/:submissionId"
+                element={<SubmissionDetail />}
+              />
               <Route path="upload-topic" element={<PostTheTopic />} />
             </Route>
             <Route path="/change-password" element={<ChangePassword />} />

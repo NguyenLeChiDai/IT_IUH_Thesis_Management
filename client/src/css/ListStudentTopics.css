@@ -59,6 +59,9 @@
 /* Cột đề tài thu nhỏ */
 .custom-table td:nth-child(2) {
   width: 45%;
+  white-space: normal; /* Cho phép xuống dòng */
+  word-wrap: break-word; /* Đảm bảo từ dài sẽ xuống dòng */
+  word-break: break-word; /* Nếu từ quá dài, sẽ ngắt từ đó để xuống dòng */
 }
 
 /* Cột giảng viên mở rộng */
@@ -89,20 +92,27 @@
   padding: 24px;
 }
 
+/* Tên đề tài trong chi tiết xuống dòng */
 .topic-detail-title {
   color: #024995;
   font-weight: bold;
   margin-bottom: 16px;
+  word-wrap: break-word; /* Cho phép xuống dòng khi từ quá dài */
+  word-break: break-word;
 }
 
 .topic-detail-divider {
   margin: 16px 0;
 }
 
+/* Mô tả đề tài trong chi tiết */
 .topic-detail-content {
   padding: 16px;
   background-color: #f8f9fa;
   border-radius: 8px;
+  word-wrap: break-word; /* Cho phép xuống dòng khi từ quá dài */
+  word-break: break-word;
+  white-space: pre-wrap; /* Bảo lưu xuống dòng nếu có trong mô tả */
 }
 
 .topic-name {

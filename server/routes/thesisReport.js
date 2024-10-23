@@ -6,10 +6,59 @@ const fs = require("fs");
 const ThesisReport = require("../models/ThesisReport");
 const ProfileStudent = require("../models/ProfileStudent");
 const Topic = require("../models/Topic");
-const StudentGroup = require("../models/StudentGroup");
-const { verifyToken } = require("../middleware/auth");
+const { verifyToken, checkRole } = require("../middleware/auth");
+const ReportFolder = require("../models/ReportFolder");
 
-// Cấu hình multer
+// Lấy danh sách thư mục báo cáo cho sinh viên
+router.get("/student-folders", verifyToken, async (req, res) => {
+  try {
+    const folders = await ReportFolder.find({ status: "Đang mở" }).sort({
+      createdAt: -1,
+    });
+    res.json({ success: true, folders });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server", error: error.message });
+  }
+});
+
+// Lấy danh sách báo cáo theo thư mục
+router.get("/get-folder-reports/:folderId", verifyToken, async (req, res) => {
+  try {
+    const folderId = req.params.folderId;
+    const userId = req.userId; // Assuming verifyToken middleware sets this
+
+    console.log(`Fetching reports for folder: ${folderId}, user: ${userId}`);
+
+    const student = await ProfileStudent.findOne({ user: userId });
+    if (!student) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found" });
+    }
+
+    const reports = await ThesisReport.find({
+      folder: folderId,
+      student: student._id,
+    })
+      .populate("teacher", "name")
+      .populate("topic", "nameTopic")
+      .sort({ submissionDate: -1 });
+
+    console.log(`Found ${reports.length} reports`);
+
+    res.json({ success: true, reports });
+  } catch (error) {
+    console.error("Error fetching folder reports:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy danh sách báo cáo",
+      error: error.message,
+    });
+  }
+});
+// Cấu hình multer cho việc lưu trữ file
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadDir = path.join(__dirname, "../uploadReports");
@@ -43,80 +92,108 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // Giới hạn kích thước file 5MB
 });
 
-// Route đăng tải báo cáo với file
+// Route xử lý nộp báo cáo với kiểm tra thời hạn
 router.post(
-  "/upload-report",
+  "/submit-report/:folderId",
   verifyToken,
   upload.single("file"),
   async (req, res) => {
     try {
-      if (!req.file) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Vui lòng chọn file để tải lên" });
+      const folder = await ReportFolder.findById(req.params.folderId);
+      if (!folder) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy thư mục",
+        });
       }
 
-      const { title, description } = req.body;
-      if (!title || !description) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Tiêu đề và mô tả là bắt buộc" });
-      }
-      const fileUrl = `/uploads/${req.file.filename}`;
-      const fileName = req.file.originalname;
+      // Kiểm tra thời gian nộp
+      const currentDate = new Date();
+      const deadlineDate = new Date(folder.deadline);
+      let isLate = false;
+      let lateTime = null;
 
-      // Lấy thông tin sinh viên
+      if (currentDate > deadlineDate) {
+        isLate = true;
+        const timeDiff = currentDate - deadlineDate;
+        const hoursDiff = Math.floor(timeDiff / (1000 * 60 * 60));
+        const daysDiff = Math.floor(hoursDiff / 24);
+
+        if (daysDiff > 0) {
+          lateTime = `${daysDiff} ngày`;
+        } else {
+          lateTime = `${hoursDiff} giờ`;
+        }
+      }
+
       const student = await ProfileStudent.findOne({
         user: req.userId,
       }).populate("studentGroup");
-      if (!student) {
-        return res.status(404).json({
-          success: false,
-          message: "Không tìm thấy thông tin sinh viên",
-        });
-      }
 
-      // Lấy thông tin đề tài và giảng viên
       const topic = await Topic.findOne({
         "Groups.group": student.studentGroup,
       }).populate("teacher");
-      if (!topic) {
-        return res.status(404).json({
-          success: false,
-          message: "Không tìm thấy đề tài cho nhóm của bạn",
-        });
-      }
 
+      const fileUrl = `/uploads/${req.file.filename}`;
       const newReport = new ThesisReport({
-        title,
-        description,
+        title: req.body.title,
+        description: req.body.description,
         fileUrl,
-        fileName,
+        fileName: req.file.originalname,
         student: student._id,
         teacher: topic.teacher._id,
         topic: topic._id,
         group: student.studentGroup,
-        status: "Chưa xem",
-        submissionDate: new Date(),
+        folder: folder._id,
+        isLate,
+        lateTime,
       });
 
       await newReport.save();
 
       res.json({
         success: true,
-        message: "Báo cáo đã được gửi thành công",
+        message: isLate
+          ? `Nộp báo cáo thành công (quá hạn ${lateTime})`
+          : "Nộp báo cáo thành công",
         report: newReport,
       });
     } catch (error) {
-      console.error("Error in upload-report:", error);
+      console.error("Error submitting report:", error);
       res.status(500).json({
         success: false,
-        message: "Lỗi server khi tải file lên",
+        message: "Lỗi khi nộp báo cáo",
         error: error.message,
       });
     }
   }
 );
+
+// Route để tải file
+router.get("/download/:filename", verifyToken, async (req, res) => {
+  try {
+    const filename = req.params.filename;
+    const uploadDir = path.join(__dirname, "../uploadReports");
+    const filePath = path.join(uploadDir, filename);
+
+    // Kiểm tra xem file có tồn tại không
+    if (fs.existsSync(filePath)) {
+      res.download(filePath, filename, (err) => {
+        if (err) {
+          console.error("Error downloading file:", err);
+          res.status(500).json({ success: false, message: "Lỗi khi tải file" });
+        }
+      });
+    } else {
+      res.status(404).json({ success: false, message: "Không tìm thấy file" });
+    }
+  } catch (error) {
+    console.error("Error in download route:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server khi tải file" });
+  }
+});
 
 // Sinh viên lấy danh sách báo cáo đã đăng tải
 router.get("/get-report", verifyToken, async (req, res) => {
@@ -166,22 +243,29 @@ router.put("/:id", verifyToken, upload.single("file"), async (req, res) => {
   try {
     const report = await ThesisReport.findById(req.params.id);
     if (!report) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Không tìm thấy báo cáo" });
-    }
-    if (report.status === "Đã xem") {
-      return res
-        .status(400)
-        .json({ success: false, message: "Không thể sửa báo cáo đã được xem" });
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy báo cáo",
+      });
     }
 
-    const { title, description } = req.body;
-    report.title = title || report.title;
-    report.description = description || report.description;
+    // Kiểm tra trạng thái báo cáo
+    if (report.status === "GV đã xem") {
+      return res.status(400).json({
+        success: false,
+        message: "Không thể chỉnh sửa báo cáo đã được giảng viên xem",
+      });
+    }
 
+    // Cập nhật thông tin báo cáo
+    const updates = {
+      title: req.body.title,
+      description: req.body.description,
+    };
+
+    // Nếu có file mới
     if (req.file) {
-      // Xóa file cũ
+      // Xóa file cũ nếu tồn tại
       if (report.fileUrl) {
         const oldFilePath = path.join(__dirname, "..", report.fileUrl);
         fs.unlink(oldFilePath, (err) => {
@@ -189,15 +273,30 @@ router.put("/:id", verifyToken, upload.single("file"), async (req, res) => {
         });
       }
 
-      // Cập nhật file mới
-      report.fileUrl = `/uploads/${req.file.filename}`;
-      report.fileName = req.file.originalname;
+      // Cập nhật thông tin file mới
+      updates.fileUrl = `/uploads/${req.file.filename}`;
+      updates.fileName = req.file.originalname;
     }
 
-    await report.save();
-    res.json({ success: true, message: "Báo cáo đã được cập nhật", report });
+    // Cập nhật báo cáo trong database
+    const updatedReport = await ThesisReport.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      message: "Cập nhật báo cáo thành công",
+      report: updatedReport,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    console.error("Error updating report:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật báo cáo",
+      error: error.message,
+    });
   }
 });
 
@@ -210,7 +309,7 @@ router.delete("/:id", verifyToken, async (req, res) => {
         .status(404)
         .json({ success: false, message: "Không tìm thấy báo cáo" });
     }
-    if (report.status === "Đã xem") {
+    if (report.status === "GV Đã xem") {
       return res
         .status(400)
         .json({ success: false, message: "Không thể xóa báo cáo đã được xem" });

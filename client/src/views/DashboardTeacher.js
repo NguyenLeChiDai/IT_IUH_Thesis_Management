@@ -28,6 +28,7 @@ import StarIcon from "@mui/icons-material/Star";
 import EditIcon from "@mui/icons-material/Edit";
 import PeopleIcon from "@mui/icons-material/People";
 import ListAltIcon from "@mui/icons-material/ListAlt";
+import DocumentScannerIcon from "@mui/icons-material/DocumentScanner";
 import "../css/DashboardTeacher.css";
 
 const drawerWidth = 240;
@@ -56,7 +57,17 @@ const DashboardTeacher = () => {
       icon: <HomeIcon />,
       onClick: () => navigate("/dashboardTeacher"),
     },
-    { text: "Báo cáo", icon: <GroupIcon /> },
+    {
+      text: "Quản lý báo cáo",
+      icon: <GroupIcon />,
+      submenu: [
+        {
+          text: "Báo cáo của sinh viên",
+          icon: <DocumentScannerIcon />,
+          onClick: () => navigate("/dashboardTeacher/manage-report-student"),
+        },
+      ],
+    },
     {
       text: "Đề Tài",
       icon: <AssignmentIcon />,

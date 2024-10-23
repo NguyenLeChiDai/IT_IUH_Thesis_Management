@@ -177,7 +177,9 @@ const TopicStudent = () => {
                   className="topic-header"
                   onClick={() => handleToggle(topicItem.topicId)}
                 >
-                  <h3>{topicItem.nameTopic}</h3>
+                  <h3 style={{ wordBreak: "break-word", overflow: "hidden" }}>
+                    {topicItem.nameTopic}
+                  </h3>
                   <span className="toggle-icon">
                     {expandedTopicId === topicItem.topicId
                       ? "Thu gọn ▲"
@@ -205,7 +207,7 @@ const TopicStudent = () => {
                 {expandedTopicId === topicItem.topicId && (
                   <div className="topic-description">
                     <h4 class="project-title">Mô tả chi tiết đề tài:</h4>
-                    <p>
+                    <p style={{ wordBreak: "break-word", overflow: "hidden" }}>
                       {topicItem.descriptionTopic ||
                         "Không có mô tả cho đề tài này."}
                     </p>

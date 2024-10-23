@@ -24,8 +24,8 @@ const ThesisReportSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ["Chưa xem", "Đã xem"],
-    default: "Chưa xem",
+    enum: ["GV chưa xem", "GV đã xem"],
+    default: "GV chưa xem",
   },
   viewedDate: {
     type: Date,
@@ -54,15 +54,22 @@ const ThesisReportSchema = new Schema({
     ref: "topics",
     required: true,
   },
-  topic: {
-    type: Schema.Types.ObjectId,
-    ref: "topics",
-    required: true,
-  },
   group: {
     type: Schema.Types.ObjectId,
     ref: "studentgroups",
     required: true,
+  },
+  folder: {
+    type: Schema.Types.ObjectId,
+    ref: "reportFolders",
+    required: true,
+  },
+  isLate: {
+    type: Boolean,
+    default: false,
+  },
+  lateTime: {
+    type: String,
   },
 });
 

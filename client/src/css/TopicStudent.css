@@ -150,3 +150,33 @@
   cursor: pointer; /* Con trỏ tay khi di chuột qua */
   transition: color 0.3s; /* Hiệu ứng chuyển màu */
 }
+
+.topic-header h3 {
+  margin: 0;
+  flex: 1; /* Cho phép tiêu đề chiếm hết không gian còn lại */
+  word-wrap: break-word; /* Cho phép văn bản xuống dòng */
+  white-space: pre-wrap; /* Giữ nguyên khoảng trắng và xuống dòng */
+  line-height: 1.4; /* Tăng khoảng cách giữa các dòng */
+  max-width: 85%; /* Giới hạn chiều rộng để tránh xung đột với toggle icon */
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.status-badge.reviewed {
+  background-color: #198754;
+  color: white;
+}
+
+.status-badge.pending {
+  background-color: #ffc107;
+  color: black;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+  font-size: 0.875rem;
+}
