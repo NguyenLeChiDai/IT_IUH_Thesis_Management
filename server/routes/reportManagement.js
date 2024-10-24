@@ -1,8 +1,12 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose"); // Thêm import mongoose
+const { verifyToken } = require("../middleware/auth");
+const { checkRole } = require("../middleware/auth");
+
+// Import các model
 const ReportFolder = require("../models/ReportFolder");
 const ThesisReport = require("../models/ThesisReport");
-const { verifyToken, checkRole } = require("../middleware/auth");
 
 // Lấy danh sách báo cáo trong thư mục (cho giảng viên)
 router.get(
@@ -30,8 +34,18 @@ router.get(
   checkRole("Giảng viên"),
   async (req, res) => {
     try {
+      const { folderId } = req.params;
+
+      // Kiểm tra folderId có hợp lệ không
+      if (!folderId || !mongoose.Types.ObjectId.isValid(folderId)) {
+        return res.status(400).json({
+          success: false,
+          message: "ID thư mục không hợp lệ",
+        });
+      }
+
       // Lấy thông tin thư mục
-      const folder = await ReportFolder.findById(req.params.folderId);
+      const folder = await ReportFolder.findById(folderId);
       if (!folder) {
         return res.status(404).json({
           success: false,
@@ -40,11 +54,13 @@ router.get(
       }
 
       // Lấy tất cả báo cáo trong thư mục với thông tin chi tiết
-      const reports = await ThesisReport.find({ folder: req.params.folderId })
+      const reports = await ThesisReport.find({ folder: folderId })
         .populate({
           path: "student",
+          select: "name studentId",
           populate: {
             path: "studentGroup",
+            select: "groupName profileStudents",
             populate: {
               path: "profileStudents.student",
               select: "name",
@@ -61,24 +77,28 @@ router.get(
         lateSubmissions: reports.filter((report) => report.isLate).length,
       };
 
+      // Format data for response
+      const formattedReports = reports.map((report) => ({
+        id: report._id,
+        groupName: report.student?.studentGroup?.groupName || "Chưa có nhóm",
+        members: report.student?.studentGroup?.profileStudents?.map(
+          (ps) => ps.student?.name
+        ) || [report.student?.name],
+        //studentId: report.student?.studentId,
+        fileName: report.fileName,
+        fileUrl: report.fileUrl,
+        submissionDate: report.submissionDate,
+        status: report.isLate ? `Trễ (${report.lateTime})` : "Đúng hạn",
+        /*  viewStatus: report.status, */
+        topicName: report.topic?.nameTopic || "Chưa có đề tài",
+        description: report.description,
+      }));
+
       res.json({
         success: true,
         data: {
           folder,
-          reports: reports.map((report) => ({
-            id: report._id,
-            groupName: report.student?.studentGroup?.groupName || "N/A",
-            members:
-              report.student?.studentGroup?.profileStudents?.map(
-                (ps) => ps.student?.name
-              ) || [],
-            fileName: report.fileName,
-            fileUrl: report.fileUrl,
-            submissionDate: report.submissionDate,
-            status: report.isLate ? `Trễ (${report.lateTime})` : "Đúng hạn",
-            viewStatus: report.status,
-            topicName: report.topic?.nameTopic,
-          })),
+          reports: formattedReports,
           stats,
         },
       });

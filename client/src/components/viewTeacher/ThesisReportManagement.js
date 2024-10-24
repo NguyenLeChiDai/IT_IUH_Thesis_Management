@@ -103,7 +103,7 @@ const ThesisReportManagement = () => {
 
   // Mở thư mục - Điều hướng đến trang chi tiết thư mục
   const handleOpenFolder = (folder) => {
-    navigate(`/dashboardTeacher/folder/${folder.id}`, {
+    navigate(`/dashboardTeacher/folder/${folder._id}`, {
       state: { folderData: folder },
     });
   };
