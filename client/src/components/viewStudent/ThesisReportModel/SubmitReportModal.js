@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Modal, Form, Button } from "react-bootstrap";
+import "../../../css/SubmitReportModal.css";
+import { toast } from "react-toastify";
 
 const SubmitReportModal = ({
   show,
@@ -42,7 +44,12 @@ const SubmitReportModal = ({
   };
 
   return (
-    <Modal show={show} onHide={onHide} size="lg">
+    <Modal
+      show={show}
+      onHide={onHide}
+      size="lg"
+      className="thesis-report-modal"
+    >
       <Modal.Header closeButton>
         <Modal.Title>
           {editMode ? "Chỉnh sửa báo cáo" : "Nộp báo cáo mới"}

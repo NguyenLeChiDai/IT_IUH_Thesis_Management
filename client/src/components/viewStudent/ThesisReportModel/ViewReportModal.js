@@ -1,12 +1,14 @@
 import React from "react";
 import { Modal, Button, Table } from "react-bootstrap";
 import { FileText, Download } from "lucide-react";
+import "../../../css/ViewReportModal.css";
+import { toast } from "react-toastify";
 
 const ViewReportModal = ({ show, onHide, report, onEdit, onDownload }) => {
   if (!report) return null;
 
   return (
-    <Modal show={show} onHide={onHide} size="lg">
+    <Modal show={show} onHide={onHide} size="lg" className="view-report-modal">
       <Modal.Header closeButton>
         <Modal.Title>Chi tiết báo cáo</Modal.Title>
       </Modal.Header>
@@ -101,11 +103,26 @@ const ViewReportModal = ({ show, onHide, report, onEdit, onDownload }) => {
         <Button variant="secondary" onClick={onHide}>
           Đóng
         </Button>
-        {report.status === "GV chưa xem" && (
+
+        <Button
+          variant="primary"
+          onClick={() => {
+            if (report.status === "GV chưa xem") {
+              onEdit();
+            } else {
+              // Sử dụng toast hoặc alert để thông báo
+              toast.warning("Giáo viên đã xem, không thể chỉnh sửa báo cáo!");
+            }
+          }}
+        >
+          Chỉnh sửa
+        </Button>
+        {/*  nút này cho phép đóng nút chỉnh sửa khi giáo viên đã xem */}
+        {/*  {report.status === "GV chưa xem" && (
           <Button variant="primary" onClick={onEdit}>
             Chỉnh sửa
           </Button>
-        )}
+        )} */}
       </Modal.Footer>
     </Modal>
   );

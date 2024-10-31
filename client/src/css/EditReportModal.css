@@ -1,0 +1,27 @@
+/*để front nộp báo cáo hiển thị lên lớp trên cùng màn hình và ko bị che bới drawer*/
+/* Modal chỉnh sửa báo cáo */
+.edit-report-modal {
+  z-index: 9999 !important;
+}
+
+/* Backdrop của modal */
+.modal-backdrop {
+  z-index: 9998 !important;
+}
+
+/* Đảm bảo SweetAlert2 luôn hiển thị trên cùng */
+.swal2-container {
+  z-index: 10000 !important;
+}
+
+/* Đảm bảo Toast notifications cũng hiển thị đúng */
+.Toastify {
+  z-index: 10001 !important;
+}
+
+/* Tùy chỉnh style cho SweetAlert để nổi bật hơn */
+.swal2-popup {
+  border-radius: 12px !important;
+  padding: 20px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+}

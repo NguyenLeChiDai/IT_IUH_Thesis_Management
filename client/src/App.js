@@ -22,8 +22,8 @@ import TopicStudent from "./components/viewStudent/TopicStudent";
 import ThesisReport from "./components/viewStudent/ThesisReport";
 import ManageTopic from "./components/viewsAdmin/ManageTopic";
 import ThesisReportManagement from "./components/viewTeacher/ThesisReportManagement";
-import FolderContent from "./components/viewTeacher/FolderContent";
-import SubmissionDetail from "./components/viewTeacher/SubmissionDetail";
+import FolderContent from "./components/viewTeacher/ThesisReportManagement/FolderContent";
+import SubmissionDetail from "./components/viewTeacher/ThesisReportManagement/SubmissionDetail";
 
 function App() {
   return (

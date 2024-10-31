@@ -26,6 +26,11 @@ const ReportFolderSchema = new Schema({
     enum: ["Đang mở", "Đã đóng"],
     default: "Đang mở",
   },
+  teacher: {
+    type: Schema.Types.ObjectId,
+    ref: "profileTeacher",
+    required: true,
+  },
 });
 
 module.exports = mongoose.model("reportFolders", ReportFolderSchema);

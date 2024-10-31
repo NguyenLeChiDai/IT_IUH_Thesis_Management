@@ -8,21 +8,89 @@ const ProfileStudent = require("../models/ProfileStudent");
 const Topic = require("../models/Topic");
 const { verifyToken, checkRole } = require("../middleware/auth");
 const ReportFolder = require("../models/ReportFolder");
+const StudentGroup = require("../models/StudentGroup");
+const ProfileTeacher = require("../models/ProfileTeacher");
 
 // Lấy danh sách thư mục báo cáo cho sinh viên
 router.get("/student-folders", verifyToken, async (req, res) => {
   try {
-    const folders = await ReportFolder.find({ status: "Đang mở" }).sort({
-      createdAt: -1,
+    // 1. Tìm thông tin sinh viên từ user ID
+    const student = await ProfileStudent.findOne({ user: req.userId });
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy thông tin sinh viên",
+      });
+    }
+
+    // 2. Kiểm tra xem sinh viên có thuộc nhóm nào không
+    if (!student.studentGroup) {
+      return res.status(400).json({
+        success: false,
+        message: "Sinh viên chưa thuộc nhóm nào",
+      });
+    }
+
+    // 3. Tìm đề tài mà nhóm đã đăng ký và đã được phê duyệt
+    const topic = await Topic.findOne({
+      "Groups.group": student.studentGroup,
+      status: "Đã phê duyệt",
+    }).populate({
+      path: "teacher",
+      select: "_id user",
     });
-    res.json({ success: true, folders });
+
+    if (!topic) {
+      return res.status(400).json({
+        success: false,
+        message: "Nhóm chưa đăng ký đề tài hoặc đề tài chưa được phê duyệt",
+      });
+    }
+
+    // 4. Tìm thông tin profile của giảng viên
+    const teacherProfile = await ProfileTeacher.findById(topic.teacher);
+    if (!teacherProfile) {
+      return res.status(400).json({
+        success: false,
+        message: "Không tìm thấy thông tin giảng viên",
+      });
+    }
+
+    // 5. Tìm các thư mục báo cáo của giảng viên
+    const folders = await ReportFolder.find({
+      teacher: teacherProfile._id,
+      status: "Đang mở",
+    }).sort({ createdAt: -1 });
+
+    // 6. Log để debug
+    console.log({
+      studentId: student._id,
+      groupId: student.studentGroup,
+      topicId: topic._id,
+      teacherProfileId: teacherProfile._id,
+      teacherUserId: teacherProfile.user,
+      foldersFound: folders.length,
+    });
+
+    res.json({
+      success: true,
+      folders,
+      debug: {
+        studentId: student._id,
+        groupId: student.studentGroup,
+        topicId: topic._id,
+        teacherProfileId: teacherProfile._id,
+      },
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: "Lỗi server", error: error.message });
+    console.error("Error in student-folders:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy danh sách thư mục",
+      error: error.message,
+    });
   }
 });
-
 // Lấy danh sách báo cáo theo thư mục
 router.get("/get-folder-reports/:folderId", verifyToken, async (req, res) => {
   try {

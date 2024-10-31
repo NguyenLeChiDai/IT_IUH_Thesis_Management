@@ -13,8 +13,34 @@ const ThesisReportManagement = () => {
   const [alert, setAlert] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState(""); // Thêm state để lưu role của user
 
   useEffect(() => {
+    // Lấy role từ token JWT hoặc local storage
+    const getUserRole = () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          // Decode JWT token để lấy role (nếu bạn lưu role trong token)
+          const base64Url = token.split(".")[1];
+          const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+          const jsonPayload = decodeURIComponent(
+            atob(base64)
+              .split("")
+              .map(function (c) {
+                return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+              })
+              .join("")
+          );
+          const payload = JSON.parse(jsonPayload);
+          setUserRole(payload.role);
+        } catch (error) {
+          console.error("Error decoding token:", error);
+        }
+      }
+    };
+
+    getUserRole();
     fetchFolders();
   }, []);
 

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form, Alert } from "react-bootstrap";
 import { Upload } from "lucide-react";
+import "../../../css/EditReportModal.css";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
 const EditReportModal = ({ show, onHide, report, onSubmit }) => {
   const [title, setTitle] = useState("");
@@ -17,7 +20,7 @@ const EditReportModal = ({ show, onHide, report, onSubmit }) => {
     }
   }, [report]);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     const allowedTypes = [".doc", ".docx", ".xls", ".xlsx"];
     const fileExtension = selectedFile.name
@@ -25,7 +28,7 @@ const EditReportModal = ({ show, onHide, report, onSubmit }) => {
       .substring(selectedFile.name.lastIndexOf("."));
 
     if (!allowedTypes.includes(fileExtension)) {
-      setError("Chỉ chấp nhận file Word hoặc Excel");
+      toast.error("Chỉ chấp nhận file Word hoặc Excel");
       setFile(null);
       e.target.value = null;
       return;
@@ -33,56 +36,129 @@ const EditReportModal = ({ show, onHide, report, onSubmit }) => {
 
     if (selectedFile.size > 5 * 1024 * 1024) {
       // 5MB
-      setError("Kích thước file không được vượt quá 5MB");
+      toast.error("Kích thước file không được vượt quá 5MB");
       setFile(null);
       e.target.value = null;
       return;
     }
 
-    setError("");
-    setFile(selectedFile);
+    // xác nhận file upload
+    const isConfirmed = await Swal.fire({
+      title: "Xác Nhận Tải File",
+      text: `Bạn có chắc chắn muốn tải lên file "${selectedFile.name}" không?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Có, tải lên!",
+      cancelButtonText: "Không",
+    });
+
+    if (isConfirmed.isConfirmed) {
+      setFile(selectedFile);
+      toast.success("File đã được chọn thành công");
+    } else {
+      setFile(null);
+      e.target.value = null;
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!title.trim()) {
-      setError("Vui lòng nhập tiêu đề báo cáo");
+      toast.error("Vui lòng nhập tiêu đề báo cáo");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
-    if (file) {
-      formData.append("file", file);
-    }
+    // xác nhận update
+    const isConfirmed = await Swal.fire({
+      title: "Xác Nhận Cập Nhật",
+      text: "Bạn có chắc chắn muốn cập nhật báo cáo này không?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Có, cập nhật!",
+      cancelButtonText: "Không",
+    });
 
-    try {
-      await onSubmit(formData);
-      handleClose();
-    } catch (error) {
-      setError("Có lỗi xảy ra khi cập nhật báo cáo");
+    if (isConfirmed.isConfirmed) {
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("description", description);
+      if (file) {
+        formData.append("file", file);
+      }
+
+      try {
+        await onSubmit(formData);
+        // Loại bỏ toast.success ở đây và chuyển logic đóng modal vào hàm onSubmit
+        handleClose(true);
+      } catch (error) {
+        toast.error("Có lỗi xảy ra khi cập nhật báo cáo");
+      }
     }
   };
 
-  const handleClose = () => {
-    setTitle("");
-    setDescription("");
-    setFile(null);
-    setError("");
-    onHide();
+  // Thêm các cấu hình mặc định cho tất cả các SweetAlert
+  const defaultSweetAlertConfig = {
+    customClass: {
+      container: "sweet-alert-container",
+      popup: "sweet-alert-popup",
+      title: "sweet-alert-title",
+      confirmButton: "sweet-alert-confirm-btn",
+      cancelButton: "sweet-alert-cancel-btn",
+    },
+    buttonsStyling: true,
+    reverseButtons: true,
+    heightAuto: false,
+    scrollbarPadding: false,
+  };
+
+  // Sửa lại hàm handleClose để nhận tham số skipConfirmation
+  const handleClose = async (skipConfirmation = false) => {
+    if (!skipConfirmation && (title || description || file)) {
+      const isConfirmed = await Swal.fire({
+        ...defaultSweetAlertConfig,
+        title: "Xác Nhận Đóng",
+        text: "Bạn có chắc chắn muốn đóng? Các thay đổi sẽ không được lưu.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Có, đóng!",
+        cancelButtonText: "Không",
+      });
+
+      if (isConfirmed.isConfirmed) {
+        setTitle("");
+        setDescription("");
+        setFile(null);
+        setError("");
+        onHide();
+      }
+    } else {
+      setTitle("");
+      setDescription("");
+      setFile(null);
+      setError("");
+      onHide();
+    }
   };
 
   return (
-    <Modal show={show} onHide={handleClose} size="lg">
+    <Modal
+      show={show}
+      onHide={handleClose}
+      size="lg"
+      className="edit-report-modal"
+    >
       <Modal.Header closeButton>
         <Modal.Title>Chỉnh sửa báo cáo</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form onSubmit={handleSubmit}>
-          {error && <Alert variant="danger">{error}</Alert>}
-
           <Form.Group className="mb-3">
             <Form.Label>
               Tiêu đề báo cáo <span className="text-danger">*</span>

@@ -1,0 +1,9 @@
+/*để front nộp báo cáo hiển thị lên lớp trên cùng màn hình và ko bị che bới drawer*/
+.thesis-report-modal {
+  z-index: 9999 !important;
+}
+
+/* Đảm bảo backdrop cũng hiện thị đúng */
+.modal-backdrop {
+  z-index: 9998 !important;
+}

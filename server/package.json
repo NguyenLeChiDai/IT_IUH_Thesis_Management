@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "archiver": "^7.0.1",
     "argon2": "^0.40.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
