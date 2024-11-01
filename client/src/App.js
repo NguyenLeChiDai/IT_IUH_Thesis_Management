@@ -24,6 +24,12 @@ import ManageTopic from "./components/viewsAdmin/ManageTopic";
 import ThesisReportManagement from "./components/viewTeacher/ThesisReportManagement";
 import FolderContent from "./components/viewTeacher/ThesisReportManagement/FolderContent";
 import SubmissionDetail from "./components/viewTeacher/ThesisReportManagement/SubmissionDetail";
+import ListSudentGroupForTeacher from "./components/viewTeacher/ListStudentgroupForTeacher";
+import ListStudentTeacher from "./components/viewTeacher/ListStudentTeacher";
+import InputScore from "./components/viewTeacher/InputScore";
+import ScoreStudent from "./components/viewStudent/ScoreStudent";
+import MessageTeacher from "./components/viewTeacher/MessageTeacher";
+import MessageStudent from "./components/viewStudent/MessageStudent";
 
 function App() {
   return (
@@ -40,6 +46,7 @@ function App() {
           <Route path="/trangchu" element={<TrangChu />} />
 
           <Route element={<ProtectedRoute />}>
+            {/* Admin */}
             <Route path="/dashboardAdmin" element={<DashboardAdmin />}>
               <Route index element={<HomeAdmin />} />
               <Route
@@ -59,7 +66,7 @@ function App() {
               {/* Đường dẫn cho "Nhóm sinh viên" */}
               <Route path="manage-topics" element={<ManageTopic />} />{" "}
             </Route>
-
+            {/* Sinh viên */}
             <Route path="/dashboardStudent" element={<DashboardStudent />}>
               <Route index element={<StudentInfo />} />{" "}
               <Route
@@ -72,8 +79,11 @@ function App() {
               />{" "}
               <Route path="TopicStudent" element={<TopicStudent />} />{" "}
               <Route path="submit-report" element={<ThesisReport />} />{" "}
+              <Route path="score-student" element={<ScoreStudent />} />{" "}
+              <Route path="messageStudent" element={<MessageStudent />} />
             </Route>
 
+            {/* Giảng viên */}
             <Route path="/dashboardTeacher" element={<DashboardTeacher />}>
               <Route
                 path="manage-report-student"
@@ -85,6 +95,16 @@ function App() {
                 element={<SubmissionDetail />}
               />
               <Route path="upload-topic" element={<PostTheTopic />} />
+              <Route
+                path="list-student-group-teacher"
+                element={<ListSudentGroupForTeacher />}
+              />
+              <Route
+                path="list-student-teacher"
+                element={<ListStudentTeacher />}
+              />
+              <Route path="input-score" element={<InputScore />} />
+              <Route path="messageTeacher" element={<MessageTeacher />} />
             </Route>
             <Route path="/change-password" element={<ChangePassword />} />
           </Route>

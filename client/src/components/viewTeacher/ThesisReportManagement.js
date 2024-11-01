@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Button, Form, Table, Modal, Badge, Alert } from "react-bootstrap";
-import { Folder, Plus, Trash2, FileUp, Calendar } from "lucide-react";
+import { Folder, Plus, Trash2, FileUp, Calendar, Edit } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import EditFolderModal from "./ThesisReportManagement/EditFolderModal";
 
 const ThesisReportManagement = () => {
   const [folders, setFolders] = useState([]);
@@ -196,6 +197,7 @@ const ThesisReportManagement = () => {
       );
 
       if (response.data.success) {
+        // Cập nhật state folders với thư mục đã được cập nhật
         setFolders(
           folders.map((f) =>
             f._id === selectedFolder._id ? response.data.folder : f
@@ -203,6 +205,7 @@ const ThesisReportManagement = () => {
         );
         setShowEditModal(false);
         showAlert("Cập nhật thư mục thành công!");
+        await fetchFolders(); // Refresh danh sách
       }
     } catch (error) {
       showAlert(
@@ -226,7 +229,6 @@ const ThesisReportManagement = () => {
           {alert.message}
         </Alert>
       )}
-
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="mb-0">Quản lý Báo cáo Luận văn</h2>
@@ -235,7 +237,6 @@ const ThesisReportManagement = () => {
           Tạo thư mục mới
         </Button>
       </div>
-
       {/* Search bar */}
       <div className="mb-4">
         <Form.Control
@@ -245,7 +246,6 @@ const ThesisReportManagement = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
-
       {/* Folders list */}
       <Table responsive striped bordered hover>
         <thead className="bg-light">
@@ -299,6 +299,15 @@ const ThesisReportManagement = () => {
                   Mở
                 </Button>
                 <Button
+                  variant="warning"
+                  size="sm"
+                  className="me-2"
+                  onClick={() => handleEditClick(folder)}
+                >
+                  <Edit size={16} className="me-1" />
+                  Sửa
+                </Button>
+                <Button
                   variant="danger"
                   size="sm"
                   onClick={() => handleDeleteFolder(folder._id)}
@@ -310,7 +319,6 @@ const ThesisReportManagement = () => {
           ))}
         </tbody>
       </Table>
-
       {/* Empty state */}
       {(!filteredFolders || filteredFolders.length === 0) && (
         <div className="text-center py-5">
@@ -318,7 +326,6 @@ const ThesisReportManagement = () => {
           <p className="text-muted mb-0">Chưa có thư mục nào được tạo</p>
         </div>
       )}
-
       {/* Create Folder Modal */}
       <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)}>
         <Modal.Header closeButton>
@@ -366,7 +373,21 @@ const ThesisReportManagement = () => {
           </Form>
         </Modal.Body>
       </Modal>
-
+      {/*  Thêm Edit Modal */}
+      <EditFolderModal
+        show={showEditModal}
+        onHide={() => setShowEditModal(false)}
+        selectedFolder={selectedFolder}
+        onUpdate={(updatedFolder) => {
+          setFolders(
+            folders.map((f) =>
+              f._id === updatedFolder._id ? updatedFolder : f
+            )
+          );
+          fetchFolders();
+        }}
+        showAlert={showAlert}
+      />
       {/* Loading overlay */}
       {loading && (
         <div

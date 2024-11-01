@@ -1,0 +1,110 @@
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 100px); /* Điều chỉnh chiều cao tổng thể */
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chat-header {
+  padding: 0.75rem 1rem; /* Giảm padding của header */
+  border-bottom: 1px solid #dee2e6;
+  background-color: #fff;
+}
+
+.messages-area {
+  flex: 1; /* Cho phép khu vực tin nhắn co giãn */
+  height: 0; /* Quan trọng: đặt height: 0 để flex: 1 hoạt động đúng */
+  min-height: 300px; /* Đặt chiều cao tối thiểu */
+  max-height: calc(100vh - 200px); /* Giới hạn chiều cao tối đa */
+  padding: 1rem;
+  overflow-y: auto;
+  background-color: #f8f9fa;
+}
+
+.message-wrapper {
+  display: flex;
+  margin-bottom: 0.75rem; /* Giảm margin giữa các tin nhắn */
+  width: 100%;
+}
+
+.message-bubble {
+  max-width: 70%;
+  padding: 8px 12px; /* Điều chỉnh padding của bong bóng tin nhắn */
+  border-radius: 10px;
+  font-size: 14px;
+  word-wrap: break-word;
+}
+
+.message-input-container {
+  display: flex;
+  gap: 10px;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #dee2e6;
+  background-color: #fff;
+  margin-top: auto;
+  align-items: center;
+}
+
+input.form-control {
+  flex-grow: 1;
+  border-radius: 20px;
+  padding: 8px 15px; /* Điều chỉnh padding của input */
+  height: 40px; /* Đặt chiều cao cố định cho input */
+}
+
+.btn-primary {
+  height: 40px; /* Đặt chiều cao cố định cho button */
+  padding: 0 20px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Điều chỉnh style cho message popover */
+.message-popover {
+  position: absolute;
+  min-width: 120px;
+  border-radius: 8px;
+  padding: 4px;
+  margin-top: 4px; /* Thêm khoảng cách nhỏ từ tin nhắn */
+}
+
+.delete-message-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+/* Điều chỉnh khoảng cách cho tin nhắn */
+.message-sent {
+  margin-left: auto;
+  background-color: #0084ff;
+  color: #fff;
+}
+
+.message-received {
+  margin-right: auto;
+  background-color: #f1f1f1;
+  color: #000;
+}
+
+/* Thêm style cho tin nhắn cuối cùng */
+.message-wrapper:last-child {
+  margin-bottom: 0;
+}
+
+/* Đảm bảo scrollbar không chiếm không gian */
+.messages-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages-area::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.messages-area::-webkit-scrollbar-track {
+  background-color: transparent;
+}

@@ -1,0 +1,141 @@
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: calc(100vh - 100px); /* Điều chỉnh chiều cao tổng thể */
+  border: 1px solid rgba(0, 0, 0, 0.2); /* Thêm viền rõ ràng hơn */
+}
+
+.chat-header {
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+  background-color: #fff;
+}
+
+.messages-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  background-color: #f8f9fa;
+  height: 100%; /* Giới hạn chiều cao của khu vực tin nhắn */
+}
+
+.message-wrapper {
+  display: flex;
+  margin-bottom: 1rem;
+  width: 100%; /* Đảm bảo chiều rộng 100% */
+}
+
+.message-left {
+  justify-content: flex-start; /* Tin nhắn của sinh viên nằm bên trái */
+}
+
+.message-right {
+  justify-content: flex-end; /* Tin nhắn của giảng viên nằm bên phải */
+}
+
+.message-bubble {
+  max-width: 70%; /* Giới hạn chiều rộng tối đa của tin nhắn */
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  word-wrap: break-word; /* Cho phép bọc dòng chữ */
+}
+
+.message-sent {
+  background-color: #007bff; /* Màu xanh cho tin nhắn của giảng viên */
+  color: #fff; /* Đổi sang màu trắng cho chữ */
+}
+
+.message-received {
+  background-color: #f1f1f1;
+  color: black;
+}
+
+.message-input-container {
+  display: flex;
+  gap: 10px; /* Khoảng cách giữa input và button */
+  padding: 1rem; /* Thêm padding để cách đều */
+  border-top: 1px solid #dee2e6; /* Đường viền trên cùng */
+  display: flex;
+}
+
+input.form-control {
+  flex-grow: 1;
+  border-radius: 20px;
+  padding: 8px 15px; /* Điều chỉnh padding của input */
+  height: 40px; /* Đặt chiều cao cố định cho input */
+}
+
+.send-button {
+  display: flex; /* Sử dụng flexbox để căn chỉnh nội dung */
+  align-items: center; /* Căn giữa nội dung theo chiều dọc */
+  padding: 10px 15px; /* Điều chỉnh padding cho button */
+  border-radius: 20px; /* Thêm bo góc cho button */
+  background-color: #007bff; /* Màu nền cho button */
+  color: #fff; /* Màu chữ cho button */
+  border: none; /* Bỏ đường viền */
+  cursor: pointer; /* Hiển thị con trỏ tay khi hover */
+  white-space: nowrap; /* Ngăn không cho nội dung xuống dòng */
+}
+
+.messages-area {
+  height: 450px; /* Đặt chiều cao cố định cho khu vực tin nhắn */
+  padding: 1rem;
+  overflow-y: auto; /* Thêm thanh cuộn nếu có nhiều tin nhắn */
+  background-color: #f8f9fa;
+}
+
+.message-popover {
+  min-width: 120px;
+}
+
+.message-popover button {
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.message-popover button:hover {
+  background-color: #f8f9fa;
+}
+.message-wrapper {
+  position: relative;
+}
+
+.delete-message-btn {
+  color: #dc3545;
+  background-color: transparent;
+  border: none;
+  width: 100%;
+  text-align: center;
+  padding: 8px 12px;
+  transition: all 0.3s ease; /* Tăng thời gian chuyển tiếp */
+  border-radius: 8px; /* Bo tròn cho button */
+  position: relative; /* Để canh giữa hiệu ứng hover */
+}
+
+.delete-message-btn:hover {
+  background-color: rgba(220, 53, 69, 0.1); /* Màu nền tối hơn khi hover */
+  color: #dc3545;
+}
+.message-popover {
+  min-width: 120px;
+  border-radius: 12px; /* Bo tròn cho form */
+  padding: 10px; /* Tăng padding của form một chút */
+  overflow: hidden; /* Quan trọng: ngăn hiệu ứng hover tràn ra ngoài */
+  display: flex; /* Sử dụng flex để căn giữa nội dung */
+  justify-content: center; /* Căn giữa theo chiều ngang */
+}
+
+.message-wrapper {
+  position: relative;
+}

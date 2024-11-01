@@ -1,0 +1,94 @@
+.current-scores {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.score-container {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 10px; /* Giảm khoảng cách giữa các phần tử */
+  flex-wrap: wrap; /* Cho phép các phần tử xuống dòng nếu không đủ không gian */
+}
+
+.score-item {
+  flex: 1 1 calc(33.333% - 10px); /* Điều chỉnh kích thước để 3 item trên một hàng */
+  padding: 10px; /* Giảm padding */
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: all 0.3s ease;
+  min-width: 120px; /* Giảm kích thước tối thiểu */
+  max-width: 180px; /* Giảm kích thước tối đa */
+}
+
+.score-item .MuiPaper-root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+}
+
+.score-item:hover {
+  transform: translateY(-3px); /* Giảm hiệu ứng hover */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.score-item .MuiTypography-subtitle1 {
+  margin-bottom: 4px; /* Giảm margin */
+  color: #666;
+  font-size: 0.9em; /* Giảm kích thước font */
+}
+
+.score-item .MuiTypography-h6 {
+  font-weight: bold;
+  color: #1976d2;
+  font-size: 1.1em; /* Giảm kích thước font */
+}
+
+@media (max-width: 768px) {
+  .score-container {
+    flex-direction: row; /* Giữ layout ngang cho màn hình vừa */
+  }
+
+  .score-item {
+    flex: 1 1 calc(50% - 10px); /* 2 items trên một hàng cho màn hình vừa */
+  }
+}
+
+@media (max-width: 500px) {
+  .score-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .score-item {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+/* Thêm styles mới để đảm bảo form nằm gọn trong màn hình */
+.form-container {
+  max-height: 100vh; /* Chiều cao tối đa bằng chiều cao của viewport */
+  overflow-y: auto; /* Thêm thanh cuộn nếu nội dung vượt quá */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Điều chỉnh kích thước font và spacing cho các phần tử trong form */
+.form-container .MuiTypography-root {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-container .MuiFormControl-root {
+  margin-bottom: 1rem;
+}
+
+.form-container .MuiButton-root {
+  padding: 6px 12px;
+  font-size: 0.9rem;
+}

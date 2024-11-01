@@ -8,6 +8,8 @@ import Swal from "sweetalert2";
 import "font-awesome/css/font-awesome.min.css";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CloseIcon from "@mui/icons-material/Close"; // Import thêm icon "X"
+import { useNavigate } from "react-router-dom";
+
 const TopicStudent = () => {
   const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +17,7 @@ const TopicStudent = () => {
   const { authState } = useContext(AuthContext);
   const [groupId, setGroupId] = useState(null);
   const [expandedTopicId, setExpandedTopicId] = useState(null);
+  const navigate = useNavigate();
 
   const handleToggle = (topicId) => {
     setExpandedTopicId(expandedTopicId === topicId ? null : topicId);
@@ -203,6 +206,66 @@ const TopicStudent = () => {
                   onClick={() => handleLeaveTopic(topicItem.topicId)}
                 >
                   Rời Đề Tài
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+
+                    // Kiểm tra đầy đủ dữ liệu
+                    if (!groupId) {
+                      console.error("groupId is missing:", groupId);
+                      toast.error("Thiếu thông tin nhóm");
+                      return;
+                    }
+
+                    if (
+                      !topicItem?.teacher?.id ||
+                      !topicItem?.teacher?.fullName
+                    ) {
+                      console.error(
+                        "teacher info is missing:",
+                        topicItem?.teacher
+                      );
+                      toast.error("Thiếu thông tin giảng viên");
+                      return;
+                    }
+
+                    // Log để debug
+                    console.log("Original groupId:", groupId);
+                    console.log("TopicItem:", topicItem);
+
+                    // Đảm bảo groupId là string
+                    const groupIdString = groupId.toString();
+                    console.log("GroupId as string:", groupIdString);
+
+                    const stateData = {
+                      teacherInfo: {
+                        id: topicItem.teacher.id,
+                        name: topicItem.teacher.fullName,
+                        role: "teacher",
+                      },
+                      groupInfo: {
+                        _id: groupIdString,
+                      },
+                    };
+
+                    // Log state data trước khi navigate
+                    console.log("Navigating with state:", stateData);
+
+                    navigate("/dashboardStudent/messageStudent", {
+                      state: stateData,
+                    });
+                  }}
+                  style={{
+                    padding: "10px",
+                    backgroundColor: "#2196F3",
+                    color: "white",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                    border: "none",
+                  }}
+                >
+                  Chat với giảng viên
                 </button>
                 {expandedTopicId === topicItem.topicId && (
                   <div className="topic-description">

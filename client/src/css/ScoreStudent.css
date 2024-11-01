@@ -1,0 +1,59 @@
+.current-scores {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.score-container {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 20px;
+}
+
+.score-item {
+  flex: 1;
+  padding: 15px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: all 0.3s ease;
+  min-width: 150px;
+  max-width: 200px;
+}
+
+.score-item .MuiPaper-root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  background-color: #e3f2fd; /* Màu nền xanh nhạt cho điểm */
+}
+
+.score-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.score-item .MuiTypography-subtitle1 {
+  margin-bottom: 8px;
+  color: #1565c0; /* Màu xanh đậm hơn cho tiêu đề */
+}
+
+.score-item .MuiTypography-h6 {
+  font-weight: bold;
+  color: #0d47a1; /* Màu xanh đậm cho điểm */
+}
+
+@media (max-width: 600px) {
+  .score-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .score-item {
+    width: 100%;
+    max-width: none;
+  }
+}

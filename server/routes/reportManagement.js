@@ -547,18 +547,31 @@ router.put(
   checkRole("Giảng viên"),
   async (req, res) => {
     try {
+      const { folderId } = req.params;
       const { name, description, deadline, status } = req.body;
 
+      // Validate required fields
       if (!name || !deadline) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Tên và thời hạn là bắt buộc" });
+        return res.status(400).json({
+          success: false,
+          message: "Tên và thời hạn là bắt buộc",
+        });
       }
 
+      // Find teacher profile
+      const teacherProfile = await ProfileTeacher.findOne({ user: req.userId });
+      if (!teacherProfile) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy thông tin giảng viên",
+        });
+      }
+
+      // Find and update the folder
       const folder = await ReportFolder.findOneAndUpdate(
         {
-          _id: req.params.folderId,
-          teacher: req.userId,
+          _id: folderId,
+          teacher: teacherProfile._id, // Ensure the folder belongs to the teacher
         },
         {
           name,
@@ -566,7 +579,7 @@ router.put(
           deadline,
           status,
         },
-        { new: true }
+        { new: true } // Return the updated document
       );
 
       if (!folder) {
@@ -576,12 +589,14 @@ router.put(
         });
       }
 
+      // Return success response
       res.json({
         success: true,
         message: "Cập nhật thư mục thành công",
         folder,
       });
     } catch (error) {
+      console.error("Error in updating folder:", error);
       res.status(500).json({
         success: false,
         message: "Lỗi server",

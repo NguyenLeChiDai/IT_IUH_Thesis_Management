@@ -657,4 +657,133 @@ router.put(
   }
 );
 
+// hiển thị nhóm đã đăng ký đề tài (giáo viên quản lý thông tin nhóm)
+router.get("/teacher/groups", verifyToken, async (req, res) => {
+  try {
+    const teacherId = req.userId;
+    //console.log("teacherId from token:", teacherId);
+
+    const teacher = await ProfileTeacher.findOne({ user: teacherId });
+    if (!teacher) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Giảng viên không tồn tại" });
+    }
+
+    const topics = await Topic.find({ teacher: teacher._id }).populate({
+      path: "Groups.group",
+      select: "groupName groupStatus profileStudents",
+      model: "studentgroups",
+      populate: {
+        path: "profileStudents.student",
+        select: "studentId name email phone class major gender", // Include all necessary fields
+      },
+    });
+
+    if (topics.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Không có nhóm nào đăng ký đề tài của bạn.",
+      });
+    }
+
+    const groups = topics.flatMap((topic) =>
+      topic.Groups.map((groupRegistration) => ({
+        groupId: groupRegistration.group._id,
+        groupName: groupRegistration.group.groupName,
+        groupStatus: groupRegistration.group.groupStatus,
+        profileStudents: groupRegistration.group.profileStudents.map(
+          (studentRegistration) => ({
+            student: {
+              // _id: studentRegistration.student._id,
+              studentId: studentRegistration.student.studentId,
+              name: studentRegistration.student.name,
+              email: studentRegistration.student.email,
+              phone: studentRegistration.student.phone,
+              class: studentRegistration.student.class,
+              major: studentRegistration.student.major,
+              gender: studentRegistration.student.gender,
+            },
+            role: studentRegistration.role,
+          })
+        ),
+        topic: {
+          topicId: topic._id,
+          nameTopic: topic.nameTopic,
+          descriptionTopic: topic.descriptionTopic,
+          registrationDate: groupRegistration.registrationDate || null,
+        },
+      }))
+    );
+
+    res.json({ success: true, groups });
+  } catch (error) {
+    console.error("Lỗi server:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server", error: error.message });
+  }
+});
+
+// lấy danh sách từng sinh viên để nhập điểm
+router.get("/teacher/students", verifyToken, async (req, res) => {
+  try {
+    const teacherId = req.userId;
+
+    const teacher = await ProfileTeacher.findOne({ user: teacherId });
+    if (!teacher) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Giảng viên không tồn tại" });
+    }
+
+    const topics = await Topic.find({ teacher: teacher._id }).populate({
+      path: "Groups.group",
+      select: "groupName groupStatus profileStudents",
+      model: "studentgroups",
+      populate: {
+        path: "profileStudents.student",
+        select: "studentId name email phone class major gender", // Include all necessary fields
+      },
+    });
+
+    if (topics.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Không có sinh viên nào đăng ký đề tài của bạn.",
+      });
+    }
+
+    // Lấy danh sách sinh viên từ các nhóm
+    const students = topics.flatMap((topic) =>
+      topic.Groups.flatMap((groupRegistration) =>
+        groupRegistration.group.profileStudents.map((studentRegistration) => ({
+          student: {
+            studentId: studentRegistration.student.studentId,
+            name: studentRegistration.student.name,
+            email: studentRegistration.student.email,
+            phone: studentRegistration.student.phone,
+            class: studentRegistration.student.class,
+            major: studentRegistration.student.major,
+            gender: studentRegistration.student.gender,
+          },
+          role: studentRegistration.role,
+          topic: {
+            topicId: topic._id,
+            nameTopic: topic.nameTopic,
+            descriptionTopic: topic.descriptionTopic,
+            registrationDate: groupRegistration.registrationDate || null,
+          },
+        }))
+      )
+    );
+
+    res.json({ success: true, students });
+  } catch (error) {
+    console.error("Lỗi server:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server", error: error.message });
+  }
+});
 module.exports = router;

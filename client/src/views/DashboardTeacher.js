@@ -84,9 +84,10 @@ const DashboardTeacher = () => {
       icon: <PeopleIcon />,
       submenu: [
         {
-          text: "Danh Sách Sinh Viên",
+          text: "Danh Sách Nhóm Sinh Viên",
           icon: <ListAltIcon />,
-          onClick: () => navigate("/dashboardTeacher/input-score"),
+          onClick: () =>
+            navigate("/dashboardTeacher/list-student-group-teacher"),
         },
       ],
     },
@@ -97,7 +98,7 @@ const DashboardTeacher = () => {
         {
           text: "Nhập Điểm",
           icon: <EditIcon />,
-          onClick: () => navigate("/dashboardTeacher/upload-topic"),
+          onClick: () => navigate("/dashboardTeacher/list-student-teacher"),
         },
       ],
     },

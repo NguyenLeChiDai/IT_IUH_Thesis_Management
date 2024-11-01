@@ -21,6 +21,7 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import GradeIcon from "@mui/icons-material/Grade";
 import ScoreIcon from "@mui/icons-material/Score";
 import UserMenu from "../components/viewStudent/UserMenu";
+import { faChartBar } from "@fortawesome/free-solid-svg-icons";
 import "../css/DashboardUser.css";
 import { Outlet, useNavigate } from "react-router-dom";
 import ExpandLess from "@mui/icons-material/ExpandLess"; // Icon thu gọn
@@ -93,7 +94,17 @@ const DashboardStudent = () => {
       ],
     },
     { text: "Tiêu chí Đánh giá của học kỳ", icon: <GradeIcon /> },
-    { text: "Bảng điểm của tôi", icon: <ScoreIcon /> },
+    {
+      text: "Bảng điểm",
+      icon: <ScoreIcon />,
+      subMenu: [
+        {
+          text: "Bảng điểm của tôi",
+          icon: <FontAwesomeIcon icon={faChartBar} />,
+          onClick: () => navigate("/dashboardStudent/score-student"),
+        },
+      ],
+    },
   ];
 
   return (
