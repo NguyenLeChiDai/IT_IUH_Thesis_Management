@@ -74,25 +74,27 @@
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
-.register-link {
-  text-align: center;
+.forgotpassword-link {
+  display: flex; /* Sử dụng flexbox để căn chỉnh items */
+  align-items: center; /* Căn giữa theo chiều dọc */
+  gap: 10px; /* Khoảng cách giữa text và button */
   margin-top: 20px;
   font-size: 14px;
   color: #555;
 }
 
 .btn-forgotpassword {
-  padding: 12px;
+  padding: 8px 12px; /* Giảm padding để button không quá to */
   background: #2846ca;
   color: white;
   border: none;
   border-radius: 5px;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 14px; /* Giảm font-size để cân đối với text */
+  font-weight: 500;
   cursor: pointer;
-  margin-top: 10px;
-  display: block; /* Đảm bảo nút là phần tử block */
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin: 0; /* Xóa margin-top */
+  display: inline-block; /* Chuyển thành inline-block */
 }
 
 .btn-forgotpassword:hover {

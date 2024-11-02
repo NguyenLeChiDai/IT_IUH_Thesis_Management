@@ -124,12 +124,12 @@ function LoginForm() {
           </Link>
         </p> */}
 
-        <p className="forgotpassword-link">
+        <span className="forgotpassword-link">
           Bạn quên mật khẩu?
           <Link to="/forgot-password">
             <Button className="btn-forgotpassword">Lấy lại mật khẩu</Button>
           </Link>
-        </p>
+        </span>
       </div>
     </div>
   );

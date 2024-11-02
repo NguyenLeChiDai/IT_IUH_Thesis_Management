@@ -11,7 +11,7 @@ import ManageStudentAccounts from "./components/viewsAdmin/ManageStudentAccounts
 import DashboardTeacher from "./views/DashboardTeacher";
 import ManageTeacherAccounts from "./components/viewsAdmin/ManageTeacherAccounts";
 import PostTheTopic from "./components/viewTeacher/PostTheTopic";
-import { HomeAdmin } from "./components/viewsAdmin/HomeAdmin";
+import HomeAdmin from "./components/viewsAdmin/HomeAdmin";
 import ManageStudentGroups from "./components/viewsAdmin/ManageStudentGroups";
 import { ListStudentGroups } from "./components/viewStudent/ListStudentGroups";
 import StudentInfo from "./components/viewStudent/StudentInfo";

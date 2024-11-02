@@ -285,7 +285,7 @@ const ThesisReportDetails = ({
                     className="me-2"
                     onClick={() => handleViewReport(report)}
                   >
-                    <Eye size={16} className="me-1" /> Xem
+                    <Eye size={16} className="me-1" /> Xem / Sửa
                   </Button>
                   <Button
                     variant="secondary"

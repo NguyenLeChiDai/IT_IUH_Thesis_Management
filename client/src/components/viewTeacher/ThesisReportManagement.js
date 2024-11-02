@@ -4,6 +4,7 @@ import { Folder, Plus, Trash2, FileUp, Calendar, Edit } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import EditFolderModal from "./ThesisReportManagement/EditFolderModal";
+import "../../css/ThesisReportManagement.css";
 
 const ThesisReportManagement = () => {
   const [folders, setFolders] = useState([]);
@@ -252,8 +253,8 @@ const ThesisReportManagement = () => {
           <tr>
             <th>Tên thư mục</th>
             <th>Mô tả</th>
-            <th>Ngày tạo</th>
-            <th>Thời hạn nộp</th>
+            <th style={{ width: "160px" }}>Ngày tạo</th>
+            <th style={{ width: "160px" }}>Thời hạn nộp</th>
             <th>Số bài nộp</th>
             <th>Trạng thái</th>
             <th>Thao tác</th>
@@ -264,8 +265,10 @@ const ThesisReportManagement = () => {
             <tr key={folder._id}>
               <td>{folder.name}</td>
               <td>{folder.description}</td>
-              <td>{new Date(folder.createdAt).toLocaleString()}</td>
-              <td>
+              <td className="date-column">
+                {new Date(folder.createdAt).toLocaleString()}
+              </td>
+              <td className="date-column">
                 <div className="d-flex align-items-center">
                   <Calendar size={16} className="me-2" />
                   {new Date(folder.deadline).toLocaleString()}

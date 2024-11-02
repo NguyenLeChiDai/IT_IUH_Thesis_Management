@@ -208,7 +208,7 @@ const FolderContent = () => {
                 </Badge>
               </td> */}
               <td>
-                <Button
+                {/*  <Button
                   variant="primary"
                   size="sm"
                   className="me-1"
@@ -216,8 +216,8 @@ const FolderContent = () => {
                     navigate(`/dashboardTeacher/submission/${report.id}`)
                   }
                 >
-                  <Eye size={16} />
-                </Button>
+                  <Eye size={16} /> Xem và nhận xét
+                </Button> */}
                 <Button
                   variant="success"
                   size="sm"
@@ -226,7 +226,7 @@ const FolderContent = () => {
                     navigate(`/dashboardTeacher/submission/${report.id}`)
                   }
                 >
-                  <MessageSquare size={16} />
+                  <MessageSquare size={16} /> Xem / nhận xét
                 </Button>
                 <Button
                   variant="info"
@@ -234,7 +234,7 @@ const FolderContent = () => {
                   onClick={() => handleDownload(report.id, report.fileName)}
                   disabled={loading}
                 >
-                  <Download size={16} />
+                  <Download size={16} /> Tải xuống
                 </Button>
               </td>
             </tr>

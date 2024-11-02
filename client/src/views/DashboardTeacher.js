@@ -142,12 +142,13 @@ const DashboardTeacher = () => {
         </Toolbar>
       </AppBar>
 
+      {/* Ngăn kéo (Drawer) bên trái */}
       <Drawer
         variant="persistent"
         anchor="left"
         open={sidebarOpen}
         sx={{
-          width: "150px",
+          width: "60px",
           flexShrink: 0,
           "& .MuiDrawer-paper": {
             width: drawerWidth,
