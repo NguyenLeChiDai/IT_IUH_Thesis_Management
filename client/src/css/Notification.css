@@ -1,0 +1,47 @@
+/* Notification.css */
+.notification-menu {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  transition: background-color 0.2s ease;
+}
+
+.notification-item:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.notification-message {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge {
+  font-size: 0.8em;
+  padding: 0.35em 0.65em;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Animation cho badge */
+@keyframes notification-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.badge.bg-danger {
+  animation: notification-pulse 2s infinite;
+}

@@ -132,7 +132,7 @@ const ListStudentTeacher = () => {
     return <p className="text-center text-red-500 py-4">Lỗi: {error}</p>;
 
   return (
-    <div className="main-container" style={{ paddingRight: "200px" }}>
+    <div className="main-container" style={{ paddingRight: "50px" }}>
       <div style={{ marginBottom: "1rem", position: "relative" }}>
         <SearchIcon
           style={{

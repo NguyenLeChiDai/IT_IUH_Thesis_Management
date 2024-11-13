@@ -5,6 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import EditFolderModal from "./ThesisReportManagement/EditFolderModal";
 import "../../css/ThesisReportManagement.css";
+import Swal from "sweetalert2";
 
 const ThesisReportManagement = () => {
   const [folders, setFolders] = useState([]);
@@ -143,9 +144,24 @@ const ThesisReportManagement = () => {
 
   // Xóa thư mục
   const handleDeleteFolder = async (folderId) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa thư mục này?")) {
-      setLoading(true);
-      try {
+    try {
+      // Hiển thị confirm dialog sử dụng SweetAlert2
+      const result = await Swal.fire({
+        title: "Xác nhận xóa",
+        text: "Bạn có chắc chắn muốn xóa thư mục này? Hành động này không thể hoàn tác!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Xóa",
+        cancelButtonText: "Hủy",
+        focusCancel: true, // Focus vào nút hủy để tránh xóa nhầm
+      });
+
+      // Nếu user click Xóa
+      if (result.isConfirmed) {
+        setLoading(true);
+
         const response = await axios.delete(
           `http://localhost:5000/api/reportManagements/folder/${folderId}`,
           {
@@ -156,17 +172,33 @@ const ThesisReportManagement = () => {
         );
 
         if (response.data.success) {
-          setFolders(folders.filter((f) => f._id !== folderId));
-          showAlert("Đã xóa thư mục thành công!");
+          // Cập nhật state để remove folder đã xóa
+          setFolders((prevFolders) =>
+            prevFolders.filter((folder) => folder._id !== folderId)
+          );
+
+          // Hiển thị thông báo thành công
+          Swal.fire({
+            title: "Đã xóa!",
+            text: "Thư mục đã được xóa thành công",
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false,
+          });
         }
-      } catch (error) {
-        showAlert(
-          error.response?.data?.message || "Lỗi khi xóa thư mục",
-          "danger"
-        );
-      } finally {
-        setLoading(false);
       }
+    } catch (error) {
+      console.error("Error deleting folder:", error);
+
+      // Hiển thị thông báo lỗi
+      Swal.fire({
+        title: "Lỗi!",
+        text: error.response?.data?.message || "Có lỗi xảy ra khi xóa thư mục",
+        icon: "error",
+        confirmButtonText: "Đóng",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -330,7 +362,11 @@ const ThesisReportManagement = () => {
         </div>
       )}
       {/* Create Folder Modal */}
-      <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)}>
+      <Modal
+        className="create-folder-modal"
+        show={showCreateModal}
+        onHide={() => setShowCreateModal(false)}
+      >
         <Modal.Header closeButton>
           <Modal.Title>Tạo thư mục nộp báo cáo mới</Modal.Title>
         </Modal.Header>

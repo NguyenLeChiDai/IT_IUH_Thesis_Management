@@ -30,6 +30,7 @@ import InputScore from "./components/viewTeacher/InputScore";
 import ScoreStudent from "./components/viewStudent/ScoreStudent";
 import MessageTeacher from "./components/viewTeacher/MessageTeacher";
 import MessageStudent from "./components/viewStudent/MessageStudent";
+import AdminNotifications from "./components/viewsAdmin/AdminNotifications";
 
 function App() {
   return (
@@ -65,6 +66,7 @@ function App() {
               />{" "}
               {/* Đường dẫn cho "Nhóm sinh viên" */}
               <Route path="manage-topics" element={<ManageTopic />} />{" "}
+              <Route path="notifications" element={<AdminNotifications />} />{" "}
             </Route>
             {/* Sinh viên */}
             <Route path="/dashboardStudent" element={<DashboardStudent />}>

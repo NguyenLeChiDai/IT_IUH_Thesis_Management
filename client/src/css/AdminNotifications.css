@@ -1,5 +1,5 @@
-/*để front nộp báo cáo hiển thị lên lớp trên cùng màn hình và ko bị che bới drawer*/
-.create-folder-modal {
+/*để front thông báo hiển thị lên lớp trên cùng màn hình và ko bị che bới drawer*/
+.create-notification-modal {
   z-index: 9999 !important;
 }
 

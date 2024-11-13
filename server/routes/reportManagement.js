@@ -502,9 +502,32 @@ router.delete(
   checkRole("Giảng viên"),
   async (req, res) => {
     try {
+      const { folderId } = req.params;
+
+      // Kiểm tra folder có tồn tại không
+      const folder = await ReportFolder.findById(folderId);
+      if (!folder) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy thư mục",
+        });
+      }
+
+      // Kiểm tra xem folder có thuộc về giảng viên đang đăng nhập không
+      const teacherProfile = await ProfileTeacher.findOne({ user: req.userId });
+      if (
+        !teacherProfile ||
+        folder.teacher.toString() !== teacherProfile._id.toString()
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "Không có quyền xóa thư mục này",
+        });
+      }
+
       // Kiểm tra xem có báo cáo nào trong thư mục không
       const reportsCount = await ThesisReport.countDocuments({
-        folder: req.params.folderId,
+        folder: folderId,
       });
 
       if (reportsCount > 0) {
@@ -514,26 +537,18 @@ router.delete(
         });
       }
 
-      const folder = await ReportFolder.findOneAndDelete({
-        _id: req.params.folderId,
-        teacher: req.userId,
-      });
-
-      if (!folder) {
-        return res.status(404).json({
-          success: false,
-          message: "Không tìm thấy thư mục hoặc không có quyền xóa",
-        });
-      }
+      // Thực hiện xóa folder
+      await ReportFolder.findByIdAndDelete(folderId);
 
       res.json({
         success: true,
         message: "Đã xóa thư mục thành công",
       });
     } catch (error) {
+      console.error("Error in deleting folder:", error);
       res.status(500).json({
         success: false,
-        message: "Lỗi server",
+        message: "Lỗi server khi xóa thư mục",
         error: error.message,
       });
     }

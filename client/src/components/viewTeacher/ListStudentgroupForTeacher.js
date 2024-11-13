@@ -88,7 +88,7 @@ const ListStudentGroupForTeacher = () => {
   );
 
   return (
-    <div className="container-main" style={{ paddingRight: "200px" }}>
+    <div className="container-main" style={{ paddingRight: "50px" }}>
       <h1
         style={{ marginRight: "50px", fontWeight: "Roboto", fontSize: "35px" }}
       >
