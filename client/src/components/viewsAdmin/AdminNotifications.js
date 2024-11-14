@@ -1,20 +1,23 @@
-// AdminNotifications.js
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import moment from "moment";
 import "moment/locale/vi";
-import { Table, Button, Modal } from "react-bootstrap";
+import { Table, Button, Modal, Form, Pagination } from "react-bootstrap";
+import { FaTrash } from "react-icons/fa";
 import "../../css/AdminNotifications.css";
 
 const AdminNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [newNotification, setNewNotification] = useState({
     title: "",
     message: "",
     type: "all",
   });
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [notificationsPerPage] = useState(10);
 
   useEffect(() => {
     fetchNotifications();
@@ -23,7 +26,7 @@ const AdminNotifications = () => {
   const fetchNotifications = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/notification",
+        "http://localhost:5000/api/notification/all",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -63,6 +66,50 @@ const AdminNotifications = () => {
     setLoading(false);
   };
 
+  const handleDeleteNotification = async (id) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa thông báo này?")) {
+      try {
+        const response = await axios.delete(
+          `http://localhost:5000/api/notification/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        if (response.data.success) {
+          fetchNotifications();
+          alert("Đã xóa thông báo thành công");
+        }
+      } catch (error) {
+        console.error("Error deleting notification:", error);
+        alert("Có lỗi xảy ra khi xóa thông báo");
+      }
+    }
+  };
+
+  const filteredNotifications = notifications.filter(
+    (notification) =>
+      notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      notification.message.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const indexOfLastNotification = currentPage * notificationsPerPage;
+  const indexOfFirstNotification =
+    indexOfLastNotification - notificationsPerPage;
+  const currentNotifications = filteredNotifications.slice(
+    indexOfFirstNotification,
+    indexOfLastNotification
+  );
+
+  const totalPages = Math.ceil(
+    filteredNotifications.length / notificationsPerPage
+  );
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   const getTypeLabel = (type) => {
     switch (type) {
       case "all":
@@ -93,9 +140,18 @@ const AdminNotifications = () => {
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Quản lý thông báo</h2>
-        <Button variant="primary" onClick={() => setShowCreateModal(true)}>
-          Tạo thông báo mới
-        </Button>
+        <div className="d-flex gap-3">
+          <Form.Control
+            type="search"
+            placeholder="Tìm kiếm thông báo..."
+            className="search-input"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <Button variant="primary" onClick={() => setShowCreateModal(true)}>
+            Tạo thông báo mới
+          </Button>
+        </div>
       </div>
 
       <Table responsive striped bordered hover>
@@ -105,14 +161,19 @@ const AdminNotifications = () => {
             <th>Nội dung</th>
             <th>Đối tượng</th>
             <th>Thời gian</th>
-            <th>Đã đọc</th>
+            <th>Người tạo</th>
+            <th>Hoạt động</th>
           </tr>
         </thead>
         <tbody>
-          {notifications.map((notification) => (
+          {filteredNotifications.map((notification) => (
             <tr key={notification._id}>
-              <td>{notification.title}</td>
-              <td>{notification.message}</td>
+              <td className="title-cell">{notification.title}</td>
+              <td className="message-cell">
+                {notification.message.length > 300
+                  ? `${notification.message.substring(0, 300)}...`
+                  : notification.message}
+              </td>
               <td>
                 <span
                   className={`badge bg-${getTypeVariant(notification.type)}`}
@@ -123,13 +184,45 @@ const AdminNotifications = () => {
               <td>
                 {moment(notification.createdAt).format("DD/MM/YYYY HH:mm")}
               </td>
-              <td>{notification.readBy.length} người dùng</td>
+              <td>{notification.createdBy?.username || "N/A"}</td>
+              <td>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => handleDeleteNotification(notification._id)}
+                >
+                  <FaTrash />
+                </Button>
+              </td>
             </tr>
           ))}
         </tbody>
       </Table>
 
-      {/* Modal tạo thông báo */}
+      <div className="d-flex justify-content-end mt-4">
+        <Pagination>
+          <Pagination.First onClick={() => handlePageChange(1)} />
+          <Pagination.Prev
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          />
+          {[...Array(totalPages)].map((_, index) => (
+            <Pagination.Item
+              key={index}
+              active={index + 1 === currentPage}
+              onClick={() => handlePageChange(index + 1)}
+            >
+              {index + 1}
+            </Pagination.Item>
+          ))}
+          <Pagination.Next
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          />
+          <Pagination.Last onClick={() => handlePageChange(totalPages)} />
+        </Pagination>
+      </div>
+
       <Modal
         className="create-notification-modal"
         show={showCreateModal}
@@ -159,7 +252,7 @@ const AdminNotifications = () => {
               <label className="form-label">Nội dung</label>
               <textarea
                 className="form-control"
-                rows="3"
+                rows="4"
                 value={newNotification.message}
                 onChange={(e) =>
                   setNewNotification({

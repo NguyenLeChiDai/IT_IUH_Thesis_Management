@@ -31,6 +31,7 @@ import ScoreStudent from "./components/viewStudent/ScoreStudent";
 import MessageTeacher from "./components/viewTeacher/MessageTeacher";
 import MessageStudent from "./components/viewStudent/MessageStudent";
 import AdminNotifications from "./components/viewsAdmin/AdminNotifications";
+import NotificationPage from "./components/Notification/NotificationPage";
 
 function App() {
   return (
@@ -107,6 +108,7 @@ function App() {
               />
               <Route path="input-score" element={<InputScore />} />
               <Route path="messageTeacher" element={<MessageTeacher />} />
+              <Route path="notification-page" element={<NotificationPage />} />
             </Route>
             <Route path="/change-password" element={<ChangePassword />} />
           </Route>

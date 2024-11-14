@@ -178,7 +178,21 @@ const UserMenu = () => {
                   style={{ cursor: "pointer" }}
                 >
                   <div className="d-flex flex-column">
-                    <span className="fw-bold">{notif.title}</span>
+                    <div className="d-flex justify-content-between align-items-center">
+                      <span className="fw-bold" style={{ color: "black" }}>
+                        {notif.title}
+                      </span>
+                      {!notif.isRead && (
+                        <div
+                          className="notification-dot bg-danger"
+                          style={{
+                            width: "8px",
+                            height: "8px",
+                            borderRadius: "50%",
+                          }}
+                        ></div>
+                      )}
+                    </div>
                     <span className="notification-message">
                       {getNotificationPreview(notif.message)}
                     </span>
@@ -202,7 +216,7 @@ const UserMenu = () => {
             <div className="p-2 text-center border-top">
               <button
                 className="btn btn-link btn-sm text-decoration-none"
-                onClick={() => navigate("/notifications")}
+                onClick={() => navigate("/dashboardTeacher/notification-page")}
               >
                 Xem tất cả thông báo
               </button>

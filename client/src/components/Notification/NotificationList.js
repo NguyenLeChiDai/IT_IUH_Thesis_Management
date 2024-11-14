@@ -1,4 +1,3 @@
-// NotificationList.js
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { AuthContext } from "../../contexts/AuthContext";
@@ -42,10 +41,14 @@ const NotificationList = () => {
           },
         }
       );
-      fetchNotifications(); // Refresh notifications
+      fetchNotifications();
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
+  };
+
+  const getMessagePreview = (message) => {
+    return message.length > 100 ? `${message.substring(0, 100)}...` : message;
   };
 
   return (
@@ -58,16 +61,21 @@ const NotificationList = () => {
           }`}
           onClick={() => markAsRead(notification._id)}
         >
-          <div className="d-flex justify-content-between">
-            <h6 className="mb-1">{notification.title}</h6>
+          <div className="d-flex justify-content-between align-items-center">
+            <h6 className="mb-1 fw-bold">{notification.title}</h6>
             <small className="text-muted">
               {moment(notification.createdAt).fromNow()}
             </small>
           </div>
-          <p className="mb-1">{notification.message}</p>
-          <small className="text-muted">
-            Gửi bởi: {notification.createdBy.username}
-          </small>
+          <p className="mb-2">{getMessagePreview(notification.message)}</p>
+          <div className="d-flex justify-content-between align-items-center">
+            <small className="text-muted">
+              Gửi bởi: {notification.createdBy?.username}
+            </small>
+            {!notification.isRead && (
+              <span className="badge bg-primary">Chưa đọc</span>
+            )}
+          </div>
         </div>
       ))}
       {notifications.length === 0 && (

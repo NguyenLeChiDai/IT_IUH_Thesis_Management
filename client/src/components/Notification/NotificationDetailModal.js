@@ -1,6 +1,7 @@
 import React from "react";
 import { Modal, Button } from "react-bootstrap";
 import moment from "moment";
+import "../../css/NotificationDetailModal.css";
 
 const NotificationDetailModal = ({
   notification,
@@ -16,7 +17,12 @@ const NotificationDetailModal = ({
   };
 
   return (
-    <Modal show={show} onHide={onHide} centered>
+    <Modal
+      className="view-notification-detail-modal"
+      show={show}
+      onHide={onHide}
+      centered
+    >
       <Modal.Header closeButton>
         <Modal.Title>{notification.title}</Modal.Title>
       </Modal.Header>
@@ -33,7 +39,11 @@ const NotificationDetailModal = ({
             </p>
             <p className="mb-1">
               <strong>Trạng thái:</strong>{" "}
-              {notification.isRead ? "Đã đọc" : "Chưa đọc"}
+              {notification.isRead ? (
+                <span className="text-success">Đã đọc</span>
+              ) : (
+                <span className="text-danger">Chưa đọc</span>
+              )}
             </p>
           </div>
         </div>

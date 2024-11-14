@@ -7,3 +7,38 @@
 .modal-backdrop {
   z-index: 9998 !important;
 }
+
+/* CSS để giới hạn chiều cao của tiêu đề và nội dung */
+.table td {
+  vertical-align: middle; /* Căn giữa nội dung theo chiều dọc */
+  word-break: break-word; /* Đảm bảo tiêu đề và nội dung xuống dòng khi cần */
+}
+
+/* Đảm bảo tiêu đề luôn xuống dòng */
+.table td:first-child {
+  max-width: 300px; /* Thiết lập chiều rộng tối đa cho tiêu đề */
+  white-space: normal; /* Cho phép xuống dòng */
+}
+
+/* Giới hạn hiển thị tối đa 2 dòng cho nội dung */
+.table td:nth-child {
+  max-width: 500px; /* Điều chỉnh chiều rộng theo nhu cầu */
+  white-space: normal;
+}
+.title-cell {
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.message-cell {
+  max-width: 400px;
+  white-space: pre-wrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-input {
+  width: 300px;
+}

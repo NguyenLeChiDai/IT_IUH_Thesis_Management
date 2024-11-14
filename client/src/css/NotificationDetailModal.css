@@ -1,0 +1,14 @@
+/*để front hiển thị lên lớp trên cùng màn hình và ko bị che bới drawer*/
+.view-notification-detail-modal {
+  z-index: 9999 !important;
+}
+
+/* Đảm bảo backdrop cũng hiện thị đúng */
+.modal-backdrop {
+  z-index: 9998 !important;
+}
+
+.notification-message {
+  font-size: 15px;
+  white-space: pre-wrap;
+}
