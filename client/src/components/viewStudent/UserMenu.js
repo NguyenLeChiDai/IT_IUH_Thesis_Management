@@ -9,6 +9,7 @@ import "moment/locale/vi";
 import "../../css/UserMenu.css";
 import avatar from "../../assets/avatar.png";
 import NotificationDetailModal from "../Notification/NotificationDetailModal";
+import MessageNotificationBell from "../Notification/MessageNotificationBell";
 
 const UserMenu = () => {
   const navigate = useNavigate();
@@ -127,6 +128,7 @@ const UserMenu = () => {
 
   return (
     <div className="user-dropdown d-flex align-items-center gap-3">
+      <MessageNotificationBell />
       <div
         className="position-relative"
         style={{ marginTop: "20px" }}

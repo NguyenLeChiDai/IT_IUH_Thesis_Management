@@ -19,6 +19,7 @@ const reportManagementRouter = require("./routes/reportManagement");
 const scoreStudent = require("./routes/scoreStudent");
 const message = require("./routes/message");
 const notification = require("./routes/notification");
+const messageNotification = require("./routes/messageNotification");
 
 //------- Kết nối CSDL
 const connectDB = async () => {
@@ -67,6 +68,7 @@ app.use("/api/reportManagements", reportManagementRouter);
 app.use("/api/scores", scoreStudent);
 app.use("/api/messages", message);
 app.use("/api/notification", notification);
+app.use("/api/messageNotification", messageNotification);
 
 // Create HTTP Server socket.io
 const server = http.createServer(app);

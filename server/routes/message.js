@@ -7,6 +7,7 @@ const Group = require("../models/StudentGroup");
 const ProfileStudent = require("../models/ProfileStudent");
 const ProfileTeacher = require("../models/ProfileTeacher");
 const Topic = require("../models/Topic");
+const MessageNotification = require("../models/MessageNotification");
 // @route GET api/messages/history/:partnerId
 // @desc Lấy lịch sử chat với một người/nhóm
 // @access Private
@@ -183,6 +184,46 @@ router.post("/send-new", verifyToken, async (req, res) => {
 
     const savedMessage = await Message.create(newMessage);
 
+    //////////////////////////////////////////////////////////////////////////////
+    // Trong route POST /api/messages/send-new, thêm đoạn code sau sau khi lưu tin nhắn:
+    const createNotifications = async (message, group, sender) => {
+      try {
+        const notifications = [];
+
+        if (group) {
+          // Nếu là tin nhắn nhóm, tạo thông báo cho tất cả thành viên trừ người gửi
+          const members = group.profileStudents.map(
+            (student) => student.student
+          );
+          if (group.teacher) members.push(group.teacher);
+
+          for (const memberId of members) {
+            if (memberId.toString() !== sender._id.toString()) {
+              notifications.push({
+                recipient: memberId,
+                sender: sender._id,
+                senderModel: message.senderModel,
+                message: message._id,
+                groupId: group._id,
+              });
+            }
+          }
+        } else {
+          // Nếu là tin nhắn cá nhân
+          notifications.push({
+            recipient: message.receiver,
+            sender: sender._id,
+            senderModel: message.senderModel,
+            message: message._id,
+          });
+        }
+
+        await MessageNotification.insertMany(notifications);
+      } catch (error) {
+        console.error("Error creating notifications:", error);
+      }
+    };
+
     // Lấy thông tin người gửi kèm tên bằng cách populate
     const populatedMessage = await savedMessage.populate({
       path: "sender",
@@ -327,12 +368,10 @@ router.get("/group/:groupId", async (req, res) => {
       .exec();
 
     if (!messages) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "Không tìm thấy tin nhắn cho nhóm này.",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy tin nhắn cho nhóm này.",
+      });
     }
 
     res.status(200).json({ success: true, messages });
