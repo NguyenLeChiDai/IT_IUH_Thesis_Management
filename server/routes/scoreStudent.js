@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { verifyToken } = require("../middleware/auth");
 
-const Score = require("../models/ScoreStudent"); // Import model profile
+const Score = require("../models/ScoreStudent.js"); // Import model profile
 const Topic = require("../models/Topic");
 const Student = require("../models/ProfileStudent"); // Import model profileStudent
 const Teacher = require("../models/ProfileTeacher"); // Import model profileTeacher

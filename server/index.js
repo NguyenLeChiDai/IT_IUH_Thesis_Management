@@ -21,6 +21,8 @@ const message = require("./routes/message");
 const notification = require("./routes/notification");
 const messageNotification = require("./routes/messageNotification");
 const reviewAssignments = require("./routes/reviewAssignment");
+const councilAssignments = require("./routes/councilAssignment");
+const posterAssignments = require("./routes/posterAssignment");
 
 //------- Kết nối CSDL
 const connectDB = async () => {
@@ -71,6 +73,8 @@ app.use("/api/messages", message);
 app.use("/api/notification", notification);
 app.use("/api/messageNotification", messageNotification);
 app.use("/api/reviewAssignment", reviewAssignments);
+app.use("/api/councilAssignment", councilAssignments);
+app.use("/api/posterAssignment", posterAssignments);
 
 // Create HTTP Server socket.io
 const server = http.createServer(app);
