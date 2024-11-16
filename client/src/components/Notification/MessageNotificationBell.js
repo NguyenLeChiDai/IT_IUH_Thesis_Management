@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Badge } from "react-bootstrap";
-import axios from "axios";
 import { MessageCircle } from "lucide-react";
+import axios from "axios";
 import moment from "moment";
+import { useNavigate } from "react-router-dom";
 
 const MessageNotificationBell = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
 
   const fetchUnreadCount = async () => {
     try {
@@ -17,13 +19,10 @@ const MessageNotificationBell = () => {
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
           },
         }
       );
-      if (response.data.success) {
-        setUnreadCount(response.data.count);
-      }
+      setUnreadCount(response.data.count);
     } catch (error) {
       console.error("Error fetching unread count:", error);
     }
@@ -32,48 +31,19 @@ const MessageNotificationBell = () => {
   const fetchNotifications = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/messageNotification",
+        "http://localhost:5000/api/messageNotification/notifications",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
           },
         }
       );
-      if (response.data.success) {
-        setNotifications(response.data.notifications);
-      }
+      setNotifications(response.data.notifications || []);
     } catch (error) {
       console.error("Error fetching notifications:", error);
+      setNotifications([]);
     }
   };
-
-  const markAsRead = async (notificationId) => {
-    try {
-      const response = await axios.put(
-        `http://localhost:5000/api/messageNotification/mark-read/${notificationId}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (response.data.success) {
-        fetchUnreadCount();
-        fetchNotifications();
-      }
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000); // Poll every 30 seconds
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -85,11 +55,102 @@ const MessageNotificationBell = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleNotificationClick = async (notification) => {
+    try {
+      // Kiểm tra xem notification và groupId có tồn tại không
+      if (!notification || !notification.groupId?._id) {
+        console.error("Invalid notification data");
+        return;
+      }
+
+      await axios.put(
+        `http://localhost:5000/api/messageNotification/mark-group-read/${notification.groupId._id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      const userRole = localStorage.getItem("role");
+      if (userRole === "Giảng viên") {
+        navigate("/dashboardTeacher/messageTeacher", {
+          state: {
+            groupInfo: {
+              id: notification.groupId._id,
+              name: notification.groupId.groupName || "Unknown Group",
+              members: notification.groupId.members || [],
+            },
+          },
+        });
+      } else {
+        navigate("/dashboardStudent/messageStudent", {
+          state: {
+            groupInfo: {
+              _id: notification.groupId._id,
+              name: notification.groupId.groupName || "Unknown Group",
+            },
+            teacherInfo: {
+              id: notification.sender?._id || "",
+              name: notification.sender?.name || "Unknown Teacher",
+            },
+          },
+        });
+      }
+
+      setShowDropdown(false);
+      fetchUnreadCount();
+      fetchNotifications();
+    } catch (error) {
+      console.error("Error handling notification click:", error);
+    }
+  };
+
   const handleBellClick = () => {
     setShowDropdown(!showDropdown);
     if (!showDropdown) {
       fetchNotifications();
     }
+  };
+
+  const renderNotificationContent = (notification) => {
+    if (!notification) return null;
+
+    return (
+      <div
+        key={notification._id}
+        className={`p-2 border-bottom ${
+          !notification.isRead ? "bg-light" : ""
+        }`}
+        onClick={() => handleNotificationClick(notification)}
+        style={{ cursor: "pointer" }}
+      >
+        <div
+          className="d-flex justify-content-between"
+          style={{ color: "black" }}
+        >
+          <strong>{notification.sender?.name}</strong>
+          <small className="text-muted">
+            {moment(notification.timestamp).fromNow()}
+          </small>
+        </div>
+        {notification.groupId && (
+          <div className="text-muted small mb-1" style={{ color: "black" }}>
+            Nhóm: {notification.groupId.groupName}
+          </div>
+        )}
+        <div className="text-truncate" style={{ color: "black" }}>
+          {notification.messageContent}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -124,33 +185,9 @@ const MessageNotificationBell = () => {
         >
           <h6 className="mb-3">Tin nhắn mới</h6>
           {notifications.length > 0 ? (
-            notifications.map((notification) => (
-              <div
-                key={notification._id}
-                className={`p-2 border-bottom ${
-                  !notification.isRead ? "bg-light" : ""
-                }`}
-                onClick={() => markAsRead(notification._id)}
-                style={{ cursor: "pointer" }}
-              >
-                <div className="d-flex justify-content-between">
-                  <strong>{notification.sender?.name}</strong>
-                  <small className="text-muted">
-                    {moment(notification.createdAt).fromNow()}
-                  </small>
-                </div>
-                <div>
-                  {notification.groupId ? (
-                    <small className="text-muted">
-                      Nhóm: {notification.groupId.name}
-                    </small>
-                  ) : null}
-                </div>
-                <div className="text-truncate">
-                  {notification.message?.content}
-                </div>
-              </div>
-            ))
+            notifications.map((notification) =>
+              renderNotificationContent(notification)
+            )
           ) : (
             <div className="text-center text-muted">Không có tin nhắn mới</div>
           )}

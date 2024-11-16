@@ -22,6 +22,7 @@ const StudentGroupSchema = new Schema({
         ref: "profileStudent",
         required: false,
       },
+
       role: {
         type: String,
         enum: ["Nhóm trưởng", "Thành viên"],
@@ -29,6 +30,11 @@ const StudentGroupSchema = new Schema({
       },
     },
   ],
+  teacher: {
+    type: Schema.Types.ObjectId,
+    ref: "profileTeacher",
+    required: true,
+  },
 });
 
 module.exports = mongoose.model("studentgroups", StudentGroupSchema);
