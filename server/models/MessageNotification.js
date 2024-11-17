@@ -17,6 +17,12 @@ const MessageNotificationSchema = new Schema({
     required: true,
     enum: ["profileTeacher", "profileStudent"],
   },
+  messageType: {
+    type: String,
+    enum: ["direct", "group"],
+    required: true,
+    default: "direct",
+  },
   message: {
     type: Schema.Types.ObjectId,
     ref: "Message",

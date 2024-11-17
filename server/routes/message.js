@@ -101,166 +101,6 @@ router.get("/unread", verifyToken, async (req, res) => {
   }
 });
 
-// @route POST api/messages/send-new
-// @desc Gửi tin nhắn mới vào nhóm
-// @access Private
-/* router.post("/send-new", verifyToken, async (req, res) => {
-  try {
-    const { content, groupId } = req.body;
-
-    const senderModel =
-      req.role === "Giảng viên" ? "profileTeacher" : "profileStudent";
-
-    // Validate input
-    if (!content || !groupId) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing required fields",
-      });
-    }
-
-    // Tìm profile người gửi
-    let sender;
-    if (senderModel === "profileTeacher") {
-      sender = await ProfileTeacher.findOne({ user: req.userId });
-    } else {
-      sender = await ProfileStudent.findOne({ user: req.userId });
-    }
-
-    if (!sender) {
-      return res.status(404).json({
-        success: false,
-        message: "Sender profile not found",
-      });
-    }
-
-    // Kiểm tra group nếu có
-    const group = await Group.findById(groupId);
-    if (!group) {
-      return res.status(404).json({
-        success: false,
-        message: "Group not found",
-      });
-    }
-
-    // Kiểm tra nếu là sinh viên trong nhóm
-    if (senderModel === "profileStudent") {
-      const isMember = group.profileStudents.some(
-        (student) => student.student.toString() === sender._id.toString()
-      );
-      if (!isMember) {
-        return res.status(403).json({
-          success: false,
-          message: "You are not a member of this group",
-        });
-      }
-    }
-
-    // Kiểm tra xem tin nhắn đã tồn tại hay chưa
-    const existingMessage = await Message.findOne({
-      content,
-      sender: sender._id,
-      groupId,
-      senderModel,
-      isRead: false,
-      timestamp: { $gte: new Date(Date.now() - 60000) }, // Kiểm tra trong 60 giây qua
-    });
-
-    if (existingMessage) {
-      return res.status(409).json({
-        success: false,
-        message: "This message already exists.",
-      });
-    }
-
-    // Tạo và lưu tin nhắn cho nhóm
-    const newMessage = {
-      sender: sender._id,
-      senderModel,
-      content,
-      groupId,
-      receiverModel: "studentgroups", // Đặt receiverModel là 'studentgroups' để biết đây là tin nhắn nhóm
-    };
-
-    //////////////////////////////////////////////////////////////////////////////
-    // Trong route POST /api/messages/send-new, thêm đoạn code sau sau khi lưu tin nhắn:
-    const createNotifications = async (message, group, sender) => {
-      try {
-        const notifications = [];
-
-        if (group) {
-          // Nếu là tin nhắn nhóm, tạo thông báo cho tất cả thành viên trừ người gửi
-          const members = group.profileStudents.map(
-            (student) => student.student
-          );
-          if (group.teacher) members.push(group.teacher);
-
-          for (const memberId of members) {
-            if (memberId.toString() !== sender._id.toString()) {
-              notifications.push({
-                recipient: memberId,
-                sender: sender._id,
-                senderModel: message.senderModel,
-                message: message._id,
-                groupId: group._id,
-              });
-            }
-          }
-        } else {
-          // Nếu là tin nhắn cá nhân
-          notifications.push({
-            recipient: message.receiver,
-            sender: sender._id,
-            senderModel: message.senderModel,
-            message: message._id,
-          });
-        }
-
-        await MessageNotification.insertMany(notifications);
-      } catch (error) {
-        console.error("Error creating notifications:", error);
-      }
-    };
-
-    // Sau khi lưu tin nhắn mới
-    const savedMessage = await Message.create(newMessage);
-    await createNotifications(savedMessage, group, sender);
-
-    // Lấy thông tin người gửi kèm tên bằng cách populate
-    const populatedMessage = await savedMessage.populate({
-      path: "sender",
-      select: "name email",
-      model: senderModel, // model là profileTeacher hoặc profileStudent
-    });
-
-    // Chuẩn bị response
-    const messageResponse = {
-      _id: populatedMessage._id,
-      sender: {
-        _id: populatedMessage.sender._id,
-        name: populatedMessage.sender.name,
-        email: populatedMessage.sender.email,
-      },
-      content: populatedMessage.content,
-      groupId: populatedMessage.groupId,
-      timestamp: populatedMessage.timestamp,
-    };
-
-    res.json({
-      success: true,
-      message: messageResponse,
-    });
-  } catch (error) {
-    console.error("Error in send message:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
-    });
-  }
-}); */
-
 router.post("/send-new", verifyToken, async (req, res) => {
   try {
     const { content, groupId } = req.body;
@@ -342,43 +182,54 @@ router.post("/send-new", verifyToken, async (req, res) => {
     const createNotifications = async (message, group, sender) => {
       try {
         const notifications = [];
+        let senderUser = sender.user.toString();
 
-        // Lấy danh sách tất cả người nhận thông báo
-        const recipients = new Set();
+        if (group) {
+          // Thông báo cho giảng viên
+          const teacherProfile = await ProfileTeacher.findById(group.teacher);
+          if (teacherProfile && teacherProfile.user) {
+            notifications.push({
+              recipient: teacherProfile.user,
+              sender: sender._id,
+              senderModel: message.senderModel,
+              messageType: "group",
+              message: message._id,
+              groupId: group._id,
+            });
+          }
 
-        // Thêm tất cả sinh viên trong nhóm
-        group.profileStudents.forEach((student) => {
-          recipients.add(student.student.toString());
-        });
-
-        // Thêm giảng viên của nhóm nếu có
-        if (group.teacher) {
-          recipients.add(group.teacher.toString());
-        }
-
-        // Loại bỏ người gửi khỏi danh sách người nhận
-        recipients.delete(sender._id.toString());
-
-        // Tạo thông báo cho mỗi người nhận
-        for (const recipientId of recipients) {
-          notifications.push({
-            recipient: recipientId,
-            sender: sender._id,
-            senderModel: message.senderModel,
-            message: message._id,
-            groupId: group._id,
-          });
+          // Thông báo cho các sinh viên khác trong nhóm
+          for (const studentMember of group.profileStudents) {
+            const studentProfile = await ProfileStudent.findById(
+              studentMember.student
+            );
+            if (
+              studentProfile &&
+              studentProfile.user &&
+              studentProfile.user.toString() !== senderUser
+            ) {
+              notifications.push({
+                recipient: studentProfile.user,
+                sender: sender._id,
+                senderModel: message.senderModel,
+                messageType: "group",
+                message: message._id,
+                groupId: group._id,
+              });
+            }
+          }
         }
 
         if (notifications.length > 0) {
           await MessageNotification.insertMany(notifications);
         }
+
+        return notifications;
       } catch (error) {
         console.error("Error creating notifications:", error);
         throw error;
       }
     };
-
     // Sau khi lưu tin nhắn mới
     const savedMessage = await Message.create(newMessage);
     await createNotifications(savedMessage, group, sender);
