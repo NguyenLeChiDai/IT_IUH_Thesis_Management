@@ -143,7 +143,7 @@ const MessageNotificationBell = () => {
         </div>
         {notification.groupId && (
           <div className="text-muted small mb-1" style={{ color: "black" }}>
-            Nhóm: {notification.groupName}
+            Nhóm: {notification.groupId.groupName}
           </div>
         )}
         <div className="text-truncate" style={{ color: "black" }}>

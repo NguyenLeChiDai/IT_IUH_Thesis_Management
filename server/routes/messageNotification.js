@@ -119,6 +119,258 @@ router.get("/group/:groupId/new-messages", verifyToken, async (req, res) => {
   }
 });
 
+router.get("/notifications/:groupId?", verifyToken, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    let userProfile;
+    let notifications;
+
+    if (req.role === "Giảng viên") {
+      // 1. Tìm profile giảng viên
+      userProfile = await ProfileTeacher.findOne({ user: req.userId });
+      if (!userProfile) {
+        return res.status(404).json({
+          success: false,
+          message: "Teacher profile not found",
+        });
+      }
+
+      // 2. Xây dựng query conditions
+      let queryConditions = {
+        isRead: false,
+        senderModel: "profileStudent", // Chỉ lấy tin nhắn từ sinh viên
+      };
+
+      // Nếu có groupId, thêm điều kiện lọc theo nhóm
+      if (groupId) {
+        queryConditions.groupId = groupId;
+      } else {
+        // Nếu không có groupId, lấy tất cả nhóm của giảng viên
+        const teacherGroups = await Group.find({ teacher: userProfile._id });
+        const groupIds = teacherGroups.map((group) => group._id);
+        queryConditions.groupId = { $in: groupIds };
+      }
+
+      // 3. Query notifications với điều kiện đã xây dựng
+      notifications = await MessageNotification.find(queryConditions)
+        .populate({
+          path: "sender",
+          select: "name email studentId",
+          model: ProfileStudent,
+        })
+        .populate("message", "content timestamp")
+        .populate("groupId", "groupName")
+        .sort({ createdAt: -1 });
+    } else if (req.role === "Sinh viên") {
+      // 1. Tìm profile sinh viên
+      userProfile = await ProfileStudent.findOne({ user: req.userId });
+      if (!userProfile) {
+        return res.status(404).json({
+          success: false,
+          message: "Student profile not found",
+        });
+      }
+
+      // 2. Xây dựng query conditions cho sinh viên
+      let queryConditions = {
+        recipient: req.userId,
+        isRead: false,
+        senderModel: "profileTeacher", // Chỉ lấy tin nhắn từ giảng viên
+      };
+
+      // Thêm điều kiện groupId nếu có
+      if (groupId) {
+        queryConditions.groupId = groupId;
+      }
+
+      // 3. Query notifications
+      notifications = await MessageNotification.find(queryConditions)
+        .populate({
+          path: "sender",
+          select: "name email",
+          model: ProfileTeacher,
+        })
+        .populate("message", "content timestamp")
+        .populate("groupId", "groupName")
+        .sort({ createdAt: -1 });
+    } else {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Access denied. Only teachers and students can access this route.",
+      });
+    }
+
+    // Format notifications
+    const formattedNotifications = notifications.map((notification) => {
+      return {
+        _id: notification._id,
+        sender: {
+          _id: notification.sender?._id,
+          name: notification.sender?.name,
+          email: notification.sender?.email,
+          studentId: notification.sender?.studentId || null,
+        },
+        message: {
+          content: notification.message?.content,
+          timestamp: notification.message?.timestamp,
+        },
+        groupId: notification.groupId?._id,
+        groupName: notification.groupId?.groupName,
+        createdAt: notification.createdAt,
+        isRead: notification.isRead,
+      };
+    });
+
+    res.json({
+      success: true,
+      notifications: formattedNotifications,
+    });
+  } catch (error) {
+    console.error("Error getting notifications:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+});
+// Lấy tất cả thông báo tin nhắn của người dùng hiện tại
+// @route GET api/notifications
+// @desc Get notifications for teacher/student
+// @access Private
+router.get("/notifications", verifyToken, async (req, res) => {
+  try {
+    let userProfile;
+    let notifications;
+
+    if (req.role === "Giảng viên") {
+      // 1. Tìm profile giảng viên
+      userProfile = await ProfileTeacher.findOne({ user: req.userId });
+      console.log("Teacher Profile:", userProfile);
+
+      if (!userProfile) {
+        return res.status(404).json({
+          success: false,
+          message: "Teacher profile not found",
+        });
+      }
+
+      // 2. Lấy danh sách nhóm
+      const teacherGroups = await Group.find({ teacher: userProfile._id });
+      const groupIds = teacherGroups.map((group) => group._id);
+      console.log("Group IDs:", groupIds);
+
+      // 3. Query notifications với điều kiện mở rộng
+      notifications = await MessageNotification.find({
+        $or: [
+          // Tìm thông báo dựa trên recipient (userId của giảng viên)
+          { recipient: req.userId, isRead: false },
+          // Hoặc tìm thông báo dựa trên groupId (nếu cần)
+          { groupId: { $in: groupIds }, isRead: false },
+        ],
+      })
+        .populate("message", "content timestamp")
+        .populate("groupId", "groupName")
+        .populate({
+          path: "sender",
+          select: "name email",
+          model: function (doc) {
+            return doc.senderModel;
+          },
+        })
+        .sort({ createdAt: -1 });
+
+      console.log("Raw Notifications:", JSON.stringify(notifications, null, 2));
+    } else if (req.role === "Sinh viên") {
+      // Logic cho sinh viên giữ nguyên
+      userProfile = await ProfileStudent.findOne({ user: req.userId });
+      if (!userProfile) {
+        return res.status(404).json({
+          success: false,
+          message: "Student profile not found",
+        });
+      }
+
+      notifications = await MessageNotification.find({
+        recipient: req.userId,
+        isRead: false,
+      })
+        .populate("message", "content timestamp")
+        .populate("groupId", "groupName")
+        .sort({ createdAt: -1 });
+    }
+
+    // Format notifications
+    const formattedNotifications = await Promise.all(
+      notifications.map(async (notification) => {
+        try {
+          let senderInfo;
+
+          // Kiểm tra nếu sender đã được populate
+          if (notification.sender?.name) {
+            senderInfo = notification.sender;
+          } else {
+            // Nếu chưa được populate, thực hiện query
+            if (notification.senderModel === "profileTeacher") {
+              senderInfo = await ProfileTeacher.findById(
+                notification.sender
+              ).select("name email");
+            } else if (notification.senderModel === "profileStudent") {
+              senderInfo = await ProfileStudent.findById(
+                notification.sender
+              ).select("name email");
+            }
+          }
+
+          if (!senderInfo) {
+            console.log(`No sender info for notification: ${notification._id}`);
+            return null;
+          }
+
+          const formattedNotification = {
+            _id: notification._id,
+            sender: {
+              _id: senderInfo._id,
+              name: senderInfo.name,
+              email: senderInfo.email,
+            },
+            groupName: notification.groupId?.groupName || "",
+            messageContent: notification.message?.content || "",
+            timestamp: notification.createdAt,
+            isRead: notification.isRead,
+            groupId: notification.groupId?._id || null,
+          };
+
+          console.log("Formatted Notification:", formattedNotification);
+          return formattedNotification;
+        } catch (error) {
+          console.error(
+            `Error processing notification ${notification._id}:`,
+            error
+          );
+          return null;
+        }
+      })
+    );
+
+    const validNotifications = formattedNotifications.filter((n) => n !== null);
+
+    console.log("Final Response:", {
+      success: true,
+      notifications: validNotifications,
+    });
+
+    res.json({
+      success: true,
+      notifications: validNotifications,
+    });
+  } catch (error) {
+    console.error("Error getting notifications:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
 // Đánh dấu tất cả thông báo trong nhóm là đã đọc khi vào nhóm chat
 router.put("/mark-group-read/:groupId", verifyToken, async (req, res) => {
   try {
