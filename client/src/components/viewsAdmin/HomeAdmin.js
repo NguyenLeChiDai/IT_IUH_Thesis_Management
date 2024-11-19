@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   FaBook,
   FaUsers,
@@ -8,29 +8,184 @@ import {
 } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../css/HomeAdmin.css";
+import axios from "axios";
+import { formatDistanceToNow } from "date-fns";
+import { vi } from "date-fns/locale";
 
 const HomeAdmin = () => {
+  // đếm số lượng đề tài và đề tài đã được phê duyệt
+  const [topicStats, setTopicStats] = useState({
+    totalTopics: 0,
+    approvedTopics: 0,
+  });
+
+  useEffect(() => {
+    const fetchTopicStatistics = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/adminStatistics/topic-statistics",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          setTopicStats({
+            totalTopics: response.data.totalTopics,
+            approvedTopics: response.data.approvedTopics,
+          });
+        }
+      } catch (error) {
+        console.error("Lỗi lấy thống kê đề tài:", error);
+      }
+    };
+
+    fetchTopicStatistics();
+  }, []);
+
+  // đếm số lượng sinh viên và sinh viên đã có nhóm
+  const [studentStats, setStudentStats] = useState({
+    totalStudents: 0,
+    studentsWithGroup: 0,
+    groupedPercentage: 0,
+  });
+
+  useEffect(() => {
+    const fetchStudentStatistics = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/adminStatistics/student-statistics",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          setStudentStats({
+            totalStudents: response.data.totalStudents,
+            studentsWithGroup: response.data.studentsWithGroup,
+            groupedPercentage: response.data.groupedPercentage,
+          });
+        }
+      } catch (error) {
+        console.error("Lỗi lấy thống kê sinh viên:", error);
+      }
+    };
+
+    fetchStudentStatistics();
+  }, []);
+
+  // Thông kê giảng viên
+  // Thêm state mới cho thống kê giảng viên
+  const [teacherStats, setTeacherStats] = useState({
+    totalTeachers: 0,
+    teachersWithTopics: 0,
+  });
+
+  // Thêm state cho thống kê nhóm
+  const [groupStats, setGroupStats] = useState({
+    groupsWithTopic: 0,
+    totalGroups: 0,
+    groupsWithTopicPercentage: 0,
+  });
+
+  // Thêm useEffect mới để lấy thống kê giảng viên
+  useEffect(() => {
+    const fetchTeacherStatistics = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/adminStatistics/teacher-statistics",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          setTeacherStats({
+            totalTeachers: response.data.totalTeachers,
+            teachersWithTopics: response.data.teachersWithTopics,
+          });
+          setGroupStats({
+            groupsWithTopic: response.data.groupsWithTopic,
+            totalGroups: response.data.totalGroups,
+            groupsWithTopicPercentage: response.data.groupsWithTopicPercentage,
+          });
+        }
+      } catch (error) {
+        console.error("Lỗi lấy thống kê giảng viên:", error);
+      }
+    };
+
+    fetchTeacherStatistics();
+  }, []);
+
+  // Tính tỉ lệ
+  // Thêm state mới cho thống kê nhanh
+  const [quickStats, setQuickStats] = useState({
+    studentGroupPercentage: 0,
+    approvedTopicPercentage: 0,
+  });
+
+  // Thêm useEffect mới để lấy thống kê nhanh
+  useEffect(() => {
+    const fetchQuickStatistics = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/adminStatistics/quick-statistics",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          setQuickStats({
+            studentGroupPercentage: response.data.studentStats.percentage,
+            approvedTopicPercentage: response.data.topicStats.percentage,
+          });
+        }
+      } catch (error) {
+        console.error("Lỗi lấy thống kê nhanh:", error);
+      }
+    };
+
+    fetchQuickStatistics();
+  }, []);
+
   const stats = [
     {
       title: "Tổng số đề tài",
-      value: "156",
-      icon: <FaBook className="stats-icon" />,
-      description: "Đã phê duyệt: 120",
-      color: "primary",
+      value: topicStats.totalTopics.toString(),
+      // ... các thuộc tính khác giữ nguyên
+      description: `Đã phê duyệt: ${topicStats.approvedTopics}`,
     },
     {
       title: "Sinh viên đăng ký",
-      value: "324",
+      value: studentStats.totalStudents.toString(),
       icon: <FaUsers className="stats-icon" />,
-      description: "Đã có nhóm: 300",
+      description: `Đã có nhóm: ${studentStats.studentsWithGroup}`,
       color: "success",
     },
     {
       title: "Giảng viên",
-      value: "45",
+      value: teacherStats.totalTeachers.toString(),
       icon: <FaUserGraduate className="stats-icon" />,
-      description: "Đang hướng dẫn: 38",
+      description: `Đang hướng dẫn: ${teacherStats.teachersWithTopics}`,
       color: "info",
+    },
+    {
+      title: "Nhóm sinh viên",
+      value: groupStats.totalGroups.toString(),
+      icon: <FaUsers className="stats-icon" />,
+      description: `Đã có đề tài: ${groupStats.groupsWithTopic}`,
+      color: "warning",
     },
     {
       title: "Khóa luận đã nộp",
@@ -41,13 +196,85 @@ const HomeAdmin = () => {
     },
   ];
 
-  const recentActivities = [
-    "GV. Nguyễn Văn A đã phê duyệt đề tài 'Ứng dụng AI trong nhận diện khuôn mặt'",
-    "Nhóm SV03 đã nộp báo cáo tiến độ tuần 8",
-    "GV. Trần Thị B đã đăng ký hướng dẫn thêm 2 nhóm sinh viên",
-    "Admin đã phê duyệt 15 đề tài mới",
-    "Hệ thống đã gửi mail nhắc nhở nộp báo cáo cho 25 nhóm",
-  ];
+  //HOẠT ĐỘNG GẦN ĐÂY
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/adminStatistics/recent",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          setActivities(response.data.activities);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy hoạt động:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchActivities();
+    // Cập nhật mỗi 30 giây
+    const interval = setInterval(fetchActivities, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  //thời gian của hoạt động
+  const formatTime = (date) => {
+    const now = new Date();
+    const activityDate = new Date(date);
+    const diffInMinutes = Math.floor((now - activityDate) / (1000 * 60));
+
+    if (diffInMinutes < 1) return "Vừa xong";
+    if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
+    if (diffInMinutes < 1440)
+      return `${Math.floor(diffInMinutes / 60)} giờ trước`;
+    return activityDate.toLocaleDateString("vi-VN");
+  };
+  // Hàm helper để xác định màu badge dựa trên loại hoạt động
+  const getActivityBadgeColor = (type) => {
+    switch (type) {
+      case "TOPIC_APPROVED":
+        return "success";
+      case "REPORT_SUBMITTED":
+        return "primary";
+      case "TEACHER_ASSIGNED":
+        return "info";
+      case "TOPIC_CREATED":
+        return "warning";
+      case "GROUP_CREATED":
+        return "secondary";
+      default:
+        return "light";
+    }
+  };
+
+  // Hàm helper để chuyển đổi tên loại hoạt động
+  const getActivityTypeName = (type) => {
+    switch (type) {
+      case "TOPIC_APPROVED":
+        return "Phê duyệt";
+      case "REPORT_SUBMITTED":
+        return "Nộp báo cáo";
+      case "TEACHER_ASSIGNED":
+        return "Phân công GV";
+      case "TOPIC_CREATED":
+        return "Tạo đề tài";
+      case "GROUP_CREATED":
+        return "Tạo nhóm";
+      default:
+        return "Khác";
+    }
+  };
 
   return (
     <div className="container-fluid py-4">
@@ -84,7 +311,7 @@ const HomeAdmin = () => {
           </div>
         ))}
       </div>
-
+      {/* HOẠT ĐỘNG GẦN ĐÂY */}
       <div className="row g-4">
         <div className="col-12 col-lg-7">
           <div className="card h-100">
@@ -95,14 +322,41 @@ const HomeAdmin = () => {
               </h5>
             </div>
             <div className="card-body">
-              <div className="activity-list">
-                {recentActivities.map((activity, index) => (
-                  <div key={index} className="activity-item">
-                    <div className="activity-dot"></div>
-                    <p className="mb-0">{activity}</p>
+              {loading ? (
+                <div className="text-center">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Đang tải...</span>
                   </div>
-                ))}
-              </div>
+                </div>
+              ) : activities.length === 0 ? (
+                <p className="text-center text-muted">Chưa có hoạt động nào</p>
+              ) : (
+                <div className="activity-list">
+                  {activities.map((activity) => (
+                    <div
+                      key={activity._id}
+                      className="activity-item d-flex align-items-center mb-3"
+                    >
+                      <div className="activity-dot"></div>
+                      <div className="ms-3 w-100">
+                        <p className="mb-0">{activity.description}</p>
+                        <div className="d-flex justify-content-between align-items-center">
+                          <small className="text-muted">
+                            {formatTime(activity.createdAt)}
+                          </small>
+                          <span
+                            className={`badge bg-${getActivityBadgeColor(
+                              activity.type
+                            )}`}
+                          >
+                            {getActivityTypeName(activity.type)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -119,14 +373,16 @@ const HomeAdmin = () => {
               <div className="mb-4">
                 <div className="d-flex justify-content-between mb-2">
                   <span>Tỉ lệ sinh viên đã có nhóm</span>
-                  <span className="text-success">92.5%</span>
+                  <span className="text-success">
+                    {quickStats.studentGroupPercentage}%
+                  </span>
                 </div>
                 <div className="progress">
                   <div
                     className="progress-bar bg-success"
                     role="progressbar"
-                    style={{ width: "92.5%" }}
-                    aria-valuenow="92.5"
+                    style={{ width: `${quickStats.studentGroupPercentage}%` }}
+                    aria-valuenow={quickStats.studentGroupPercentage}
                     aria-valuemin="0"
                     aria-valuemax="100"
                   ></div>
@@ -136,14 +392,16 @@ const HomeAdmin = () => {
               <div className="mb-4">
                 <div className="d-flex justify-content-between mb-2">
                   <span>Tỉ lệ đề tài đã được phê duyệt</span>
-                  <span className="text-primary">76.9%</span>
+                  <span className="text-primary">
+                    {quickStats.approvedTopicPercentage}%
+                  </span>
                 </div>
                 <div className="progress">
                   <div
                     className="progress-bar bg-primary"
                     role="progressbar"
-                    style={{ width: "76.9%" }}
-                    aria-valuenow="76.9"
+                    style={{ width: `${quickStats.approvedTopicPercentage}%` }}
+                    aria-valuenow={quickStats.approvedTopicPercentage}
                     aria-valuemin="0"
                     aria-valuemax="100"
                   ></div>

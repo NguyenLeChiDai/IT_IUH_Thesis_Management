@@ -12,6 +12,7 @@ const multer = require("multer");
 const xlsx = require("xlsx");
 const path = require("path");
 const fs = require("fs");
+const Activity = require("../models/Activity");
 
 //Get topicGroup
 router.get("/:groupId/topics", verifyToken, async (req, res) => {
@@ -176,7 +177,7 @@ router.get("/get-topic", verifyToken, async (req, res) => {
   }
 });
 
-//Get all topic
+//Get all topic đã duyệt cho sinh viên đăng ký
 router.get("/get-all-topics", verifyToken, async (req, res) => {
   try {
     // Lấy tất cả các đề tài và populate thông tin giảng viên
@@ -248,6 +249,14 @@ router.post("/post", verifyToken, async (req, res) => {
 
     // Lưu đề tài vào cơ sở dữ liệu
     await newTopic.save();
+
+    // Tạo hoạt động
+    await createActivity({
+      type: "TOPIC_CREATED",
+      description: `Giảng viên ${teacher.name} đã tạo đề tài "${nameTopic}"`,
+      actor: req.userId,
+      relatedTopic: newTopic._id,
+    });
 
     // Populate thông tin giảng viên sau khi đã lưu
     const populatedTopic = await Topic.findById(newTopic._id).populate(
@@ -475,6 +484,14 @@ router.post(
         // Lưu đề tài vào cơ sở dữ liệu
         const savedTopic = await newTopic.save();
         createdTopics.push(savedTopic); // Đẩy đề tài đã lưu vào mảng createdTopics
+
+        // Tạo hoạt động cho mỗi đề tài
+        await createActivity({
+          type: "TOPIC_CREATED",
+          description: `Giảng viên ${teacher.name} đã tạo đề tài "${row.nameTopic}" thông qua file Excel`,
+          actor: req.userId,
+          relatedTopic: savedTopic._id,
+        });
       }
 
       // Trả về kết quả
@@ -614,6 +631,17 @@ router.delete("/leave-topic", verifyToken, async (req, res) => {
   }
 });
 
+// Hàm tạo hoạt động cho trang admin
+const createActivity = async (activityData) => {
+  try {
+    const activity = new Activity(activityData);
+    await activity.save();
+    return activity;
+  } catch (error) {
+    console.error("Lỗi khi tạo hoạt động:", error);
+    throw error;
+  }
+};
 // Duyệt đề tài của Admin
 router.put(
   "/approve/:topicId",
@@ -622,37 +650,68 @@ router.put(
   async (req, res) => {
     try {
       const { topicId } = req.params;
-      const { status } = req.body; // 'approved' hoặc 'rejected'
+      const { status } = req.body;
 
+      // Kiểm tra status hợp lệ
       if (!["Đã phê duyệt", "Chưa phê duyệt", "Từ chối"].includes(status)) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Trạng thái không hợp lệ" });
+        return res.status(400).json({
+          success: false,
+          message: "Trạng thái không hợp lệ",
+        });
       }
 
-      const updatedTopic = await Topic.findByIdAndUpdate(
-        topicId,
-        { status },
-        { new: true }
-      );
+      // Tìm đề tài và populate thông tin giảng viên
+      const topic = await Topic.findById(topicId).populate({
+        path: "teacher",
+        populate: {
+          path: "user",
+        },
+      });
 
-      if (!updatedTopic) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Không tìm thấy đề tài" });
+      if (!topic) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy đề tài",
+        });
       }
+
+      // Cập nhật trạng thái đề tài
+      topic.status = status;
+      await topic.save();
+
+      // Lấy thông tin admin
+      const admin = await User.findById(req.userId);
+
+      // Tạo mô tả hoạt động dựa trên trạng thái
+      let activityDescription = "";
+      if (status === "Đã phê duyệt") {
+        activityDescription = `Admin ${admin.username} đã phê duyệt đề tài "${topic.nameTopic}"`;
+      } else if (status === "Từ chối") {
+        activityDescription = `Admin ${admin.username} đã từ chối đề tài "${topic.nameTopic}"`;
+      } else {
+        activityDescription = `Admin ${admin.username} đã chuyển đề tài "${topic.nameTopic}" về trạng thái chờ duyệt`;
+      }
+
+      // Tạo hoạt động mới
+      await createActivity({
+        type: "TOPIC_APPROVED",
+        description: activityDescription,
+        actor: req.userId,
+        relatedTopic: topic._id,
+      });
 
       res.json({
         success: true,
-        message: `Đề tài đã được ${
-          status === "approved" ? "duyệt" : "từ chối"
-        }`,
-        topic: updatedTopic,
+        message: `Đề tài đã được cập nhật thành ${status}`,
+        topic: topic,
       });
     } catch (error) {
-      res
-        .status(500)
-        .json({ success: false, message: "Lỗi server", error: error.message });
+      console.error("Lỗi khi phê duyệt đề tài:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi server khi phê duyệt đề tài",
+        error: error.message,
+      });
     }
   }
 );

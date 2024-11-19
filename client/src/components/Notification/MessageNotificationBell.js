@@ -63,30 +63,27 @@ const MessageNotificationBell = () => {
 
   const handleNotificationClick = async (notification) => {
     try {
-      // Kiểm tra xem notification và groupId có tồn tại không
-      if (!notification || !notification.groupId?._id) {
+      // Kiểm tra và lấy groupId
+      if (!notification) {
         console.error("Invalid notification data");
         return;
       }
 
-      await axios.put(
-        `http://localhost:5000/api/messageNotification/mark-group-read/${notification.groupId._id}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const groupId = notification.groupId?._id || notification.groupId;
 
+      if (!groupId) {
+        console.error("No group ID found in notification");
+        return;
+      }
+
+      // Điều hướng dựa trên vai trò người dùng
       const userRole = localStorage.getItem("role");
       if (userRole === "Giảng viên") {
         navigate("/dashboardTeacher/messageTeacher", {
           state: {
             groupInfo: {
-              id: notification.groupId._id,
-              name: notification.groupId.groupName || "Unknown Group",
-              members: notification.groupId.members || [],
+              id: groupId,
+              name: notification.groupName || "Unknown Group",
             },
           },
         });
@@ -94,8 +91,8 @@ const MessageNotificationBell = () => {
         navigate("/dashboardStudent/messageStudent", {
           state: {
             groupInfo: {
-              _id: notification.groupId._id,
-              name: notification.groupId.groupName || "Unknown Group",
+              _id: groupId,
+              name: notification.groupName || "Unknown Group",
             },
             teacherInfo: {
               id: notification.sender?._id || "",
@@ -105,6 +102,7 @@ const MessageNotificationBell = () => {
         });
       }
 
+      // Cập nhật trạng thái
       setShowDropdown(false);
       fetchUnreadCount();
       fetchNotifications();
@@ -136,18 +134,18 @@ const MessageNotificationBell = () => {
           className="d-flex justify-content-between"
           style={{ color: "black" }}
         >
-          <strong>{notification.sender?.name}</strong>
+          <strong>
+            Nhóm: {notification.groupName || "Nhóm không xác định"}
+          </strong>
           <small className="text-muted">
-            {moment(notification.timestamp).fromNow()}
+            {moment(notification.createdAt).fromNow()}
           </small>
         </div>
-        {notification.groupId && (
-          <div className="text-muted small mb-1" style={{ color: "black" }}>
-            Nhóm: {notification.groupId.groupName}
-          </div>
-        )}
+        <div className="text-muted small mb-1" style={{ color: "black" }}>
+          {notification.sender?.name}
+        </div>
         <div className="text-truncate" style={{ color: "black" }}>
-          {notification.messageContent}
+          {notification.message?.content}
         </div>
       </div>
     );

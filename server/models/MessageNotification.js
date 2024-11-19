@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const MessageNotificationSchema = new Schema({
   recipient: {
     type: Schema.Types.ObjectId,
-    ref: "users",
+    ref: "studentgroups", // Thay đổi ref thành studentgroups
     required: true,
   },
   sender: {
@@ -21,7 +21,7 @@ const MessageNotificationSchema = new Schema({
     type: String,
     enum: ["direct", "group"],
     required: true,
-    default: "direct",
+    default: "group", // Mặc định là group vì chúng ta đang xử lý tin nhắn nhóm
   },
   message: {
     type: Schema.Types.ObjectId,

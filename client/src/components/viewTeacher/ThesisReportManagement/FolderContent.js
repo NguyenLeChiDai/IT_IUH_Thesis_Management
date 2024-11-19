@@ -12,6 +12,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import "../../../css/FolderContent.css";
+import Swal from "sweetalert2";
 
 const FolderContent = () => {
   const [loading, setLoading] = useState(true);
@@ -112,6 +113,49 @@ const FolderContent = () => {
   if (loading) {
     return <div>Đang tải...</div>;
   }
+
+  const handleSubmitToAdmin = async (reportId) => {
+    try {
+      const result = await Swal.fire({
+        title: "Xác nhận phê duyệt báo cáo",
+        text: "Sau khi duyệt, báo cáo của sinh viên sẽ được gửi cho admin",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Phê duyệt",
+        cancelButtonText: "Hủy",
+      });
+
+      if (result.isConfirmed) {
+        const response = await axios.post(
+          `http://localhost:5000/api/reportManagements/submit-to-admin/${reportId}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          Swal.fire(
+            "Đã phê duyệt!",
+            "Báo cáo đã được gửi cho admin.",
+            "success"
+          );
+          // Refresh the list or remove the specific report
+          fetchFolderContent();
+        }
+      }
+    } catch (error) {
+      Swal.fire(
+        "Lỗi!",
+        error.response?.data?.message || "Không thể phê duyệt báo cáo",
+        "error"
+      );
+    }
+  };
 
   return (
     <div className="container-fluid mt-4">
@@ -235,6 +279,14 @@ const FolderContent = () => {
                   disabled={loading}
                 >
                   <Download size={16} /> Tải xuống
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="me-1"
+                  onClick={() => handleSubmitToAdmin(report.id)}
+                >
+                  <FileUp size={16} /> Phê duyệt
                 </Button>
               </td>
             </tr>

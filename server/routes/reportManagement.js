@@ -8,7 +8,7 @@ const { checkRole } = require("../middleware/auth");
 const ReportFolder = require("../models/ReportFolder");
 const ThesisReport = require("../models/ThesisReport");
 const ProfileTeacher = require("../models/ProfileTeacher");
-
+const AdminReport = require("../models/AdminReport");
 // Import thêm multer và path nếu chưa có
 const multer = require("multer");
 const path = require("path");
@@ -888,6 +888,74 @@ router.get(
       res.status(500).json({
         success: false,
         message: "Lỗi khi tải file",
+        error: error.message,
+      });
+    }
+  }
+);
+
+// API để giảng viên gửi báo cáo cho admin
+router.post(
+  "/submit-to-admin/:reportId",
+  verifyToken,
+  checkRole("Giảng viên"),
+  async (req, res) => {
+    try {
+      const report = await ThesisReport.findById(req.params.reportId)
+        .populate("student", "name studentId")
+        .populate("group", "groupName")
+        .populate("topic", "nameTopic")
+        .populate("folder", "name")
+        .populate("teacher", "name");
+
+      if (!report) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy báo cáo",
+        });
+      }
+
+      // Kiểm tra xem báo cáo đã được gửi cho admin chưa
+      const existingAdminReport = await AdminReport.findOne({
+        originalReport: report._id,
+      });
+      if (existingAdminReport) {
+        return res.status(400).json({
+          success: false,
+          message: "Báo cáo này đã được gửi cho admin",
+        });
+      }
+
+      // Tạo bản ghi mới trong AdminReport
+      const adminReport = new AdminReport({
+        originalReport: report._id,
+        student: report.student._id,
+        group: report.group?._id,
+        topic: report.topic._id,
+        folder: report.folder._id,
+        teacher: report.teacher._id,
+        fileName: report.fileName,
+        fileUrl: report.fileUrl,
+        submissionDate: report.submissionDate,
+        teacherApprovalDate: new Date(),
+        status: "Chờ duyệt",
+      });
+
+      await adminReport.save();
+
+      // Cập nhật trạng thái báo cáo gốc
+      report.adminSubmissionStatus = "Đã gửi";
+      await report.save();
+
+      res.json({
+        success: true,
+        message: "Đã gửi báo cáo cho admin thành công",
+      });
+    } catch (error) {
+      console.error("Error in submitting report to admin:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi gửi báo cáo cho admin",
         error: error.message,
       });
     }

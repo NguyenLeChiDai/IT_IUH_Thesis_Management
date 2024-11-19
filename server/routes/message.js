@@ -181,50 +181,19 @@ router.post("/send-new", verifyToken, async (req, res) => {
 
     const createNotifications = async (message, group, sender) => {
       try {
-        const notifications = [];
-        let senderUser = sender.user.toString();
+        // Tạo một notification duy nhất cho nhóm
+        const notification = {
+          recipient: group._id, // Sử dụng group._id làm recipient
+          sender: sender._id,
+          senderModel: message.senderModel,
+          messageType: "group",
+          message: message._id,
+        };
 
-        if (group) {
-          // Thông báo cho giảng viên
-          const teacherProfile = await ProfileTeacher.findById(group.teacher);
-          if (teacherProfile && teacherProfile.user) {
-            notifications.push({
-              recipient: teacherProfile.user,
-              sender: sender._id,
-              senderModel: message.senderModel,
-              messageType: "group",
-              message: message._id,
-              groupId: group._id,
-            });
-          }
+        // Lưu notification
+        await MessageNotification.create(notification);
 
-          // Thông báo cho các sinh viên khác trong nhóm
-          for (const studentMember of group.profileStudents) {
-            const studentProfile = await ProfileStudent.findById(
-              studentMember.student
-            );
-            if (
-              studentProfile &&
-              studentProfile.user &&
-              studentProfile.user.toString() !== senderUser
-            ) {
-              notifications.push({
-                recipient: studentProfile.user,
-                sender: sender._id,
-                senderModel: message.senderModel,
-                messageType: "group",
-                message: message._id,
-                groupId: group._id,
-              });
-            }
-          }
-        }
-
-        if (notifications.length > 0) {
-          await MessageNotification.insertMany(notifications);
-        }
-
-        return notifications;
+        return notification;
       } catch (error) {
         console.error("Error creating notifications:", error);
         throw error;

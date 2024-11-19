@@ -31,6 +31,8 @@ import SendIcon from "@mui/icons-material/Send";
 import CoPresentIcon from "@mui/icons-material/CoPresent";
 import PresentToAllIcon from "@mui/icons-material/PresentToAll";
 import EditNotificationsIcon from "@mui/icons-material/EditNotifications";
+import SummarizeIcon from "@mui/icons-material/Summarize";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 
 const drawerWidth = 240;
 
@@ -98,6 +100,18 @@ const DashboardAdmin = () => {
           text: "Danh sách đề tài", // Thêm mục "Nhóm sinh viên"
           icon: <ListAltIcon />,
           onClick: () => navigate("/dashboardAdmin"), // Chuyển đến trang "Nhóm sinh viên"
+        },
+      ],
+    },
+    // Quản lý báo cáo
+    {
+      text: "Quản lý báo cáo",
+      icon: <SummarizeIcon />,
+      subMenu: [
+        {
+          text: "Báo cáo khóa luận của sinh viên",
+          icon: <InsertDriveFileIcon />,
+          onClick: () => navigate("/dashboardAdmin/AdminReportList"),
         },
       ],
     },

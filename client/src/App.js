@@ -32,6 +32,7 @@ import MessageTeacher from "./components/viewTeacher/MessageTeacher";
 import MessageStudent from "./components/viewStudent/MessageStudent";
 import AdminNotifications from "./components/viewsAdmin/AdminNotifications";
 import NotificationPage from "./components/Notification/NotificationPage";
+import AdminReportList from "./components/viewsAdmin/AdminReportList";
 
 function App() {
   return (
@@ -68,6 +69,7 @@ function App() {
               {/* Đường dẫn cho "Nhóm sinh viên" */}
               <Route path="manage-topics" element={<ManageTopic />} />{" "}
               <Route path="notifications" element={<AdminNotifications />} />{" "}
+              <Route path="AdminReportList" element={<AdminReportList />} />{" "}
             </Route>
             {/* Sinh viên */}
             <Route path="/dashboardStudent" element={<DashboardStudent />}>
