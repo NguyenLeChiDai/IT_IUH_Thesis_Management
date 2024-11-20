@@ -14,21 +14,48 @@ const ScoreSchema = new Schema({
   },
   instructorScore: {
     type: Number,
-    required: true,
+    required: false,
     min: 0,
     max: 10,
   },
   reviewerScore: {
     type: Number,
-    required: true,
+    required: false,
     min: 0,
     max: 10,
   },
-  presentationScore: {
+  councilScore: {
     type: Number,
-    required: true,
+    required: false,
     min: 0,
     max: 10,
+  },
+  posterScore: {
+    type: Number,
+    required: false,
+    min: 0,
+    max: 10,
+  },
+  totalScore: {
+    type: Number,
+    required: false,
+    min: 0,
+    max: 10,
+  },
+  // Nhóm sinh viên được chấm phản biện
+  studentGroup: {
+    type: Schema.Types.ObjectId,
+    ref: "studentgroups",
+    required: false,
+  },
+  profileTeacher: {
+    type: Schema.Types.ObjectId,
+    ref: "profileTeacher",
+    required: false,
+  },
+  isPublished: {
+    type: Boolean,
+    default: false, // Mặc định là chưa công bố
   },
   feedback: {
     type: String,
