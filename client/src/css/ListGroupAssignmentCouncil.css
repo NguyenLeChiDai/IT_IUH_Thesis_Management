@@ -1,0 +1,78 @@
+/* Đảm bảo nhóm hiển thị theo chiều dọc */
+.group-list {
+  display: block; /* Không sử dụng flexbox nữa, hiển thị theo chiều dọc */
+}
+
+.group-card {
+  margin-bottom: 30px;
+}
+
+/* Thay đổi cách hiển thị các sinh viên để họ không nằm ngang nữa */
+
+.group-card-main {
+  margin-bottom: 20px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9; /* Màu nền nhẹ cho card */
+}
+
+/* Style cho students-main */
+.students-main {
+  display: flex;
+  flex-wrap: wrap; /* Cho phép phần tử con xuống dòng nếu không đủ chỗ */
+  gap: 20px; /* Khoảng cách giữa các phần tử */
+}
+
+/* Căn chỉnh các thông tin sinh viên theo hàng ngang */
+.student-info-main {
+  background-color: #f0f8ff; /* Màu nền sáng, dễ nhìn hơn */
+  padding: 20px; /* Thêm padding lớn để nội dung không bị sát viền */
+  border-radius: 10px; /* Cạnh mềm mại */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Tạo bóng mờ để thẻ nổi bật hơn */
+  font-size: 16px; /* Tăng kích thước chữ */
+  color: #333; /* Màu chữ tối dễ đọc */
+  transition: transform 0.3s ease-in-out; /* Thêm hiệu ứng khi hover */
+  width: 100%;
+  gap: 5px;
+}
+
+/* Style cho mỗi thông tin sinh viên */
+.student-info p {
+  flex: 1 1 200px; /* Căn chỉnh các phần tử ngang và cho phép chúng thu nhỏ khi không gian không đủ */
+  margin: 0; /* Xóa khoảng cách mặc định của p */
+  padding: 10px; /* Thêm padding để tạo khoảng cách bên trong */
+  background-color: #e7f3fe; /* Màu nền nhẹ cho mỗi thông tin */
+  border-radius: 4px; /* Tạo bo góc cho mỗi phần tử */
+}
+
+/* Tạo hiệu ứng hover cho các thông tin sinh viên */
+.student-info p:hover {
+  background-color: #d0e8fc; /* Hiệu ứng hover nhẹ khi người dùng di chuột vào */
+  border-color: #a8c7e2;
+}
+
+/* CSS cho nút phân công và hủy phân công */
+.assign-button {
+  padding: 10px 15px;
+  margin-top: 15px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #4caf50;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.assign-button.assigned {
+  background-color: #f44336; /* Màu đỏ khi đã phân công */
+}
+
+.assign-button:hover {
+  background-color: #45a049;
+}
+
+.assign-button.assigned:hover {
+  background-color: #d32f2f;
+}

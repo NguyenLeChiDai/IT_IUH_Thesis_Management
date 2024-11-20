@@ -29,6 +29,11 @@ import EditIcon from "@mui/icons-material/Edit";
 import PeopleIcon from "@mui/icons-material/People";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import DocumentScannerIcon from "@mui/icons-material/DocumentScanner";
+import GavelIcon from "@mui/icons-material/Gavel";
+import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import DesignServicesIcon from "@mui/icons-material/DesignServices";
+import SchoolIcon from "@mui/icons-material/School";
 import "../css/DashboardTeacher.css";
 
 const drawerWidth = 240;
@@ -92,6 +97,27 @@ const DashboardTeacher = () => {
       ],
     },
     {
+      text: "Nhóm phân công chấm điểm",
+      icon: <GavelIcon />,
+      submenu: [
+        {
+          text: "Nhóm được phân công chấm phản biện",
+          icon: <PeopleAltIcon />,
+          onClick: () => navigate("/dashboardTeacher/topic-review"),
+        },
+        {
+          text: "Nhóm được phân công chấm hội đồng",
+          icon: <AccountBalanceIcon />,
+          onClick: () => navigate("/dashboardTeacher/topic-council"),
+        },
+        {
+          text: "Nhóm được phân công chấm poster",
+          icon: <DesignServicesIcon />,
+          onClick: () => navigate("/dashboardTeacher/topic-poster"),
+        },
+      ],
+    },
+    {
       text: "Điểm",
       icon: <StarIcon />,
       submenu: [
@@ -99,6 +125,11 @@ const DashboardTeacher = () => {
           text: "Nhập Điểm",
           icon: <EditIcon />,
           onClick: () => navigate("/dashboardTeacher/list-student-teacher"),
+        },
+        {
+          text: "Xem Điểm",
+          icon: <SchoolIcon />,
+          onClick: () => navigate("/dashboardTeacher/view-scores"),
         },
       ],
     },

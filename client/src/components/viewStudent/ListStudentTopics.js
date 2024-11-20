@@ -28,6 +28,8 @@ export const ListStudentTopics = () => {
   const [registeredTopicId, setRegisteredTopicId] = useState(null);
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const MAX_GROUPS_PER_TOPIC = 2; // Thêm hằng số cho số nhóm tối đa
+  const [isGroupLeader, setIsGroupLeader] = useState(false);
 
   useEffect(() => {
     const fetchTopics = async () => {
@@ -51,6 +53,43 @@ export const ListStudentTopics = () => {
     fetchTopics();
   }, []);
 
+  /*  useEffect(() => {
+    const fetchGroupInfo = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/studentGroups/get-group-id",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        if (response.data.success) {
+          setGroupId(response.data.groupId);
+          const topicResponse = await axios.get(
+            `http://localhost:5000/api/topics/${response.data.groupId}/topics`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+          if (
+            topicResponse.data.success &&
+            topicResponse.data.topics.length > 0
+          ) {
+            setRegisteredTopicId(topicResponse.data.topics[0].topicId);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching group info:", error);
+      }
+    };
+
+    fetchGroupInfo();
+  }, []); */
+
+  //kiểm tra nhóm trưởng
   useEffect(() => {
     const fetchGroupInfo = async () => {
       try {
@@ -64,6 +103,19 @@ export const ListStudentTopics = () => {
         );
         if (response.data.success) {
           setGroupId(response.data.groupId);
+
+          // Kiểm tra role của người dùng trong nhóm
+          const checkGroupLeaderResponse = await axios.get(
+            "http://localhost:5000/api/topics/check-group-leader",
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+          if (checkGroupLeaderResponse.data.success) {
+            setIsGroupLeader(checkGroupLeaderResponse.data.isGroupLeader);
+          }
           const topicResponse = await axios.get(
             `http://localhost:5000/api/topics/${response.data.groupId}/topics`,
             {
@@ -103,7 +155,25 @@ export const ListStudentTopics = () => {
     setPage(0);
   };
 
+  // Thêm hàm kiểm tra xem đề tài có thể đăng ký không
+  const canRegisterTopic = (topic) => {
+    return (
+      !registeredTopicId && // Chưa đăng ký đề tài nào
+      groupId && // Đã có nhóm
+      (topic.registeredGroupsCount || 0) < MAX_GROUPS_PER_TOPIC // Số nhóm đăng ký chưa đạt tối đa
+    );
+  };
+
   const handleRegister = async (topicId, topicName) => {
+    if (!isGroupLeader) {
+      Swal.fire(
+        "Không thể đăng ký",
+        "Chỉ nhóm trưởng mới có quyền đăng ký đề tài.",
+        "warning"
+      );
+      return;
+    }
+
     if (!groupId) {
       Swal.fire(
         "Không thể đăng ký",
@@ -117,6 +187,17 @@ export const ListStudentTopics = () => {
       Swal.fire(
         "Không thể đăng ký",
         "Nhóm của bạn đã đăng ký một đề tài. Không thể đăng ký thêm.",
+        "warning"
+      );
+      return;
+    }
+
+    // Kiểm tra số lượng nhóm đăng ký
+    const topic = topics.find((t) => t._id === topicId);
+    if (topic && topic.registeredGroupsCount >= MAX_GROUPS_PER_TOPIC) {
+      Swal.fire(
+        "Không thể đăng ký",
+        "Đề tài này đã đạt số lượng nhóm đăng ký tối đa.",
         "warning"
       );
       return;
@@ -186,6 +267,35 @@ export const ListStudentTopics = () => {
     setOpenDialog(false);
   };
 
+  // Thêm hàm để hiển thị trạng thái nút đăng ký
+  const getRegisterButtonProps = (topic) => {
+    if (registeredTopicId === topic._id) {
+      return {
+        variant: "danger",
+        disabled: true,
+        text: "Đã đăng ký",
+      };
+    } else if (topic.registeredGroupsCount >= MAX_GROUPS_PER_TOPIC) {
+      return {
+        variant: "secondary",
+        disabled: true,
+        text: "Đã đủ nhóm",
+      };
+    } else if (registeredTopicId) {
+      return {
+        variant: "primary",
+        disabled: true,
+        text: "Đăng ký",
+      };
+    } else {
+      return {
+        variant: "primary",
+        disabled: false,
+        text: "Đăng ký",
+      };
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
@@ -227,30 +337,31 @@ export const ListStudentTopics = () => {
         <tbody>
           {filteredTopics
             .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-            .map((topic, index) => (
-              <tr key={topic._id} onClick={() => handleRowClick(topic)}>
-                <td>{index + 1 + page * rowsPerPage}</td>
-                <td className="topic-name">{topic.nameTopic}</td>
-                <td>{topic.teacher ? topic.teacher.name : "N/A"}</td>
-                <td>{topic.registeredGroupsCount || 0}</td>
-                <td>
-                  <Button
-                    variant={
-                      registeredTopicId === topic._id ? "danger" : "primary"
-                    }
-                    size="sm"
-                    className="custom-button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRegister(topic._id, topic.nameTopic);
-                    }}
-                    disabled={registeredTopicId !== null}
-                  >
-                    {registeredTopicId === topic._id ? "Đã đăng ký" : "Đăng ký"}
-                  </Button>
-                </td>
-              </tr>
-            ))}
+            .map((topic, index) => {
+              const buttonProps = getRegisterButtonProps(topic);
+              return (
+                <tr key={topic._id} onClick={() => handleRowClick(topic)}>
+                  <td>{index + 1 + page * rowsPerPage}</td>
+                  <td className="topic-name">{topic.nameTopic}</td>
+                  <td>{topic.teacher ? topic.teacher.name : "N/A"}</td>
+                  <td>{topic.registeredGroupsCount || 0}</td>
+                  <td>
+                    <Button
+                      variant={buttonProps.variant}
+                      size="sm"
+                      className="custom-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRegister(topic._id, topic.nameTopic);
+                      }}
+                      disabled={buttonProps.disabled}
+                    >
+                      {buttonProps.text}
+                    </Button>
+                  </td>
+                </tr>
+              );
+            })}
         </tbody>
       </Table>
 
@@ -295,9 +406,16 @@ export const ListStudentTopics = () => {
                   <strong>Mô tả:</strong>{" "}
                   {selectedTopic.descriptionTopic || "Không có mô tả"}
                 </Typography>
-                <Typography variant="body1">
+                <Typography variant="body1" paragraph>
                   <strong>Số lượng nhóm đã đăng ký:</strong>{" "}
                   {selectedTopic.registeredGroupsCount || 0}
+                  {selectedTopic.registeredGroupsCount >=
+                    MAX_GROUPS_PER_TOPIC && (
+                    <span className="text-danger">
+                      {" "}
+                      (Đã đạt số lượng tối đa)
+                    </span>
+                  )}
                 </Typography>
               </Box>
             </Box>

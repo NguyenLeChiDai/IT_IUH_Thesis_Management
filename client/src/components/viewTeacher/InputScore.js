@@ -43,8 +43,8 @@ function InputScore() {
       if (studentData.scores) {
         setCurrentScores({
           instructorScore: studentData.scores.instructorScore || "",
-          reviewerScore: studentData.scores.reviewerScore || "",
-          presentationScore: studentData.scores.presentationScore || "",
+          // reviewerScore: studentData.scores.reviewerScore || "",
+          // presentationScore: studentData.scores.presentationScore || "",
         });
       }
     } else {
@@ -77,8 +77,8 @@ function InputScore() {
         const fetchedScores = response.data.scores[0];
         setCurrentScores({
           instructorScore: fetchedScores.instructorScore || "",
-          reviewerScore: fetchedScores.reviewerScore || "",
-          presentationScore: fetchedScores.presentationScore || "",
+          // reviewerScore: fetchedScores.reviewerScore || "",
+          // presentationScore: fetchedScores.presentationScore || "",
         });
         setSnackbarMessage("Đã cập nhật điểm thành công.");
         setSnackbarSeverity("success");
@@ -139,14 +139,14 @@ function InputScore() {
           newScores.instructorScore !== ""
             ? parseFloat(newScores.instructorScore)
             : null,
-        reviewerScore:
-          newScores.reviewerScore !== ""
-            ? parseFloat(newScores.reviewerScore)
-            : null,
-        presentationScore:
-          newScores.presentationScore !== ""
-            ? parseFloat(newScores.presentationScore)
-            : null,
+        // reviewerScore:
+        //   newScores.reviewerScore !== ""
+        //     ? parseFloat(newScores.reviewerScore)
+        //     : null,
+        // presentationScore:
+        //   newScores.presentationScore !== ""
+        //     ? parseFloat(newScores.presentationScore)
+        //     : null,
       };
 
       try {
@@ -177,8 +177,8 @@ function InputScore() {
           }));
           setNewScores({
             instructorScore: "",
-            reviewerScore: "",
-            presentationScore: "",
+            // reviewerScore: "",
+            // presentationScore: "",
           });
         } else {
           throw new Error(response.data.message || "Lỗi khi lưu điểm.");
@@ -251,7 +251,7 @@ function InputScore() {
                 </Typography>
               </Paper>
             </Grid2>
-            <Grid2 item xs={12} sm={4}>
+            {/* <Grid2 item xs={12} sm={4}>
               <Paper elevation={2} className="score-item">
                 <Typography variant="subtitle1">Điểm phản biện</Typography>
                 <Typography variant="h6">
@@ -266,7 +266,7 @@ function InputScore() {
                   {currentScores.presentationScore || "Chưa có"}
                 </Typography>
               </Paper>
-            </Grid2>
+            </Grid2> */}
           </Grid2>
         </Box>
         <Box mt={4}>
@@ -283,7 +283,7 @@ function InputScore() {
               onChange={handleNewScoreChange}
               inputProps={{ min: 0, max: 10, step: 0.1 }}
             />
-            <TextField
+            {/* <TextField
               fullWidth
               label="Điểm phản biện"
               name="reviewerScore"
@@ -300,7 +300,7 @@ function InputScore() {
               value={newScores.presentationScore}
               onChange={handleNewScoreChange}
               inputProps={{ min: 0, max: 10, step: 0.1 }}
-            />
+            /> */}
           </Stack>
         </Box>
         <Box mt={2}>

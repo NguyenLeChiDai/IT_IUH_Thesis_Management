@@ -34,6 +34,17 @@ import AdminNotifications from "./components/viewsAdmin/AdminNotifications";
 import NotificationPage from "./components/Notification/NotificationPage";
 import AdminReportList from "./components/viewsAdmin/AdminReportList";
 import AdminReportDetail from "./components/viewsAdmin/AdminReportDetail";
+import AssignmentReview from "./components/viewsAdmin/AssignmentReview";
+import ListGroupAssignmentReview from "./components/viewsAdmin/ListGroupAssignmentReview";
+import AssignmentCouncil from "./components/viewsAdmin/AssignmentCouncil";
+import ListGroupAssignmentCouncil from "./components/viewsAdmin/ListGroupAssignmentCouncil";
+import AssignmentPoster from "./components/viewsAdmin/AssignmentPoster";
+import ListGroupAssignmentPoster from "./components/viewsAdmin/ListGroupAssignmentPoster";
+import ScoreStudentForAdmin from "./components/viewsAdmin/ScoreStudentForAdmin";
+import TopicReview from "./components/viewTeacher/TopicReview";
+import CouncilTopic from "./components/viewTeacher/CouncilTopic";
+import PosterTopic from "./components/viewTeacher/PosterTopic";
+import ViewScore from "./components/viewTeacher/ViewScore";
 
 function App() {
   return (
@@ -74,6 +85,33 @@ function App() {
               <Route
                 path="adminReportDetail/:reportId"
                 element={<AdminReportDetail />}
+              />{" "}
+              {/* Đường dẫn cho "Phân công giảng viên chấm phản biện" */}
+              <Route path="review-topics" element={<AssignmentReview />} />{" "}
+              {/* Đường dẫn cho "Danh sách nhóm phân công phản biện" */}
+              <Route
+                path="review-topics/assignment-reviews/:teacherId"
+                element={<ListGroupAssignmentReview />}
+              />
+              {/* Đường dẫn phân công chấm hội đồng */}
+              <Route
+                path="council-topics"
+                element={<AssignmentCouncil />}
+              />{" "}
+              <Route
+                path="council-topics/assignment-councils/:teacherId"
+                element={<ListGroupAssignmentCouncil />}
+              />
+              {/* Đường dẫn phân công chấm poster */}
+              <Route path="poster-topics" element={<AssignmentPoster />} />{" "}
+              <Route
+                path="poster-topics/assignment-posters/:teacherId"
+                element={<ListGroupAssignmentPoster />}
+              />
+              {/* Đường dẫn quản lý điểm sinh viên */}
+              <Route
+                path="manage-score"
+                element={<ScoreStudentForAdmin />}
               />{" "}
             </Route>
             {/* Sinh viên */}
@@ -116,6 +154,10 @@ function App() {
               <Route path="input-score" element={<InputScore />} />
               <Route path="messageTeacher" element={<MessageTeacher />} />
               <Route path="notification-page" element={<NotificationPage />} />
+              <Route path="topic-review" element={<TopicReview />} />
+              <Route path="topic-council" element={<CouncilTopic />} />
+              <Route path="topic-poster" element={<PosterTopic />} />
+              <Route path="view-scores" element={<ViewScore />} />
             </Route>
             <Route path="/change-password" element={<ChangePassword />} />
           </Route>

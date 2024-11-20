@@ -526,6 +526,29 @@ router.post("/register-topic", verifyToken, async (req, res) => {
         .json({ success: false, message: "Nhóm hoặc đề tài không tồn tại" });
     }
 
+    // Tìm thông tin sinh viên từ token
+    const studentProfile = await ProfileStudent.findOne({ user: req.userId });
+    if (!studentProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy thông tin sinh viên",
+      });
+    }
+
+    // Kiểm tra xem người đăng ký có phải là nhóm trưởng không
+    const isGroupLeader = group.profileStudents.some(
+      (student) =>
+        student.student.toString() === studentProfile._id.toString() &&
+        student.role === "Nhóm trưởng"
+    );
+
+    if (!isGroupLeader) {
+      return res.status(403).json({
+        success: false,
+        message: "Chỉ nhóm trưởng mới có quyền đăng ký đề tài",
+      });
+    }
+
     // Kiểm tra xem nhóm có đủ 2 thành viên chưa
     if (group.profileStudents.length < 2) {
       return res.status(400).json({
@@ -567,6 +590,110 @@ router.post("/register-topic", verifyToken, async (req, res) => {
       .json({ success: false, message: "Lỗi Server", error: error.message });
   }
 });
+
+// Route kiểm tra xem người dùng có phải là nhóm trưởng không
+router.get("/check-group-leader", verifyToken, async (req, res) => {
+  try {
+    // Tìm thông tin của sinh viên dựa trên userId từ token
+    const studentProfile = await ProfileStudent.findOne({ user: req.userId });
+    if (!studentProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy thông tin sinh viên",
+      });
+    }
+
+    // Tìm nhóm mà sinh viên là thành viên
+    const group = await StudentGroup.findOne({
+      "profileStudents.student": studentProfile._id,
+    });
+
+    if (!group) {
+      return res.json({
+        success: true,
+        isGroupLeader: false,
+        message: "Sinh viên chưa tham gia nhóm nào",
+      });
+    }
+
+    // Kiểm tra vai trò trong nhóm
+    const studentInGroup = group.profileStudents.find(
+      (s) => s.student.toString() === studentProfile._id.toString()
+    );
+
+    const isGroupLeader =
+      studentInGroup && studentInGroup.role === "Nhóm trưởng";
+
+    res.json({
+      success: true,
+      isGroupLeader,
+      groupId: group._id,
+      message: isGroupLeader
+        ? "Sinh viên là nhóm trưởng"
+        : "Sinh viên không phải là nhóm trưởng",
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi Server", error: error.message });
+  }
+});
+/* router.post("/register-topic", verifyToken, async (req, res) => {
+  const { groupId, topicId } = req.body;
+
+  try {
+    // Tìm nhóm và đề tài theo ID
+    const group = await StudentGroup.findById(groupId);
+    const topic = await Topic.findById(topicId);
+
+    if (!group || !topic) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Nhóm hoặc đề tài không tồn tại" });
+    }
+
+    // Kiểm tra xem nhóm có đủ 2 thành viên chưa
+    if (group.profileStudents.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: "Nhóm phải có đủ 2 thành viên mới được đăng ký đề tài",
+      });
+    }
+
+    // Kiểm tra xem nhóm đã đăng ký bất kỳ đề tài nào chưa
+    const existingRegistration = await Topic.findOne({
+      "Groups.group": groupId,
+    });
+    if (existingRegistration) {
+      return res.status(400).json({
+        success: false,
+        message: "Nhóm đã đăng ký một đề tài khác. Không thể đăng ký thêm.",
+      });
+    }
+
+    // Kiểm tra xem nhóm đã đăng ký đề tài này chưa
+    const alreadyRegistered = topic.Groups.some(
+      (g) => g.group.toString() === groupId
+    );
+    if (alreadyRegistered) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Nhóm đã đăng ký đề tài này" });
+    }
+
+    // Thêm groupId vào danh sách nhóm của đề tài
+    topic.Groups.push({ group: group._id });
+    await topic.save();
+
+    res.json({ success: true, message: "Đăng ký đề tài thành công", topic });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi Server", error: error.message });
+  }
+}); */
 
 // Xóa nhóm ra khỏi đề tài đã đăng ký
 router.delete("/leave-topic", verifyToken, async (req, res) => {

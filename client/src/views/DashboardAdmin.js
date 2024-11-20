@@ -28,12 +28,16 @@ import ArticleIcon from "@mui/icons-material/Article";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import SendIcon from "@mui/icons-material/Send";
-import CoPresentIcon from "@mui/icons-material/CoPresent";
-import PresentToAllIcon from "@mui/icons-material/PresentToAll";
 import EditNotificationsIcon from "@mui/icons-material/EditNotifications";
 import SummarizeIcon from "@mui/icons-material/Summarize";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import LeaderboardIcon from "@mui/icons-material/Leaderboard";
+import GradeIcon from "@mui/icons-material/Grade";
 
+import GavelIcon from "@mui/icons-material/Gavel";
 const drawerWidth = 240;
 
 const DashboardAdmin = () => {
@@ -103,6 +107,28 @@ const DashboardAdmin = () => {
         },
       ],
     },
+    //Phân công chấm đề tài/poster
+    {
+      text: "Phân công chấm đề tài",
+      icon: <GavelIcon />,
+      subMenu: [
+        {
+          text: "Phân công chấm phản biện",
+          icon: <AssignmentIndIcon />,
+          onClick: () => navigate("/dashboardAdmin/review-topics"),
+        },
+        {
+          text: "Phân công chấm hội đồng",
+          icon: <AccountBalanceIcon />,
+          onClick: () => navigate("/dashboardAdmin/council-topics"),
+        },
+        {
+          text: "Phân công chấm poster",
+          icon: <PictureAsPdfIcon />,
+          onClick: () => navigate("/dashboardAdmin/poster-topics"),
+        },
+      ],
+    },
     // Quản lý báo cáo
     {
       text: "Quản lý báo cáo",
@@ -112,6 +138,17 @@ const DashboardAdmin = () => {
           text: "Báo cáo khóa luận của sinh viên",
           icon: <InsertDriveFileIcon />,
           onClick: () => navigate("/dashboardAdmin/AdminReportList"),
+        },
+      ],
+    },
+    {
+      text: "Quản lý điểm sinh viên",
+      icon: <GradeIcon />,
+      subMenu: [
+        {
+          text: "Điểm sinh viên",
+          icon: <LeaderboardIcon />,
+          onClick: () => navigate("/dashboardAdmin/manage-score"),
         },
       ],
     },

@@ -1,0 +1,276 @@
+.list-group-assignment-review-container {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f4f6f8;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header-assignment {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header-assignment h2 {
+  font-size: 24px;
+  color: #333;
+  margin: 0;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  padding: 10px;
+  width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.search-input:focus {
+  border-color: #3498db;
+}
+
+.group-card {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  padding: 20px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s;
+}
+
+.group-card:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.group-topic {
+  font-size: 18px;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.teacher-name,
+.sub-group h5,
+.student-info {
+  font-size: 14px;
+  color: #555;
+}
+
+.sub-group h5 {
+  font-size: 16px;
+  margin: 10px 0 5px;
+  font-weight: bold;
+}
+
+.student-info {
+  font-size: 14px;
+  color: #666;
+  padding-left: 20px;
+}
+
+.form-container {
+  display: flex;
+  flex-direction: column; /* Căn chỉnh các mục theo chiều dọc */
+}
+
+.button-container {
+  display: flex; /* Sử dụng Flexbox */
+  justify-content: flex-end; /* Căn chỉnh nút sang bên phải */
+  margin-top: 10px; /* Khoảng cách trên nếu cần */
+  width: 100%; /* Đảm bảo chiếm toàn bộ chiều rộng của form */
+}
+
+.view-assignments-btn,
+.assign-reviewer-btn {
+  background: #2ecc71; /* Màu nền */
+  color: #fff; /* Màu chữ */
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+  width: 50px; /* Kích thước nút */
+}
+
+.view-assignments-btn {
+  background-color: #3498db;
+}
+
+.assign-reviewer-btn.cancel {
+  background-color: #ff4d4f; /* Màu đỏ cho trạng thái "Hủy phân công" */
+}
+
+.view-assignments-btn:hover {
+  background-color: #2980b9;
+}
+
+.assign-reviewer-btn:hover {
+  background-color: #27ae60;
+}
+
+.no-group-message {
+  font-size: 16px;
+  color: #888;
+  text-align: center;
+  padding: 20px;
+}
+
+.list-group-assignment-review-container {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f4f6f8;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Thêm các media queries để responsive */
+
+/* Tablet (768px - 1024px) */
+@media screen and (max-width: 1024px) {
+  .list-group-assignment-review-container {
+    padding: 15px;
+  }
+
+  .header-assignment {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .search-input {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .group-content {
+    flex-direction: column !important; /* Override inline style */
+  }
+
+  .button-container {
+    width: 100% !important; /* Override inline style */
+    margin-top: 20px;
+    justify-content: flex-start;
+  }
+
+  .assign-reviewer-btn {
+    width: 100%;
+    padding: 10px;
+  }
+}
+
+/* Mobile (< 768px) */
+@media screen and (max-width: 767px) {
+  .list-group-assignment-review-container {
+    padding: 10px;
+  }
+
+  .header-assignment h2 {
+    font-size: 20px;
+    text-align: center;
+  }
+
+  .group-card {
+    padding: 15px;
+  }
+
+  .group-details {
+    width: 100%;
+  }
+
+  .group-topic {
+    font-size: 16px;
+  }
+
+  .teacher-name,
+  .sub-group h5,
+  .student-info {
+    font-size: 13px;
+  }
+
+  .student-info {
+    margin-bottom: 10px !important; /* Override inline style */
+    padding: 8px !important; /* Override inline style */
+  }
+
+  /* Điều chỉnh pagination */
+  .MuiTablePagination-root {
+    margin-top: 20px;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .MuiTablePagination-toolbar {
+    padding: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .MuiTablePagination-selectLabel,
+  .MuiTablePagination-displayedRows {
+    margin: 10px 0;
+  }
+}
+
+/* Small Mobile (< 480px) */
+@media screen and (max-width: 480px) {
+  .header-assignment h2 {
+    font-size: 18px;
+  }
+
+  .search-input {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  .group-card {
+    padding: 10px;
+  }
+
+  .group-topic {
+    font-size: 15px;
+  }
+
+  .teacher-name,
+  .sub-group h5,
+  .student-info {
+    font-size: 12px;
+  }
+
+  .assign-reviewer-btn {
+    font-size: 13px;
+    padding: 8px;
+  }
+}
+
+/* Fix for landscape mode on mobile */
+@media screen and (max-width: 896px) and (orientation: landscape) {
+  .list-group-assignment-review-container {
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  .header-assignment {
+    position: sticky;
+    top: 0;
+    background-color: #f4f6f8;
+    padding: 10px 0;
+    z-index: 1;
+  }
+
+  .group-card {
+    margin-bottom: 10px;
+  }
+}

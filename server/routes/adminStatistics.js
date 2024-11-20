@@ -7,6 +7,7 @@ const ProfileStudent = require("../models/ProfileStudent");
 const { verifyToken, checkRole } = require("../middleware/auth");
 const User = require("../models/User");
 const Activity = require("../models/Activity");
+const AdminReport = require("../models/AdminReport");
 // lấy tổng số lượng đề tài và số lượng đề tài đãn được phê duyệt
 router.get(
   "/topic-statistics",
@@ -226,5 +227,43 @@ router.get("/recent", verifyToken, async (req, res) => {
     });
   }
 });
+
+// API endpoint để lấy thống kê báo cáo
+router.get(
+  "/report-statistics",
+  verifyToken,
+  checkRole("admin"),
+  async (req, res) => {
+    try {
+      // Đếm tổng số báo cáo đã nộp
+      const totalReports = await AdminReport.countDocuments();
+
+      // Đếm số báo cáo đã được giáo viên phê duyệt (có teacherApprovalDate)
+      const approvedReports = await AdminReport.countDocuments({
+        teacherApprovalDate: { $exists: true },
+      });
+
+      // Tính phần trăm báo cáo đã được phê duyệt
+      const approvedPercentage =
+        totalReports > 0
+          ? ((approvedReports / totalReports) * 100).toFixed(1)
+          : 0;
+
+      res.json({
+        success: true,
+        totalReports,
+        approvedReports,
+        approvedPercentage,
+      });
+    } catch (error) {
+      console.error("Lỗi khi lấy thống kê báo cáo:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi server",
+        error: error.message,
+      });
+    }
+  }
+);
 
 module.exports = router;

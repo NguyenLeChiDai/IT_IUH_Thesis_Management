@@ -6,12 +6,12 @@ import {
   Paper,
   Box,
   Stack,
-  Grid2,
   Snackbar,
   Alert,
   CircularProgress,
 } from "@mui/material";
 import "../../css/ScoreStudent.css";
+
 function ScoreStudent() {
   const [studentData, setStudentData] = useState(null);
   const [scores, setScores] = useState(null);
@@ -33,7 +33,6 @@ function ScoreStudent() {
         throw new Error("Không tìm thấy token. Vui lòng đăng nhập lại.");
       }
 
-      // Gọi API để lấy thông tin sinh viên hiện tại
       const studentResponse = await axios.get(
         "http://localhost:5000/api/student/profile-student",
         {
@@ -70,7 +69,7 @@ function ScoreStudent() {
       }
 
       const response = await axios.get(
-        `http://localhost:5000/api/scores/get-scores/${studentId}`,
+        `http://localhost:5000/api/scores/get-student-score/${studentId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -79,18 +78,14 @@ function ScoreStudent() {
       );
 
       if (response.data.success) {
-        if (response.data.scores && response.data.scores.length > 0) {
-          const scoreData = response.data.scores[0];
-          setScores({
-            instructorScore: scoreData.instructorScore,
-            reviewerScore: scoreData.reviewerScore,
-            presentationScore: scoreData.presentationScore,
-          });
-        } else {
-          setSnackbarMessage("Không tìm thấy điểm cho sinh viên này.");
-          setSnackbarSeverity("info");
-          setSnackbarOpen(true);
-        }
+        const scoreData = response.data.data.scores;
+        setScores({
+          instructorScore: scoreData.instructorScore,
+          reviewerScore: scoreData.reviewerScore,
+          councilScore: scoreData.councilScore,
+          posterScore: scoreData.posterScore,
+          totalScore: scoreData.totalScore,
+        });
       } else {
         throw new Error(
           response.data.message || "Không thể tải thông tin điểm"
@@ -98,11 +93,22 @@ function ScoreStudent() {
       }
     } catch (error) {
       console.error("Lỗi khi tải thông tin điểm:", error);
-      setError(error.message || "Đã xảy ra lỗi khi tải thông tin điểm");
-      setSnackbarMessage(
-        error.message || "Đã xảy ra lỗi khi tải thông tin điểm"
-      );
-      setSnackbarSeverity("error");
+
+      // Kiểm tra nếu là lỗi điểm chưa công bố
+      if (
+        error.response?.status === 403 &&
+        error.response?.data?.code === "SCORES_NOT_PUBLISHED"
+      ) {
+        setError("Điểm chưa được công bố");
+        setSnackbarMessage("Điểm chưa được công bố");
+        setSnackbarSeverity("info"); // Đổi severity thành info thay vì error
+      } else {
+        setError(error.message || "Đã xảy ra lỗi khi tải thông tin điểm");
+        setSnackbarMessage(
+          error.message || "Đã xảy ra lỗi khi tải thông tin điểm"
+        );
+        setSnackbarSeverity("error");
+      }
       setSnackbarOpen(true);
     }
   };
@@ -190,25 +196,37 @@ function ScoreStudent() {
           <div className="score-container">
             <div className="score-item">
               <Paper elevation={2}>
-                <Typography variant="subtitle1">Điểm hướng dẫn</Typography>
+                <Typography variant="subtitle1">Điểm Hướng Dẫn</Typography>
                 <Typography variant="h6">
-                  {scores?.instructorScore || "Chưa có"}
+                  {scores?.instructorScore ?? "Chưa có"}
                 </Typography>
               </Paper>
             </div>
             <div className="score-item">
               <Paper elevation={2}>
-                <Typography variant="subtitle1">Điểm phản biện</Typography>
+                <Typography variant="subtitle1">Điểm Phản Biện</Typography>
                 <Typography variant="h6">
-                  {scores?.reviewerScore || "Chưa có"}
+                  {scores?.reviewerScore ?? "Chưa có"}
                 </Typography>
               </Paper>
             </div>
             <div className="score-item">
               <Paper elevation={2}>
-                <Typography variant="subtitle1">Điểm báo cáo</Typography>
+                <Typography variant="subtitle1">
+                  {scores?.councilScore != null
+                    ? "Điểm Hội Đồng"
+                    : "Điểm Poster"}
+                </Typography>
                 <Typography variant="h6">
-                  {scores?.presentationScore || "Chưa có"}
+                  {scores?.councilScore ?? scores?.posterScore ?? "Chưa có"}
+                </Typography>
+              </Paper>
+            </div>
+            <div className="score-item">
+              <Paper elevation={2} sx={{ backgroundColor: "#e3f2fd" }}>
+                <Typography variant="subtitle1">Điểm Tổng Kết</Typography>
+                <Typography variant="h6" color="primary">
+                  {scores?.totalScore ?? "Chưa có"}
                 </Typography>
               </Paper>
             </div>

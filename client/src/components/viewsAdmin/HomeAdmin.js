@@ -159,6 +159,42 @@ const HomeAdmin = () => {
     fetchQuickStatistics();
   }, []);
 
+  //Thống kê báo cáo
+  // Thêm state mới cho thống kê báo cáo
+  const [reportStats, setReportStats] = useState({
+    totalReports: 0,
+    approvedReports: 0,
+    approvedPercentage: 0,
+  });
+
+  // Thêm useEffect để lấy thống kê báo cáo
+  useEffect(() => {
+    const fetchReportStatistics = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/adminStatistics/report-statistics",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          setReportStats({
+            totalReports: response.data.totalReports,
+            approvedReports: response.data.approvedReports,
+            approvedPercentage: response.data.approvedPercentage,
+          });
+        }
+      } catch (error) {
+        console.error("Lỗi lấy thống kê báo cáo:", error);
+      }
+    };
+
+    fetchReportStatistics();
+  }, []);
+
   const stats = [
     {
       title: "Tổng số đề tài",
@@ -189,9 +225,9 @@ const HomeAdmin = () => {
     },
     {
       title: "Khóa luận đã nộp",
-      value: "98",
+      value: reportStats.totalReports.toString(),
       icon: <FaFileAlt className="stats-icon" />,
-      description: "Đã chấm điểm: 85",
+      description: `Đã chấm điểm: ${reportStats.approvedReports}`,
       color: "warning",
     },
   ];
@@ -411,14 +447,16 @@ const HomeAdmin = () => {
               <div>
                 <div className="d-flex justify-content-between mb-2">
                   <span>Tỉ lệ khóa luận đã chấm điểm</span>
-                  <span className="text-warning">86.7%</span>
+                  <span className="text-warning">
+                    {reportStats.approvedPercentage}%
+                  </span>
                 </div>
                 <div className="progress">
                   <div
                     className="progress-bar bg-warning"
                     role="progressbar"
-                    style={{ width: "86.7%" }}
-                    aria-valuenow="86.7"
+                    style={{ width: `${reportStats.approvedPercentage}%` }}
+                    aria-valuenow={reportStats.approvedPercentage}
                     aria-valuemin="0"
                     aria-valuemax="100"
                   ></div>
