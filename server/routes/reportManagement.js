@@ -903,7 +903,13 @@ router.post(
     try {
       const report = await ThesisReport.findById(req.params.reportId)
         .populate("student", "name studentId")
-        .populate("group", "groupName")
+        .populate({
+          path: "group",
+          populate: {
+            path: "profileStudents.student",
+            select: "name studentId",
+          },
+        })
         .populate("topic", "nameTopic")
         .populate("folder", "name")
         .populate("teacher", "name");
@@ -926,10 +932,18 @@ router.post(
         });
       }
 
+      // Lấy danh sách students từ nhóm
+      let studentIds = [];
+      if (report.group && report.group.profileStudents) {
+        studentIds = report.group.profileStudents.map((ps) => ps.student._id);
+      } else {
+        studentIds = [report.student._id];
+      }
+
       // Tạo bản ghi mới trong AdminReport
       const adminReport = new AdminReport({
         originalReport: report._id,
-        student: report.student._id,
+        students: studentIds, // Lưu array các student ID
         group: report.group?._id,
         topic: report.topic._id,
         folder: report.folder._id,
@@ -938,7 +952,6 @@ router.post(
         fileUrl: report.fileUrl,
         submissionDate: report.submissionDate,
         teacherApprovalDate: new Date(),
-        status: "Chờ duyệt",
       });
 
       await adminReport.save();

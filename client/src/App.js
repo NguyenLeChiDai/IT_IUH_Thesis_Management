@@ -33,6 +33,7 @@ import MessageStudent from "./components/viewStudent/MessageStudent";
 import AdminNotifications from "./components/viewsAdmin/AdminNotifications";
 import NotificationPage from "./components/Notification/NotificationPage";
 import AdminReportList from "./components/viewsAdmin/AdminReportList";
+import AdminReportDetail from "./components/viewsAdmin/AdminReportDetail";
 
 function App() {
   return (
@@ -70,6 +71,10 @@ function App() {
               <Route path="manage-topics" element={<ManageTopic />} />{" "}
               <Route path="notifications" element={<AdminNotifications />} />{" "}
               <Route path="AdminReportList" element={<AdminReportList />} />{" "}
+              <Route
+                path="adminReportDetail/:reportId"
+                element={<AdminReportDetail />}
+              />{" "}
             </Route>
             {/* Sinh viên */}
             <Route path="/dashboardStudent" element={<DashboardStudent />}>

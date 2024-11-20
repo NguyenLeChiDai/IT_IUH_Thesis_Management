@@ -35,7 +35,7 @@ const AdminReports = () => {
   const handleDownload = async (reportId, fileName) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/adminReport/admin/download/${reportId}`,
+        `http://localhost:5000/api/adminReport/admin/download-report/${reportId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           responseType: "blob",
@@ -78,9 +78,12 @@ const AdminReports = () => {
             <tr key={report._id}>
               <td>{report.group?.groupName || "Chưa có nhóm"}</td>
               <td>
-                {report.students
-                  .map((student) => `${student.name} (${student.studentId})`)
-                  .join(", ")}
+                {report.students.map((student, index) => (
+                  <div key={student._id}>
+                    {student.name} ({student.studentId})
+                    {index < report.students.length - 1 ? ", " : ""}
+                  </div>
+                ))}
               </td>
               <td>{report.topic?.nameTopic}</td>
               <td>{report.teacher?.name}</td>
@@ -99,7 +102,7 @@ const AdminReports = () => {
                   variant="primary"
                   size="sm"
                   onClick={() =>
-                    navigate(`/dashboardAdmin/report/${report._id}`)
+                    navigate(`/dashboardAdmin/adminReportDetail/${report._id}`)
                   }
                 >
                   <Eye size={16} /> Chi tiết

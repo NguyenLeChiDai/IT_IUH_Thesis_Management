@@ -54,11 +54,17 @@ router.get(
           path: "students",
           select: "name studentId",
         })
-        .populate("group", "groupName")
+        .populate("group", "groupName profileStudents")
         .populate("topic", "nameTopic")
         .populate("folder", "name")
         .populate("teacher", "name")
-        .populate("originalReport");
+        .populate({
+          path: "originalReport",
+          populate: {
+            path: "student",
+            select: "name studentId",
+          },
+        });
 
       if (!report) {
         return res.status(404).json({
