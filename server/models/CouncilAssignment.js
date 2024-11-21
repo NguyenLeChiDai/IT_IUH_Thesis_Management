@@ -8,14 +8,14 @@ const CouncilAssignmentSchema = new Schema({
     required: false,
   },
 
-  // Nhóm sinh viên được chấm phản biện
+  // Nhóm sinh viên được chấm hội đồng
   studentGroup: {
     type: Schema.Types.ObjectId,
     ref: "studentgroups",
     required: true,
   },
 
-  // Đề tài được chấm phản biện
+  // Đề tài được chấm hội đồng
   topic: {
     type: Schema.Types.ObjectId,
     ref: "topics",

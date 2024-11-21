@@ -8,6 +8,7 @@ const { verifyToken, checkRole } = require("../middleware/auth");
 const User = require("../models/User");
 const Activity = require("../models/Activity");
 const AdminReport = require("../models/AdminReport");
+const Score = require("../models/ScoreStudent.js"); // Import model profile
 // lấy tổng số lượng đề tài và số lượng đề tài đãn được phê duyệt
 router.get(
   "/topic-statistics",
@@ -228,7 +229,7 @@ router.get("/recent", verifyToken, async (req, res) => {
   }
 });
 
-// API endpoint để lấy thống kê báo cáo
+// API endpoint để lấy thống kê báo cáo là nhóm đã có điểm
 router.get(
   "/report-statistics",
   verifyToken,
@@ -238,12 +239,20 @@ router.get(
       // Đếm tổng số báo cáo đã nộp
       const totalReports = await AdminReport.countDocuments();
 
-      // Đếm số báo cáo đã được giáo viên phê duyệt (có teacherApprovalDate)
-      const approvedReports = await AdminReport.countDocuments({
-        teacherApprovalDate: { $exists: true },
+      // Đếm số báo cáo đã được chấm đủ điểm
+      const fullyApprovedReports = await Score.countDocuments({
+        instructorScore: { $exists: true, $ne: null },
+        reviewerScore: { $exists: true, $ne: null },
+        $or: [
+          { councilScore: { $exists: true, $ne: null } },
+          { posterScore: { $exists: true, $ne: null } },
+        ],
       });
 
-      // Tính phần trăm báo cáo đã được phê duyệt
+      // Chia số báo cáo đã chấm điểm cho 2
+      const approvedReports = Math.floor(fullyApprovedReports / 2);
+
+      // Tính phần trăm báo cáo đã được chấm điểm
       const approvedPercentage =
         totalReports > 0
           ? ((approvedReports / totalReports) * 100).toFixed(1)

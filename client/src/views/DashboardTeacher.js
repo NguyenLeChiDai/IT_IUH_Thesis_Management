@@ -133,6 +133,12 @@ const DashboardTeacher = () => {
         },
       ],
     },
+
+    {
+      text: "Thống kê",
+      icon: <HomeIcon />,
+      onClick: () => navigate("/dashboardTeacher/StatisticsTeacher"),
+    },
   ];
 
   return (

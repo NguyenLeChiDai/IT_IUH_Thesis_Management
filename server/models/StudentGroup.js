@@ -30,6 +30,10 @@ const StudentGroupSchema = new Schema({
       },
     },
   ],
+  teacher: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "profileTeacher", // Make sure this matches your model name
+  },
 });
 
 module.exports = mongoose.model("studentgroups", StudentGroupSchema);

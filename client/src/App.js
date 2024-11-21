@@ -45,6 +45,7 @@ import TopicReview from "./components/viewTeacher/TopicReview";
 import CouncilTopic from "./components/viewTeacher/CouncilTopic";
 import PosterTopic from "./components/viewTeacher/PosterTopic";
 import ViewScore from "./components/viewTeacher/ViewScore";
+import StatisticsTeacher from "./components/viewTeacher/StatisticsTeacher";
 
 function App() {
   return (
@@ -158,6 +159,7 @@ function App() {
               <Route path="topic-council" element={<CouncilTopic />} />
               <Route path="topic-poster" element={<PosterTopic />} />
               <Route path="view-scores" element={<ViewScore />} />
+              <Route path="StatisticsTeacher" element={<StatisticsTeacher />} />
             </Route>
             <Route path="/change-password" element={<ChangePassword />} />
           </Route>
