@@ -4,6 +4,7 @@ const { verifyToken, checkRole } = require("../middleware/auth");
 const StudentGroup = require("../models/StudentGroup");
 const ProfileStudent = require("../models/ProfileStudent");
 const GroupCreationInfo = require("../models/GroupCreationInfo");
+const AdminFeature = require("../models/AdminFeature");
 //@route GET api/studentGroups
 //@desc GET studentGroups
 //@access private
@@ -328,6 +329,18 @@ router.post("/join-group/:id", verifyToken, async (req, res) => {
 //@access private
 router.post("/leave-group", verifyToken, async (req, res) => {
   try {
+    // Kiểm tra trạng thái tính năng rời nhóm
+    const leaveGroupConfig = await AdminFeature.findOne({
+      feature: "leave_group",
+    });
+    if (leaveGroupConfig && !leaveGroupConfig.isEnabled) {
+      return res.status(403).json({
+        success: false,
+        message:
+          leaveGroupConfig.disabledReason ||
+          "Chức năng rời nhóm hiện đang bị khóa",
+      });
+    }
     const studentProfile = await ProfileStudent.findOne({ user: req.userId });
 
     if (!studentProfile || !studentProfile.studentGroup) {

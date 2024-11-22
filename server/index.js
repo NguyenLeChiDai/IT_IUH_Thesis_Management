@@ -4,14 +4,11 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
 
-//socket.io
-const { Server } = require("socket.io");
-const http = require("http");
-
+// Import routes (giữ nguyên như cũ)
 const authRouter = require("./routes/auth");
 const StudentGroupRouter = require("./routes/studentGroup");
 const profileStudent = require("./routes/profileStudent");
-const userRouter = require("./routes/users"); // Import route mới
+const userRouter = require("./routes/users");
 const profileTeacher = require("./routes/profileTeacher");
 const topicPost = require("./routes/topic");
 const thesisReportRouter = require("./routes/thesisReport");
@@ -25,9 +22,9 @@ const councilAssignments = require("./routes/councilAssignment");
 const posterAssignments = require("./routes/posterAssignment");
 const adminStatistics = require("./routes/adminStatistics");
 const adminReport = require("./routes/adminReport");
-const teacherStatistics = require("./routes/teacherStatistics");
+const adminFeature = require("./routes/adminFeature");
 
-//------- Kết nối CSDL
+// Kết nối CSDL
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI, {
@@ -44,15 +41,17 @@ connectDB();
 
 const app = express();
 app.use(express.json());
-//app.use(cors());
 app.use(
   cors({
-    origin: "http://localhost:3000", // Thay bằng domain của frontend
-    credentials: true, // Để gửi cookie hoặc thông tin xác thực
+    origin: "http://localhost:3000",
+    credentials: true,
   })
 );
 
-// Thêm dòng này để phục vụ các file tĩnh từ thư mục uploads
+// Import Socket Initialization
+const { initSocket } = require("./socket");
+
+// Phục vụ các file tĩnh từ thư mục uploads
 app.use("/uploads", express.static(path.join(__dirname, "uploadReports")));
 
 app.use((req, res, next) => {
@@ -63,10 +62,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// Các route (giữ nguyên như cũ)
 app.use("/api/auth", authRouter);
 app.use("/api/studentgroups", StudentGroupRouter);
 app.use("/api/student", profileStudent);
-app.use("/api/users", userRouter); // Sử dụng route mới
+app.use("/api/users", userRouter);
 app.use("/api/teachers", profileTeacher);
 app.use("/api/topics", topicPost);
 app.use("/api/thesisReports", thesisReportRouter);
@@ -79,102 +79,15 @@ app.use("/api/reviewAssignment", reviewAssignments);
 app.use("/api/councilAssignment", councilAssignments);
 app.use("/api/posterAssignment", posterAssignments);
 app.use("/api/adminStatistics", adminStatistics);
-app.use("/api/teacherStatistics", teacherStatistics);
 app.use("/api/adminReport", adminReport);
+app.use("/api/adminFeature", adminFeature);
 
-// Create HTTP Server socket.io
-const server = http.createServer(app);
+const { server, io } = initSocket(app);
 
-// Socket.IO Setup
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
-});
+const PORT = process.env.PORT || 5000;
 
-// Socket.IO Connection Store
-const userSockets = new Map();
-
-// Socket.IO Event Handlers
-io.on("connection", (socket) => {
-  console.log("New client connected");
-
-  // Handle user login
-  socket.on("login", (userId) => {
-    userSockets.set(userId, socket.id);
-    console.log(`User ${userId} connected`);
-  });
-
-  // Handle send message
-  socket.on("sendMessage", async (data) => {
-    try {
-      const { senderId, receiverId, content, senderModel, receiverModel } =
-        data;
-
-      // Create new message
-      const Message = require("./models/Message");
-      const newMessage = new Message({
-        sender: senderId,
-        senderModel,
-        receiver: receiverId,
-        receiverModel,
-        content,
-      });
-      await newMessage.save();
-
-      // Send to receiver if online
-      const receiverSocketId = userSockets.get(receiverId);
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("receiveMessage", {
-          message: newMessage,
-          sender: senderId,
-        });
-      }
-
-      // Confirm to sender
-      socket.emit("messageSent", newMessage);
-    } catch (error) {
-      console.error("Error sending message:", error);
-      socket.emit("messageError", { error: "Failed to send message" });
-    }
-  });
-
-  // Handle read status
-  socket.on("markAsRead", async (messageId) => {
-    try {
-      const Message = require("./models/Message");
-      await Message.findByIdAndUpdate(messageId, { isRead: true });
-      socket.emit("messageMarkedAsRead", messageId);
-    } catch (error) {
-      console.error("Error marking message as read:", error);
-    }
-  });
-
-  // Handle typing indicator
-  socket.on("typing", (data) => {
-    const { senderId, receiverId } = data;
-    const receiverSocketId = userSockets.get(receiverId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("userTyping", { userId: senderId });
-    }
-  });
-
-  // Handle disconnect
-  socket.on("disconnect", () => {
-    for (const [userId, socketId] of userSockets.entries()) {
-      if (socketId === socket.id) {
-        userSockets.delete(userId);
-        console.log(`User ${userId} disconnected`);
-        break;
-      }
-    }
-  });
-});
-
-const PORT = process.env.PORT || 5000; // Sử dụng PORT từ môi trường hoặc mặc định là 5000
-
-app.listen(PORT, () =>
+server.listen(PORT, () =>
   console.log(`Server started on port ${process.env.PORT}`)
 );
+
+module.exports = { server, io };

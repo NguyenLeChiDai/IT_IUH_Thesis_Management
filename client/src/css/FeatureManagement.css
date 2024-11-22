@@ -1,0 +1,25 @@
+.feature-management-container {
+  background-color: #f4f6f9;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.feature-management-card {
+  width: 100%;
+  max-width: 500px;
+  border: none;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.feature-item {
+  background-color: white;
+  transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.07);
+  transform: translateY(-3px);
+}

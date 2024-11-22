@@ -282,6 +282,7 @@ import "../../css/UserMenu.css";
 import avatar from "../../assets/avatar.png";
 import NotificationDetailModal from "../Notification/NotificationDetailModal";
 import MessageNotificationBell from "../Notification/MessageNotificationBell";
+import io from "socket.io-client";
 
 const UserMenu = () => {
   const navigate = useNavigate();
@@ -294,6 +295,61 @@ const UserMenu = () => {
   const notificationRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [socket, setSocket] = useState(null);
+
+  useEffect(() => {
+    const newSocket = io("http://localhost:5000", {
+      withCredentials: true,
+      auth: {
+        token: localStorage.getItem("token"),
+      },
+    });
+
+    setSocket(newSocket);
+
+    // Đăng ký lắng nghe sự kiện nhận thông báo
+    newSocket.on("receiveNotification", (newNotification) => {
+      if (shouldShowNotification(newNotification)) {
+        setNotifications((prev) => [newNotification, ...prev]);
+        setUnreadCount((prev) => prev + 1);
+        showBrowserNotification(newNotification);
+      }
+    });
+
+    return () => {
+      if (newSocket) {
+        newSocket.disconnect();
+      }
+    };
+  }, [user]);
+  // Kiểm tra xem có nên hiển thị thông báo cho user hiện tại không
+  const shouldShowNotification = (notification) => {
+    if (notification.type === "all") return true;
+    if (notification.type === "student" && user?.role === "Sinh viên")
+      return true;
+    if (notification.type === "teacher" && user?.role === "Giảng viên")
+      return true;
+    return false;
+  };
+
+  // Hiển thị thông báo trên trình duyệt
+  const showBrowserNotification = (notification) => {
+    if (Notification.permission === "granted") {
+      new Notification(notification.title, {
+        body: notification.message,
+        icon: "/path/to/notification-icon.png", // Thêm icon nếu có
+      });
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          new Notification(notification.title, {
+            body: notification.message,
+            icon: "/path/to/notification-icon.png",
+          });
+        }
+      });
+    }
+  };
 
   useEffect(() => {
     setCurrentProfile(profile);

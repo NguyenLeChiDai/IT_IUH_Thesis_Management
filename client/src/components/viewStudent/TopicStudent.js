@@ -91,10 +91,7 @@ const TopicStudent = () => {
   const handleLeaveTopic = async (topicId) => {
     try {
       const token = localStorage.getItem("token");
-      console.log("Using token:", token);
-
       if (!token) {
-        console.error("Token is not available");
         setError("Không có token hợp lệ.");
         return;
       }
@@ -111,42 +108,49 @@ const TopicStudent = () => {
       });
 
       if (result.isConfirmed) {
-        console.log("Leaving topic with ID:", topicId);
-        console.log("Using group ID:", groupId); // Giữ lại log để kiểm tra groupId
-
-        const response = await axios.delete(
-          `http://localhost:5000/api/topics/leave-topic`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            data: { groupId, topicId },
-          }
-        );
-
-        console.log("Server response:", response.data);
-
-        if (response.data.success) {
-          // Cập nhật danh sách đề tài
-          setTopics((prevTopics) =>
-            prevTopics.filter((topic) => topic.topicId !== topicId)
+        try {
+          const response = await axios.delete(
+            `http://localhost:5000/api/topics/leave-topic`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              data: { groupId, topicId },
+            }
           );
-          toast.success("Bạn đã rời đề tài thành công!", {
-            position: "top-right",
-            autoClose: 2500,
-          });
-        } else {
-          setError(response.data.message);
+
+          if (response.data.success) {
+            setTopics((prevTopics) =>
+              prevTopics.filter((topic) => topic.topicId !== topicId)
+            );
+            toast.success("Bạn đã rời đề tài thành công!", {
+              position: "top-right",
+              autoClose: 2500,
+            });
+          }
+        } catch (err) {
+          // Kiểm tra lỗi từ server và hiển thị thông báo chi tiết
+          if (err.response && err.response.status === 403) {
+            // Hiển thị thông báo khi chức năng bị khóa
+            await Swal.fire({
+              title: "Chức Năng Bị Khóa",
+              text:
+                err.response.data.message ||
+                "Chức năng rời đề tài hiện đang bị khóa",
+              icon: "warning",
+              confirmButtonText: "Đóng",
+            });
+          } else {
+            // Xử lý các lỗi khác
+            setError(
+              err.response?.data?.message || "Đã xảy ra lỗi khi rời đề tài."
+            );
+          }
         }
       }
     } catch (err) {
-      if (err.response) {
-        console.error("Error response data:", err.response.data);
-        setError(err.response.data.message || "Đã xảy ra lỗi khi rời đề tài.");
-      } else {
-        console.error("Error occurred:", err);
-        setError("Đã xảy ra lỗi khi rời đề tài.");
-      }
+      console.error("Lỗi:", err);
+      setError("Đã xảy ra lỗi không xác định.");
     }
   };
 

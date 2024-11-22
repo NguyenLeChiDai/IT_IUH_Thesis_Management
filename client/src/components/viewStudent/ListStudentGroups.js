@@ -173,7 +173,6 @@ export const ListStudentGroups = () => {
       toast.error("Bạn chưa tham gia nhóm nào!");
       return;
     }
-
     try {
       const result = await Swal.fire({
         title: "Xác nhận rời nhóm",
@@ -185,36 +184,49 @@ export const ListStudentGroups = () => {
         confirmButtonText: "Xác nhận",
         cancelButtonText: "Hủy",
       });
-
       if (result.isConfirmed) {
         const token = localStorage.getItem("token");
-        const response = await axios.post(
-          "http://localhost:5000/api/studentGroups/leave-group",
-          {},
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        if (response.data.success) {
-          toast.success(`Bạn đã rời khỏi nhóm "${myGroup.groupName}"!`);
-          setMyGroup(null);
-          fetchGroups();
-          updateProfile();
-        } else {
-          Swal.fire(
-            "Lỗi",
-            response.data.message || "Có lỗi xảy ra khi rời nhóm",
-            "error"
+        try {
+          const response = await axios.post(
+            "http://localhost:5000/api/studentGroups/leave-group",
+            {},
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
           );
+          if (response.data.success) {
+            toast.success(`Bạn đã rời khỏi nhóm "${myGroup.groupName}"!`);
+            setMyGroup(null);
+            fetchGroups();
+            updateProfile();
+          }
+        } catch (err) {
+          // Kiểm tra lỗi từ server và hiển thị thông báo chi tiết
+          if (err.response && err.response.status === 403) {
+            // Hiển thị thông báo khi chức năng bị khóa
+            await Swal.fire({
+              title: "Chức Năng Bị Khóa",
+              text:
+                err.response.data.message ||
+                "Chức năng rời nhóm hiện đang bị khóa",
+              icon: "warning",
+              confirmButtonText: "Đóng",
+            });
+          } else {
+            // Xử lý các lỗi khác
+            Swal.fire(
+              "Lỗi",
+              err.response?.data?.message || "Có lỗi xảy ra khi rời nhóm",
+              "error"
+            );
+          }
         }
       }
     } catch (error) {
       console.error("Lỗi khi rời nhóm:", error);
-      Swal.fire("Lỗi", "Lỗi khi rời khỏi nhóm!", "error");
+      Swal.fire("Lỗi", "Có lỗi xảy ra khi rời khỏi nhóm!", "error");
     }
   };
-
   // thay đổi nhóm trưởng
   const handleChangeLeader = async (groupId, newLeaderId) => {
     if (!groupId || !newLeaderId) {

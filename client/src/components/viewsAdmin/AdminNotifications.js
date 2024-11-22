@@ -5,6 +5,9 @@ import "moment/locale/vi";
 import { Table, Button, Modal, Form, Pagination } from "react-bootstrap";
 import { FaTrash } from "react-icons/fa";
 import "../../css/AdminNotifications.css";
+import io from "socket.io-client";
+import Swal from "sweetalert2";
+import { toast, ToastContainer } from "react-toastify";
 
 const AdminNotifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -18,6 +21,28 @@ const AdminNotifications = () => {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [notificationsPerPage] = useState(10);
+  const [socket, setSocket] = useState(null);
+
+  useEffect(() => {
+    const newSocket = io("http://localhost:5000", {
+      withCredentials: true,
+      auth: {
+        token: localStorage.getItem("token"),
+      },
+    });
+
+    setSocket(newSocket);
+
+    newSocket.on("connect", () => {
+      console.log("Connected to socket server");
+    });
+
+    return () => {
+      if (newSocket) {
+        newSocket.disconnect();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     fetchNotifications();
@@ -38,6 +63,7 @@ const AdminNotifications = () => {
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
+      toast.error("Lỗi khi tải danh sách thông báo");
     }
   };
 
@@ -55,19 +81,39 @@ const AdminNotifications = () => {
         }
       );
       if (response.data.success) {
+        // Socket sẽ tự động gửi thông báo từ server
+
         setShowCreateModal(false);
         setNewNotification({ title: "", message: "", type: "all" });
         fetchNotifications();
+        toast.success("Tạo thông báo mới thành công!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       }
     } catch (error) {
       console.error("Error creating notification:", error);
-      alert("Có lỗi xảy ra khi tạo thông báo");
+      toast.error("Có lỗi xảy ra khi tạo thông báo");
     }
     setLoading(false);
   };
 
   const handleDeleteNotification = async (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa thông báo này?")) {
+    const result = await Swal.fire({
+      title: "Xác nhận xóa",
+      text: "Bạn có chắc chắn muốn xóa thông báo này?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Xác nhận",
+      cancelButtonText: "Hủy",
+    });
+    if (result.isConfirmed) {
       try {
         const response = await axios.delete(
           `http://localhost:5000/api/notification/${id}`,
@@ -79,11 +125,14 @@ const AdminNotifications = () => {
         );
         if (response.data.success) {
           fetchNotifications();
-          alert("Đã xóa thông báo thành công");
+          toast.success("Xóa thông báo thành công!", {
+            position: "top-right",
+            autoClose: 3000,
+          });
         }
       } catch (error) {
         console.error("Error deleting notification:", error);
-        alert("Có lỗi xảy ra khi xóa thông báo");
+        toast.error("Có lỗi xảy ra khi xóa thông báo");
       }
     }
   };

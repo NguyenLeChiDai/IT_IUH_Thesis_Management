@@ -13,7 +13,7 @@ const xlsx = require("xlsx");
 const path = require("path");
 const fs = require("fs");
 const Activity = require("../models/Activity");
-
+const AdminFeature = require("../models/AdminFeature");
 //Get topicGroup
 router.get("/:groupId/topics", verifyToken, async (req, res) => {
   try {
@@ -700,6 +700,18 @@ router.delete("/leave-topic", verifyToken, async (req, res) => {
   const { groupId, topicId } = req.body;
 
   try {
+    // Kiểm tra trạng thái tính năng rời đề tài
+    const leaveTopicConfig = await AdminFeature.findOne({
+      feature: "leave_topic",
+    });
+    if (leaveTopicConfig && !leaveTopicConfig.isEnabled) {
+      return res.status(403).json({
+        success: false,
+        message:
+          leaveTopicConfig.disabledReason ||
+          "Chức năng rời đề tài hiện đang bị khóa",
+      });
+    }
     // Tìm nhóm và đề tài theo ID
     const group = await StudentGroup.findById(groupId);
     const topic = await Topic.findById(topicId);

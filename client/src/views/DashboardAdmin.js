@@ -36,8 +36,10 @@ import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import GradeIcon from "@mui/icons-material/Grade";
-
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import GavelIcon from "@mui/icons-material/Gavel";
+import BlockIcon from "@mui/icons-material/Block";
+
 const drawerWidth = 240;
 
 const DashboardAdmin = () => {
@@ -149,6 +151,17 @@ const DashboardAdmin = () => {
           text: "Điểm sinh viên",
           icon: <LeaderboardIcon />,
           onClick: () => navigate("/dashboardAdmin/manage-score"),
+        },
+      ],
+    },
+    {
+      text: "Quản lý chức năng",
+      icon: <ManageAccountsIcon />,
+      subMenu: [
+        {
+          text: "Khóa chức năng",
+          icon: <BlockIcon />,
+          onClick: () => navigate("/dashboardAdmin/feature-management"),
         },
       ],
     },

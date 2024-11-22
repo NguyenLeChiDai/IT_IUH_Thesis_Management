@@ -46,6 +46,7 @@ import CouncilTopic from "./components/viewTeacher/CouncilTopic";
 import PosterTopic from "./components/viewTeacher/PosterTopic";
 import ViewScore from "./components/viewTeacher/ViewScore";
 import StatisticsTeacher from "./components/viewTeacher/StatisticsTeacher";
+import FeatureManagement from "./components/viewsAdmin/FeatureManagement";
 
 function App() {
   return (
@@ -113,6 +114,10 @@ function App() {
               <Route
                 path="manage-score"
                 element={<ScoreStudentForAdmin />}
+              />{" "}
+              <Route
+                path="feature-management"
+                element={<FeatureManagement />}
               />{" "}
             </Route>
             {/* Sinh viên */}
