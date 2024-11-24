@@ -13,7 +13,7 @@ const Header = () => {
         <h2>Thành Phố Hồ Chí Minh</h2>
       </div>
       <div className="right-link">
-        <a href="/"> Quay lại trang chủ </a>
+        <a href="/home"> Quay lại trang chủ </a>
       </div>
     </header>
   );

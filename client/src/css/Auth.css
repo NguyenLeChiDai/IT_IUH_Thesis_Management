@@ -1,56 +1,173 @@
+/* Base styles */
 .auth-page {
   display: flex;
   flex-direction: column;
-  min-height: 50vh;
-  overflow: hidden; /* Ẩn thanh cuộn chỉ cho phần tử này */
+  min-height: 100vh;
+  background: url("../assets/cntt-iuh2.png") no-repeat center center/cover;
+  position: relative;
+  overflow: hidden;
 }
 
+/* Header adjustments */
+header {
+  width: 100%;
+  padding: 1rem;
+}
+
+/* Main content area */
 .auth-content {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding-bottom: 3vh; /* Giảm padding-bottom từ 3vh xuống 2vh */
-  margin-top: 0; /* Thêm margin-top nếu cần thiết */
+  padding: 2rem 1rem;
+  margin-top: 0;
 }
 
+/* Authentication form container */
 .auth-form {
-  background: #fff;
-  padding: 30px;
+  background: rgb(255, 255, 255);
+  padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   text-align: center;
-  padding-top: 80px; /* Thêm padding phía trên form */
+  width: 100%;
+  max-width: 550px;
+  margin: 0 auto;
 }
 
+/* Title styling */
 .auth-form h2 {
   font-size: 1.8rem;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-bottom: 50px;
-  padding-bottom: 0;
-  position: relative;
-  color: #6b65c6; /* Màu trung bình giữa #667eea và #764ba2 */
-
-  /* Thêm khung xung quanh */
-  border: 2px solid #6b65c6; /* Màu khung */
-  border-radius: 8px; /* Bo góc cho khung */
-  padding: 10px 20px; /* Thêm padding bên trong khung */
-
-  /* Hiệu ứng bóng */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Tạo bóng cho tiêu đề */
+  margin-bottom: 2rem;
+  color: #6b65c6;
+  border: 2px solid #6b65c6;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: color 0.3s ease;
 }
 
-/* Thêm hiệu ứng hover */
 .auth-form h2:hover {
-  color: #764ba2; /* Đổi màu khi hover */
-  transition: color 0.3s ease; /* Hiệu ứng chuyển màu mượt mà */
+  color: #764ba2;
 }
 
+/* Logo styling */
 .logo img {
   height: 70px;
   display: block;
   margin: 0 auto;
-  opacity: 0.8; /* Điều chỉnh độ trong suốt để logo "chìm" vào nền */
+  opacity: 0.8;
+}
+
+/* Footer positioning */
+footer {
+  margin-top: auto;
+  width: 100%;
+  padding: 1rem;
+}
+
+/* Responsive Breakpoints */
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+  .auth-form {
+    padding: 2.5rem;
+    min-height: 600px;
+  }
+
+  .auth-form h2 {
+    font-size: 1.8rem;
+    margin-bottom: 3rem;
+  }
+}
+
+/* Medium devices (tablets, 768px to 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .auth-form {
+    max-width: 500px;
+    padding: 2rem;
+    min-height: auto;
+  }
+
+  .auth-form h2 {
+    font-size: 1.6rem;
+    margin-bottom: 2.5rem;
+  }
+}
+
+/* Small devices (landscape phones, 576px to 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
+  .auth-form {
+    max-width: 450px;
+    padding: 1.5rem;
+  }
+
+  .auth-form h2 {
+    font-size: 1.4rem;
+    margin-bottom: 2rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .logo img {
+    height: 60px;
+  }
+}
+
+/* Extra small devices (phones, less than 576px) */
+@media (max-width: 575px) {
+  .auth-content {
+    padding: 1rem;
+  }
+
+  .auth-form {
+    max-width: 100%;
+    padding: 1rem;
+    margin: 0 0.5rem;
+  }
+
+  .auth-form h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem;
+  }
+
+  .logo img {
+    height: 50px;
+  }
+}
+
+/* Handle very small devices */
+@media (max-width: 320px) {
+  .auth-form h2 {
+    font-size: 1rem;
+    padding: 0.25rem;
+  }
+
+  .auth-form {
+    padding: 0.75rem;
+  }
+}
+
+/* Handle landscape orientation */
+@media (max-height: 600px) and (orientation: landscape) {
+  .auth-page {
+    min-height: auto;
+  }
+
+  .auth-content {
+    padding: 1rem 0;
+  }
+
+  .auth-form {
+    min-height: auto;
+    margin-bottom: 1rem;
+  }
+
+  footer {
+    margin-top: 1rem;
+  }
 }

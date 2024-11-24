@@ -104,7 +104,6 @@ router.get("/unread", verifyToken, async (req, res) => {
 router.post("/send-new", verifyToken, async (req, res) => {
   try {
     const { content, groupId } = req.body;
-
     const senderModel =
       req.role === "Giảng viên" ? "profileTeacher" : "profileStudent";
 
@@ -131,7 +130,7 @@ router.post("/send-new", verifyToken, async (req, res) => {
       });
     }
 
-    // Kiểm tra group nếu có
+    // Kiểm tra group
     const group = await Group.findById(groupId).populate("teacher");
     if (!group) {
       return res.status(404).json({
@@ -140,7 +139,7 @@ router.post("/send-new", verifyToken, async (req, res) => {
       });
     }
 
-    // Kiểm tra nếu là sinh viên trong nhóm
+    // Kiểm tra quyền gửi tin nhắn
     if (senderModel === "profileStudent") {
       const isMember = group.profileStudents.some(
         (student) => student.student.toString() === sender._id.toString()
@@ -153,70 +152,33 @@ router.post("/send-new", verifyToken, async (req, res) => {
       }
     }
 
-    // Kiểm tra xem tin nhắn đã tồn tại hay chưa
-    const existingMessage = await Message.findOne({
-      content,
-      sender: sender._id,
-      groupId,
-      senderModel,
-      isRead: false,
-      timestamp: { $gte: new Date(Date.now() - 60000) },
-    });
-
-    if (existingMessage) {
-      return res.status(409).json({
-        success: false,
-        message: "This message already exists.",
-      });
-    }
-
-    // Tạo và lưu tin nhắn cho nhóm
-    const newMessage = {
+    // Tạo tin nhắn mới
+    const newMessage = new Message({
       sender: sender._id,
       senderModel,
       content,
       groupId,
       receiverModel: "studentgroups",
-    };
+    });
 
-    const createNotifications = async (message, group, sender) => {
-      try {
-        // Tạo một notification duy nhất cho nhóm
-        const notification = {
-          recipient: group._id, // Sử dụng group._id làm recipient
-          sender: sender._id,
-          senderModel: message.senderModel,
-          messageType: "group",
-          message: message._id,
-        };
+    // Lưu tin nhắn vào MongoDB
+    const savedMessage = await newMessage.save();
 
-        // Lưu notification
-        await MessageNotification.create(notification);
-
-        return notification;
-      } catch (error) {
-        console.error("Error creating notifications:", error);
-        throw error;
-      }
-    };
-    // Sau khi lưu tin nhắn mới
-    const savedMessage = await Message.create(newMessage);
-    await createNotifications(savedMessage, group, sender);
-
-    // Lấy thông tin người gửi kèm tên bằng cách populate
-    const populatedMessage = await savedMessage.populate({
+    // Lấy thông tin chi tiết của người gửi
+    const populatedMessage = await Message.findById(savedMessage._id).populate({
       path: "sender",
       select: "name email",
       model: senderModel,
     });
 
-    // Chuẩn bị response
+    // Format message response
     const messageResponse = {
       _id: populatedMessage._id,
       sender: {
         _id: populatedMessage.sender._id,
         name: populatedMessage.sender.name,
         email: populatedMessage.sender.email,
+        role: req.role,
       },
       content: populatedMessage.content,
       groupId: populatedMessage.groupId,
@@ -233,7 +195,6 @@ router.post("/send-new", verifyToken, async (req, res) => {
       success: false,
       message: "Internal server error",
       error: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
 });

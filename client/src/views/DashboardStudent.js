@@ -117,7 +117,7 @@ const DashboardStudent = () => {
           width:
             sidebarOpen && !isMobile ? `calc(100% - ${drawerWidth}px)` : "100%",
           ml: sidebarOpen && !isMobile ? `${drawerWidth}px` : 0,
-          height: "70px", // Giảm chiều cao của AppBar
+          height: "80px", // Giảm chiều cao của AppBar
         }}
       >
         <Toolbar>

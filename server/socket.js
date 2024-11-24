@@ -5,6 +5,7 @@ const ProfileTeacher = require("./models/ProfileTeacher");
 const ProfileStudent = require("./models/ProfileStudent");
 const Group = require("./models/StudentGroup");
 const jwt = require("jsonwebtoken");
+const StudentGroup = require("./models/StudentGroup");
 
 let io;
 let server;
@@ -13,6 +14,8 @@ let server;
 const userSockets = new Map();
 const userGroups = new Map();
 const connectedUsers = new Map();
+// Lưu trữ socket connections theo group
+const groupSockets = new Map(); // Map để lưu các socket đang xem một nhóm cụ thể
 
 const initSocket = (app) => {
   server = http.createServer(app);
@@ -93,6 +96,28 @@ const initSocket = (app) => {
       }
     });
 
+    // Handler khi client bắt đầu xem danh sách nhóm
+    socket.on("joinGroupsList", () => {
+      socket.join("groupsList");
+    });
+
+    // Handler khi client xem chi tiết một nhóm
+    socket.on("joinGroupDetails", (groupId) => {
+      socket.join(`group:${groupId}`);
+      if (!groupSockets.has(groupId)) {
+        groupSockets.set(groupId, new Set());
+      }
+      groupSockets.get(groupId).add(socket.id);
+    });
+
+    // Handler khi client rời khỏi trang chi tiết nhóm
+    socket.on("leaveGroupDetails", (groupId) => {
+      socket.leave(`group:${groupId}`);
+      if (groupSockets.has(groupId)) {
+        groupSockets.get(groupId).delete(socket.id);
+      }
+    });
+
     socket.on("disconnect", () => {
       connectedUsers.delete(userId);
       userSockets.delete(userId);
@@ -161,6 +186,37 @@ const verifySocketToken = async (token) => {
   }
 };
 
+// Các hàm helper để emit events
+const emitGroupUpdate = async (groupId) => {
+  try {
+    const updatedGroup = await StudentGroup.findById(groupId).populate(
+      "profileStudents.student",
+      "name studentId"
+    );
+
+    // Emit cho tất cả clients đang xem danh sách nhóm
+    io.to("groupsList").emit("groupListUpdate", {
+      _id: updatedGroup._id,
+      groupName: updatedGroup.groupName,
+      groupStatus: updatedGroup.groupStatus,
+    });
+
+    // Emit chi tiết cho clients đang xem nhóm cụ thể
+    io.to(`group:${groupId}`).emit("groupDetailsUpdate", {
+      _id: updatedGroup._id,
+      groupName: updatedGroup.groupName,
+      groupStatus: updatedGroup.groupStatus,
+      members: updatedGroup.profileStudents.map((member) => ({
+        name: member.student.name,
+        studentId: member.student.studentId,
+        role: member.role,
+      })),
+    });
+  } catch (error) {
+    console.error("Error emitting group update:", error);
+  }
+};
+
 const getIO = () => {
   if (!io) {
     throw new Error("Socket.io not initialized");
@@ -182,4 +238,5 @@ module.exports = {
   userSockets,
   userGroups,
   sendNotificationToUsers,
+  emitGroupUpdate,
 };

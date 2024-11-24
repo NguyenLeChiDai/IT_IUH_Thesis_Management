@@ -1,10 +1,21 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  scrollToBottom,
+} from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../css/MessageTeacher.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-
+import { Toast, ToastContainer } from "react-bootstrap";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { ref, push, set, onValue, remove } from "firebase/database";
+import { database } from "../../firebase/ConfigFirebase";
+import { firebaseMessageService } from "../../services/firebaseMessageService";
 function MessageTeacher() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -16,11 +27,99 @@ function MessageTeacher() {
   const [teacherProfile, setTeacherProfile] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const groupInfo = location.state?.groupInfo;
-
   const [selectedMessage, setSelectedMessage] = useState(null);
   const popoverRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   const getToken = () => localStorage.getItem("token");
+
+  // Firebase realtime listener
+  // Lắng nghe tin nhắn realtime
+  useEffect(() => {
+    if (!groupInfo?.id) return;
+
+    // Đầu tiên, lấy tin nhắn cũ
+    const fetchInitialMessages = async () => {
+      try {
+        const initialMessages = await firebaseMessageService.getGroupMessages(
+          groupInfo.id
+        );
+        setMessages(formatMessages(initialMessages));
+      } catch (error) {
+        console.error("Error fetching initial messages:", error);
+        setError("Không thể tải tin nhắn cũ");
+      }
+    };
+
+    fetchInitialMessages();
+
+    // Sau đó lắng nghe tin nhắn mới
+    firebaseMessageService.subscribeToGroupMessages(
+      groupInfo.id,
+      (newMessages) => {
+        setMessages(formatMessages(newMessages));
+      }
+    );
+
+    return () => {
+      firebaseMessageService.unsubscribeFromGroupMessages(groupInfo.id);
+    };
+  }, [groupInfo?.id]);
+
+  // Format tin nhắn để hiển thị
+  const formatMessages = useCallback((msgs) => {
+    return msgs.map((msg) => ({
+      id: msg._id || msg.id,
+      senderModel:
+        msg.sender.role === "Giảng viên" ? "profileTeacher" : "profileStudent",
+      text: msg.content,
+      senderName: msg.sender.name,
+      time: new Date(msg.timestamp).toLocaleString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }),
+    }));
+  }, []);
+
+  // Load initial messages
+  useEffect(() => {
+    const loadInitialMessages = async () => {
+      if (!groupInfo?.id) return;
+
+      try {
+        const initialMessages = await firebaseMessageService.getGroupMessages(
+          groupInfo.id
+        );
+        const formattedMessages = initialMessages.map((msg) => ({
+          id: msg._id,
+          senderModel:
+            msg.sender.role === "Giảng viên"
+              ? "profileTeacher"
+              : "profileStudent",
+          text: msg.content,
+          senderName: msg.sender.name,
+          time: new Date(msg.timestamp).toLocaleTimeString("en-US", {
+            hour: "numeric",
+            minute: "numeric",
+            hour12: true,
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          }),
+        }));
+
+        setMessages(formattedMessages);
+      } catch (err) {
+        console.error("Error loading initial messages:", err);
+        setError("Không thể tải tin nhắn. Vui lòng thử lại sau.");
+      }
+    };
+
+    loadInitialMessages();
+  }, [groupInfo?.id]);
 
   // Thêm hàm xử lý click bên ngoài popover
   useEffect(() => {
@@ -59,6 +158,22 @@ function MessageTeacher() {
       setError(err.response?.data?.message || "Có lỗi xảy ra khi xóa tin nhắn");
     }
   };
+  // useEffect(() => {
+  //   if (groupInfo?.id) {  // Thay groupId bằng groupInfo?.id
+  //     // Clear cache khi component mount
+  //     firebaseMessageService.clearDeletedMessagesCache();
+
+  //     // Subscribe to messages
+  //     firebaseMessageService.subscribeToGroupMessages(groupInfo.id, (messages) => {
+  //       setMessages(messages);
+  //     });
+
+  //     return () => {
+  //       // Cleanup khi unmount
+  //       firebaseMessageService.unsubscribeFromGroupMessages(groupInfo.id);
+  //     };
+  //   }
+  // }, [groupInfo?.id]);  // Dependency cũng cần được thay đổi
 
   const MessagePopover = ({ message }) => (
     <div
@@ -170,30 +285,21 @@ function MessageTeacher() {
   const handleSendMessage = async (e) => {
     e.preventDefault();
 
-    if (!message.trim() || !isInitialized) return;
+    if (!message.trim() || !groupInfo?.id) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      const token = getToken();
-      const receiverIds = groupInfo.members
-        .map((member) => member?.student?._id)
-        .filter((id) => id !== null);
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token không hợp lệ");
 
-      if (!receiverIds.length) {
-        throw new Error("No valid receivers found");
-      }
-
-      // Send to server first
+      // Gửi tin nhắn lên server
       const response = await axios.post(
         "http://localhost:5000/api/messages/send-new",
         {
-          receiverIds,
-          content: message,
-          receiverModel: "profileStudent",
+          content: message.trim(),
           groupId: groupInfo.id,
-          senderName: teacherProfile?.name,
         },
         {
           headers: {
@@ -203,23 +309,13 @@ function MessageTeacher() {
         }
       );
 
-      // Use the response data to create new message
-      const newMessage = {
-        id: response.data.message._id,
-        senderModel: "profileTeacher",
-        text: response.data.message.content,
-        senderName: response.data.message.sender.name,
-        time: new Date(response.data.message.timestamp).toLocaleTimeString(
-          "en-US",
-          {
-            hour: "numeric",
-            minute: "numeric",
-            hour12: true,
-          }
-        ),
-      };
+      // Đồng bộ tin nhắn lên Firebase
+      if (response.data.success) {
+        await firebaseMessageService.syncMessageToFirebase(
+          response.data.message
+        );
+      }
 
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
       setMessage("");
     } catch (err) {
       console.error("Error sending message:", err);
@@ -232,6 +328,7 @@ function MessageTeacher() {
       setLoading(false);
     }
   };
+
   if (!isInitialized) {
     return (
       <div className="chat-container d-flex justify-content-center align-items-center">

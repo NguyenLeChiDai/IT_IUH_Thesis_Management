@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../css/MessageStudent.css";
+import { firebaseMessageService } from "../../services/firebaseMessageService";
 
 const MessageStudent = () => {
   const location = useLocation();
@@ -30,6 +31,59 @@ const MessageStudent = () => {
 
   // Fetch user info and validate on component mount and after any auth changes
   // Fetch user info and validate on component mount and after any auth changes
+  // Lắng nghe tin nhắn realtime từ Firebase
+  useEffect(() => {
+    if (!groupInfo?._id) return;
+
+    // Lấy tin nhắn cũ từ Firebase khi component mount
+    const fetchInitialMessages = async () => {
+      try {
+        const initialMessages = await firebaseMessageService.getGroupMessages(
+          groupInfo._id
+        );
+        setMessages(formatMessages(initialMessages));
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+        toast.error("Không thể tải tin nhắn cũ");
+      }
+    };
+
+    fetchInitialMessages();
+
+    // Lắng nghe tin nhắn mới
+    firebaseMessageService.subscribeToGroupMessages(
+      groupInfo._id,
+      (newMessages) => {
+        setMessages(formatMessages(newMessages));
+      }
+    );
+
+    return () => {
+      firebaseMessageService.unsubscribeFromGroupMessages(groupInfo._id);
+    };
+  }, [groupInfo?._id]);
+
+  // Format tin nhắn để hiển thị
+  const formatMessages = (msgs) => {
+    return msgs.map((msg) => ({
+      id: msg._id || msg.id,
+      senderId: msg.sender?._id,
+      senderModel:
+        msg.senderModel || msg.sender?.role === "Giảng viên"
+          ? "profileTeacher"
+          : "profileStudent",
+      text: msg.content,
+      senderName: msg.sender?.name,
+      time: new Date(msg.timestamp).toLocaleString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }),
+    }));
+  };
+
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -278,16 +332,19 @@ const MessageStudent = () => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!message.trim()) return;
+    if (!message.trim() || !groupInfo?._id) return;
 
     setLoading(true);
     try {
       const token = getToken();
+      if (!token) throw new Error("Token không hợp lệ");
+
+      // 1. Gửi tin nhắn lên server
       const response = await axios.post(
         "http://localhost:5000/api/messages/send-new",
         {
           receiverIds: [teacherInfo.id],
-          content: message,
+          content: message.trim(),
           receiverModel: "profileTeacher",
           groupId: groupInfo._id,
           senderName: currentUser?.name,
@@ -300,33 +357,36 @@ const MessageStudent = () => {
         }
       );
 
-      const newMessage = {
-        id: response.data.message._id,
-        senderId: currentUser?._id,
-        senderModel: "profileStudent",
-        text: response.data.message.content,
-        senderName: response.data.message.sender.name,
-        time: new Date().toLocaleTimeString("vi-VN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }),
-      };
+      // 2. Nếu gửi thành công, đồng bộ lên Firebase
+      if (response.data.success) {
+        try {
+          await firebaseMessageService.syncMessageToFirebase({
+            _id: response.data.message._id,
+            content: response.data.message.content,
+            sender: {
+              _id: currentUser._id,
+              name: currentUser.name,
+              role: "Sinh viên",
+            },
+            groupId: groupInfo._id,
+            timestamp: new Date().toISOString(),
+            senderModel: "profileStudent",
+          });
+        } catch (firebaseError) {
+          console.error("Firebase sync error:", firebaseError);
+          // Không throw error vì tin nhắn đã được lưu trong MongoDB
+        }
+      }
 
-      setMessages((prev) => [...prev, newMessage]);
       setMessage("");
       scrollToBottom();
-      // toast.success('Tin nhắn đã được gửi!');
     } catch (err) {
       console.error("Error sending message:", err);
-      toast.error("Không thể gửi tin nhắn");
+      toast.error(err.response?.data?.message || "Không thể gửi tin nhắn");
     } finally {
       setLoading(false);
     }
   };
-
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();

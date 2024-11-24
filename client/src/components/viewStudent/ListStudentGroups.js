@@ -7,6 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { AuthContext } from "../../contexts/AuthContext";
 import { Dialog, DialogContent, DialogTitle, Button } from "@mui/material";
 import Swal from "sweetalert2";
+import { io } from "socket.io-client";
 
 export const ListStudentGroups = () => {
   const [groups, setGroups] = useState([]);
@@ -15,6 +16,68 @@ export const ListStudentGroups = () => {
   const { updateProfile } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState(null); // chọn xem nhóm
+  const [socket, setSocket] = useState(null);
+
+  // Khởi tạo socket connection
+  useEffect(() => {
+    const newSocket = io("http://localhost:5000", {
+      auth: {
+        token: localStorage.getItem("token"),
+      },
+    });
+
+    newSocket.on("connect", () => {
+      console.log("Socket connected");
+      // Join room để nhận updates cho danh sách nhóm
+      newSocket.emit("joinGroupsList");
+    });
+
+    newSocket.on("groupUpdate", handleGroupUpdate);
+
+    setSocket(newSocket);
+
+    return () => {
+      if (newSocket) {
+        newSocket.disconnect();
+      }
+    };
+  }, []);
+
+  // Handler cho group updates
+  const handleGroupUpdate = (update) => {
+    if (update.type === "join" || update.type === "leave") {
+      // Cập nhật danh sách nhóm
+      setGroups((prevGroups) =>
+        prevGroups.map((group) =>
+          group._id === update.groupId ? update.group : group
+        )
+      );
+
+      // Cập nhật thông tin nhóm đang được chọn xem
+      if (selectedGroup?._id === update.groupId) {
+        setSelectedGroup(update.group);
+      }
+
+      // Cập nhật thông tin nhóm của tôi
+      if (myGroup?._id === update.groupId) {
+        if (update.type === "leave") {
+          setMyGroup(null);
+        } else {
+          setMyGroup(update.group);
+        }
+      }
+    }
+  };
+  // Socket handlers cho chi tiết nhóm
+  useEffect(() => {
+    if (socket && selectedGroup) {
+      socket.emit("joinGroupDetails", selectedGroup._id);
+
+      return () => {
+        socket.emit("leaveGroupDetails", selectedGroup._id);
+      };
+    }
+  }, [socket, selectedGroup]);
 
   useEffect(() => {
     fetchMyGroup();

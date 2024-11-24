@@ -9,42 +9,137 @@
 .footer-content {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
+  gap: 20px;
   flex-wrap: wrap;
-  gap: 20px; /* Khoảng cách giữa các phần */
 }
 
 .footer-logo {
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: bold;
-}
-
-.footer-links {
+  max-width: 70%;
   display: flex;
-  gap: 30px; /* Tăng khoảng cách giữa các link */
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-.footer-links a {
+.footer-info {
+  text-align: right;
+  max-width: 50%;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.footer-info a {
   color: white;
-  text-decoration: none;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: opacity 0.4s ease, transform 0.3s ease;
+  text-decoration: underline;
+  transition: color 0.3s ease;
 }
 
-.footer-links a:hover {
-  opacity: 0.7;
-  transform: translateY(-2px); /* Hiệu ứng nổi khi hover */
+.footer-info a:hover {
+  color: #d0cde1;
 }
 
 .footer-bottom {
   margin-top: 20px;
-  text-align: center; /* Canh giữa văn bản */
+  text-align: center;
   font-size: 0.9rem;
   opacity: 0.8;
   padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2); /* Đường kẻ mờ giữa nội dung và footer-bottom */
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.footer-info p {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon {
+  color: #d0cde1;
+  font-size: 1.2rem;
+}
+
+.footer-logo-img {
+  width: 200px;
+  height: auto;
+  margin-right: 10px;
+}
+
+/* Responsive Styles */
+@media screen and (max-width: 992px) {
+  .footer-content {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .footer-logo,
+  .footer-info {
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .footer-info p {
+    justify-content: center;
+  }
+
+  .footer-logo {
+    flex-direction: column;
+    align-items: center;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+
+  .footer-logo-img {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .footer {
+    padding: 30px 0;
+  }
+
+  .footer-content {
+    padding: 0 15px;
+  }
+
+  .footer-logo {
+    font-size: 1.2rem;
+  }
+
+  .footer-logo-img {
+    width: 150px;
+  }
+
+  .footer-info {
+    font-size: 0.8rem;
+  }
+
+  .icon {
+    font-size: 1rem;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .footer {
+    padding: 20px 0;
+  }
+
+  .footer-content {
+    gap: 15px;
+  }
+
+  .footer-logo-img {
+    width: 120px;
+  }
+
+  .footer-bottom {
+    margin-top: 15px;
+    font-size: 0.8rem;
+  }
 }

@@ -1,7 +1,7 @@
 import "./App.css";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Landing from "./components/layout/Landing";
-import TrangChu from "./screen/TrangChu";
+import Home from "./screen/Home";
 import Auth from "./views/Auth";
 import AuthContextProvider from "./contexts/AuthContext";
 import DashboardAdmin from "./views/DashboardAdmin";
@@ -60,7 +60,7 @@ function App() {
             element={<Auth authRoute={"forgot-password"} />}
           />
           <Route path="/register" element={<Auth authRoute="register" />} />
-          <Route path="/trangchu" element={<TrangChu />} />
+          <Route path="/home" element={<Home />} />
 
           <Route element={<ProtectedRoute />}>
             {/* Admin */}

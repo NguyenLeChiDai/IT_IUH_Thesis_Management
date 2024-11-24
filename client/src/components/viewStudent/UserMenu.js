@@ -457,10 +457,10 @@ const UserMenu = () => {
   return (
     <div className="user-dropdown d-flex align-items-center gap-3">
       {/* Render MessageNotificationBell only if the user is not an admin */}
-      {user?.role !== "admin" && <MessageNotificationBell />}
+      {/*  {user?.role !== "admin" && <MessageNotificationBell />} */}
       <div
         className="position-relative"
-        style={{ marginTop: "20px" }}
+        style={{ marginTop: "10px" }}
         ref={notificationRef}
       >
         <button
@@ -565,7 +565,7 @@ const UserMenu = () => {
           height: "50px",
           borderRadius: "50%",
           objectFit: "cover",
-          marginTop: "20px",
+          marginTop: "10px",
         }}
       />
 
@@ -574,7 +574,7 @@ const UserMenu = () => {
           variant="light"
           id="dropdown-basic"
           className="d-flex flex-column align-items-start"
-          style={{ marginTop: "20px" }}
+          style={{ marginTop: "10px" }}
         >
           <span>Chào, {currentProfile?.name || user?.username || "User"}</span>
           <small className="text-muted">{user?.role}</small>

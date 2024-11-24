@@ -5,6 +5,7 @@ const StudentGroup = require("../models/StudentGroup");
 const ProfileStudent = require("../models/ProfileStudent");
 const GroupCreationInfo = require("../models/GroupCreationInfo");
 const AdminFeature = require("../models/AdminFeature");
+const { getIO } = require("../socket");
 //@route GET api/studentGroups
 //@desc GET studentGroups
 //@access private
@@ -312,6 +313,22 @@ router.post("/join-group/:id", verifyToken, async (req, res) => {
     studentProfile.studentGroup = group._id;
     await studentProfile.save();
 
+    // Emit sự kiện cập nhật qua socket
+    const io = getIO();
+    io.emit("groupUpdate", {
+      type: "join",
+      groupId: group._id,
+      group: {
+        _id: group._id,
+        groupName: group.groupName,
+        groupStatus: group.groupStatus,
+        members: group.profileStudents.map((member) => ({
+          student: member.student,
+          role: member.role,
+        })),
+      },
+    });
+
     res.json({
       success: true,
       message: `Bạn đã tham gia nhóm thành công với vai trò ${role}`,
@@ -376,6 +393,22 @@ router.post("/leave-group", verifyToken, async (req, res) => {
     // Hủy liên kết nhóm trong profile sinh viên
     studentProfile.studentGroup = null;
     await studentProfile.save();
+
+    // Emit sự kiện cập nhật qua socket
+    const io = getIO();
+    io.emit("groupUpdate", {
+      type: "leave",
+      groupId: group._id,
+      group: {
+        _id: group._id,
+        groupName: group.groupName,
+        groupStatus: group.groupStatus,
+        members: group.profileStudents.map((member) => ({
+          student: member.student,
+          role: member.role,
+        })),
+      },
+    });
 
     res.json({
       success: true,

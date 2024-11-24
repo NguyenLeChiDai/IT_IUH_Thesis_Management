@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBT8eLAjKP4Z7BQHM0aP7Atk_FUDfknpHo",
@@ -9,12 +9,14 @@ const firebaseConfig = {
   messagingSenderId: "826415557007",
   appId: "1:826415557007:web:253b963c83e5bff93183fa",
   measurementId: "G-54HJ29111N",
+  databaseURL:
+    "https://it-iuh-thesis-management-default-rtdb.asia-southeast1.firebasedatabase.app/",
 };
 
 // Khởi tạo Firebase
 const app = initializeApp(firebaseConfig);
 
-// Khởi tạo Firebase Auth và export
-const auth = getAuth(app);
+// Lấy tham chiếu đến database
+const database = getDatabase(app);
 
-export { auth, app };
+export { app, database };

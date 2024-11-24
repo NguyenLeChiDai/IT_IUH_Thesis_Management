@@ -47,13 +47,7 @@ const Auth = ({ authRoute }) => {
     <div className="auth-page">
       <Header />
       <div className="auth-content">
-        <div className="auth-form" style={{ width: 600, height: 800 }}>
-          {/* <div className="logo">
-            <img src={logo} alt="Logo" />
-          </div> */}
-          {/* <h5 className="sub-title">
-            Trang Quản lý khóa luận dành cho sinh viên Khoa Công Nghệ Thông Tin
-          </h5> */}
+        <div className="auth-form" style={{ width: 550, height: 600 }}>
           <h2 className="auth-title">
             <strong>
               {authRoute === "forgot-password"

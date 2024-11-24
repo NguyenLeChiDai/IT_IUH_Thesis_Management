@@ -1,0 +1,291 @@
+/* Base styles */
+.trang-chu {
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header styles */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #003366;
+  color: white;
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo img {
+  height: 50px;
+  width: auto;
+}
+
+.navbar ul {
+  list-style-type: none;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  gap: 20px;
+}
+
+.navbar ul li {
+  position: relative;
+  padding: 15px 20px;
+}
+
+.navbar ul li a {
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
+  transition: color 0.3s ease;
+  padding-bottom: 5px;
+  white-space: nowrap;
+}
+
+.navbar ul li a:hover {
+  color: #ffcc00;
+}
+
+.navbar ul li a::after {
+  content: "";
+  display: block;
+  width: 0;
+  height: 2px;
+  background: #ffcc00;
+  transition: width 0.3s;
+  margin: 0 auto;
+}
+
+.navbar ul li a:hover::after {
+  width: 100%;
+}
+
+.login-btn button {
+  background: linear-gradient(45deg, #ff6600, #ff9900);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.login-btn button:hover {
+  background: linear-gradient(45deg, #e65c00, #ff9933);
+  transform: scale(1.05);
+}
+
+/* Introduction section styles */
+.gioi-thieu {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  padding: 40px 5%;
+  background-color: #f9f9f9;
+  gap: 40px;
+  margin-top: 5px;
+  flex: 1;
+}
+
+.gioi-thieu-content {
+  flex: 1;
+  max-width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.gioi-thieu h2 {
+  background: linear-gradient(
+    90deg,
+    rgba(106, 90, 205, 0.8),
+    rgba(255, 102, 0, 0.8)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: clamp(24px, 3vw, 30px);
+  margin-bottom: 20px;
+  font-weight: bold;
+  padding: 15px 0;
+  transition: transform 0.3s ease;
+}
+
+.gioi-thieu h2:hover {
+  transform: scale(1.02);
+}
+
+.gioi-thieu p {
+  color: #555;
+  font-size: clamp(16px, 2vw, 18px);
+  line-height: 1.8;
+  margin-bottom: 20px;
+}
+
+.gioi-thieu ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.gioi-thieu ul li {
+  font-size: clamp(16px, 2vw, 18px);
+  color: #333;
+  margin-bottom: 15px;
+  position: relative;
+  padding-left: 25px;
+}
+
+.gioi-thieu ul li::before {
+  content: "✔";
+  color: #ff6600;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.gioi-thieu-image {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.gioi-thieu-image img {
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile menu icon */
+.menu-icon {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  padding: 10px;
+}
+
+.menu-icon span {
+  display: block;
+  width: 25px;
+  height: 3px;
+  background-color: white;
+  transition: all 0.3s ease;
+}
+
+/* Responsive Breakpoints */
+
+/* Large screens (1200px and up) */
+@media (min-width: 1200px) {
+  .gioi-thieu {
+    padding: 60px 10%;
+  }
+}
+
+/* Medium screens (992px to 1199px) */
+@media (max-width: 1199px) {
+  .navbar ul li {
+    padding: 10px 15px;
+  }
+
+  .navbar ul li a {
+    font-size: 14px;
+  }
+}
+
+/* Tablet screens (768px to 991px) */
+@media (max-width: 991px) {
+  .header {
+    padding: 10px 15px;
+  }
+
+  .gioi-thieu {
+    padding: 30px 5%;
+    gap: 20px;
+  }
+
+  .gioi-thieu-content {
+    max-width: 55%;
+  }
+}
+
+/* Mobile screens (767px and below) */
+@media (max-width: 767px) {
+  .menu-icon {
+    display: flex;
+  }
+
+  .header {
+    flex-wrap: wrap;
+  }
+
+  .navbar {
+    display: none;
+    width: 100%;
+    order: 3;
+  }
+
+  .navbar.active {
+    display: block;
+  }
+
+  .navbar ul {
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 0;
+  }
+
+  .navbar ul li {
+    width: 100%;
+    text-align: center;
+    padding: 10px 0;
+  }
+
+  .gioi-thieu {
+    flex-direction: column;
+    padding: 20px 15px;
+  }
+
+  .gioi-thieu-content {
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .gioi-thieu ul li {
+    text-align: left;
+  }
+
+  .login-btn button {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+}
+
+/* Small mobile screens (480px and below) */
+@media (max-width: 480px) {
+  .logo img {
+    height: 40px;
+  }
+
+  .gioi-thieu h2 {
+    font-size: 22px;
+    padding: 10px 0;
+  }
+
+  .gioi-thieu p,
+  .gioi-thieu ul li {
+    font-size: 16px;
+  }
+}

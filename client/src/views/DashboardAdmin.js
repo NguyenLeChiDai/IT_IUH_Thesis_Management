@@ -188,7 +188,7 @@ const DashboardAdmin = () => {
         sx={{
           width: open && !isMobile ? `calc(100% - ${drawerWidth}px)` : "100%",
           ml: open && !isMobile ? `${drawerWidth}px` : 0,
-          height: "70px",
+          height: "80px",
         }}
       >
         <Toolbar>

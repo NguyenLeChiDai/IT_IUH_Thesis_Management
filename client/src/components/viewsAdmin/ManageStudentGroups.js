@@ -20,10 +20,10 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
-
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
 const ManageStudentGroups = () => {
   const [groups, setGroups] = useState([]);
@@ -36,6 +36,10 @@ const ManageStudentGroups = () => {
 
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [editGroup, setEditGroup] = useState(null);
+
+  // Thêm state mới cho dialog chi tiết nhóm
+  const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
+  const [selectedGroupDetails, setSelectedGroupDetails] = useState(null);
 
   useEffect(() => {
     fetchGroups();
@@ -51,14 +55,34 @@ const ManageStudentGroups = () => {
         setGroups(response.data.groups);
       } else {
         setGroups([]);
+        toast.error("Không thể tải danh sách nhóm");
       }
     } catch (error) {
       console.error("Lỗi khi tải nhóm:", error);
-      setGroups([]); // Đặt mảng nhóm rỗng nếu có lỗi
+      setGroups([]);
+      toast.error("Đã xảy ra lỗi khi tải danh sách nhóm");
     }
   };
 
-  //Tạo nhóm cho sinh viên bằng cách nhập tay
+  // Thêm hàm fetch chi tiết nhóm
+  const fetchGroupDetails = async (groupId) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/studentgroups/group-details/${groupId}`
+      );
+
+      if (response.data.success) {
+        setSelectedGroupDetails(response.data);
+        setOpenDetailsDialog(true);
+      } else {
+        toast.error("Không thể tải thông tin chi tiết nhóm");
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải chi tiết nhóm:", error);
+      toast.error("Đã xảy ra lỗi khi tải thông tin chi tiết nhóm");
+    }
+  };
+
   const handleCreateGroup = async () => {
     try {
       const response = await axios.post(
@@ -70,93 +94,109 @@ const ManageStudentGroups = () => {
       );
 
       if (response.data.success) {
-        alert("Tạo nhóm thành công!");
+        toast.success("Tạo nhóm thành công!");
         setOpenCreateDialog(false);
         setNewGroup({ groupName: "", groupStatus: "0/2" });
         fetchGroups();
       } else {
-        alert("Tạo nhóm thất bại: " + response.data.message);
+        toast.error("Tạo nhóm thất bại: " + response.data.message);
       }
     } catch (error) {
       console.error("Lỗi khi tạo nhóm:", error);
+      toast.error("Đã xảy ra lỗi khi tạo nhóm");
     }
   };
 
-  //Tự động tạo nhóm dựa trên số lượng sinh viên
-  // const handleAutoCreateGroups = async () => {
-  //   try {
-  //     const response = await axios.post(
-  //       "http://localhost:5000/api/studentgroups/auto-create-groups"
-  //     );
-
-  //     if (response.data.success) {
-  //       toast.success("Đã tạo nhóm thành công!");
-  //       fetchGroups();
-  //     } else {
-  //       toast.error(response.data.message);
-  //     }
-  //   } catch (error) {
-  //     console.error("Lỗi khi tạo nhóm tự động:", error);
-  //     toast.error(error.response?.data?.message || "Lỗi khi tạo nhóm tự động.");
-  //   }
-  // };
   const handleAutoCreateGroups = async () => {
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/studentgroups/auto-create-groups"
-      );
+      const result = await Swal.fire({
+        title: "Xác nhận",
+        text: "Bạn có chắc chắn muốn tự động tạo nhóm?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Đồng ý",
+        cancelButtonText: "Hủy",
+      });
 
-      if (response.data.success) {
-        toast.success(response.data.message);
-        fetchGroups();
-      } else {
-        toast.error("Tạo nhóm tự động thất bại: " + response.data.message);
+      if (result.isConfirmed) {
+        const response = await axios.post(
+          "http://localhost:5000/api/studentgroups/auto-create-groups"
+        );
+
+        if (response.data.success) {
+          toast.success(response.data.message);
+          fetchGroups();
+        } else {
+          toast.error("Tạo nhóm tự động thất bại: " + response.data.message);
+        }
       }
     } catch (error) {
       console.error("Lỗi khi tạo nhóm tự động:", error);
-      toast.error("Lỗi khi tạo nhóm tự động.");
+      toast.error("Đã xảy ra lỗi khi tạo nhóm tự động");
     }
   };
 
   const handleDeleteGroup = async (groupId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa nhóm này?")) return;
-
     try {
-      const response = await axios.delete(
-        `http://localhost:5000/api/studentgroups/delete-group/${groupId}`
-      );
+      const result = await Swal.fire({
+        title: "Xác nhận xóa",
+        text: "Bạn có chắc chắn muốn xóa nhóm này?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Xóa",
+        cancelButtonText: "Hủy",
+        confirmButtonColor: "#d33",
+      });
 
-      if (response.data.success) {
-        alert("Xóa nhóm thành công!");
-        fetchGroups();
-      } else {
-        alert("Xóa nhóm thất bại: " + response.data.message);
+      if (result.isConfirmed) {
+        const response = await axios.delete(
+          `http://localhost:5000/api/studentgroups/delete-group/${groupId}`
+        );
+
+        if (response.data.success) {
+          toast.success("Xóa nhóm thành công!");
+          fetchGroups();
+        } else {
+          toast.error("Xóa nhóm thất bại: " + response.data.message);
+        }
       }
     } catch (error) {
       console.error("Lỗi khi xóa nhóm:", error);
+      toast.error("Đã xảy ra lỗi khi xóa nhóm");
     }
   };
 
-  // cập nhật lại các trường của nhóm
   const handleUpdateGroup = async () => {
     try {
-      const response = await axios.put(
-        `http://localhost:5000/api/studentgroups/update-group/${editGroup._id}`,
-        {
-          groupName: editGroup.groupName,
-          groupStatus: editGroup.groupStatus,
-        }
-      );
+      const result = await Swal.fire({
+        title: "Xác nhận cập nhật",
+        text: "Bạn có chắc chắn muốn cập nhật thông tin nhóm?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Cập nhật",
+        cancelButtonText: "Hủy",
+      });
 
-      if (response.data.success) {
-        alert("Cập nhật nhóm thành công!");
-        setOpenEditDialog(false);
-        fetchGroups();
-      } else {
-        alert("Cập nhật nhóm thất bại: " + response.data.message);
+      if (result.isConfirmed) {
+        const response = await axios.put(
+          `http://localhost:5000/api/studentgroups/update-group/${editGroup._id}`,
+          {
+            groupName: editGroup.groupName,
+            groupStatus: editGroup.groupStatus,
+          }
+        );
+
+        if (response.data.success) {
+          toast.success("Cập nhật nhóm thành công!");
+          setOpenEditDialog(false);
+          fetchGroups();
+        } else {
+          toast.error("Cập nhật nhóm thất bại: " + response.data.message);
+        }
       }
     } catch (error) {
       console.error("Lỗi khi cập nhật nhóm:", error);
+      toast.error("Đã xảy ra lỗi khi cập nhật nhóm");
     }
   };
 
@@ -166,7 +206,6 @@ const ManageStudentGroups = () => {
         Quản lý nhóm sinh viên
       </Typography>
 
-      {/* Các button tạo nhóm */}
       <Button
         variant="contained"
         color="primary"
@@ -185,7 +224,6 @@ const ManageStudentGroups = () => {
         Tự động tạo nhóm
       </Button>
 
-      {/* Kiểm tra nếu không có nhóm, hiển thị thông báo */}
       {groups.length === 0 ? (
         <Typography variant="body1" color="textSecondary">
           Không có nhóm nào được tạo.
@@ -203,13 +241,19 @@ const ManageStudentGroups = () => {
             </TableHead>
             <TableBody>
               {groups.map((group) => (
-                <TableRow key={group._id}>
+                <TableRow
+                  key={group._id}
+                  onClick={() => fetchGroupDetails(group._id)}
+                  style={{ cursor: "pointer" }}
+                  hover
+                >
                   <TableCell>{group.groupId}</TableCell>
                   <TableCell>{group.groupName}</TableCell>
                   <TableCell>{group.groupStatus}</TableCell>
                   <TableCell>
                     <IconButton
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation(); // Ngăn chặn sự kiện click lan truyền
                         setEditGroup(group);
                         setOpenEditDialog(true);
                       }}
@@ -218,7 +262,10 @@ const ManageStudentGroups = () => {
                       <EditIcon />
                     </IconButton>
                     <IconButton
-                      onClick={() => handleDeleteGroup(group._id)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Ngăn chặn sự kiện click lan truyền
+                        handleDeleteGroup(group._id);
+                      }}
                       color="secondary"
                     >
                       <DeleteIcon />
@@ -231,6 +278,59 @@ const ManageStudentGroups = () => {
         </TableContainer>
       )}
 
+      {/* Dialog hiển thị chi tiết nhóm */}
+      <Dialog
+        open={openDetailsDialog}
+        onClose={() => setOpenDetailsDialog(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Chi tiết nhóm: {selectedGroupDetails?.groupName}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="subtitle1" gutterBottom>
+            Trạng thái: {selectedGroupDetails?.groupStatus}
+          </Typography>
+          <Typography variant="h6" gutterBottom style={{ marginTop: "20px" }}>
+            Danh sách thành viên:
+          </Typography>
+          {selectedGroupDetails?.members &&
+          selectedGroupDetails.members.length > 0 ? (
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>MSSV</TableCell>
+                    <TableCell>Họ và tên</TableCell>
+                    <TableCell>Vai trò</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {selectedGroupDetails.members.map((member, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{member.studentId}</TableCell>
+                      <TableCell>{member.name}</TableCell>
+                      <TableCell>{member.role}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <Typography color="textSecondary">
+              Chưa có thành viên trong nhóm
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDetailsDialog(false)} color="primary">
+            Đóng
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* DIALOG FRONT NHẬP TẠO NHÓM */}
       <Dialog
         open={openCreateDialog}
         onClose={() => setOpenCreateDialog(false)}
@@ -238,7 +338,6 @@ const ManageStudentGroups = () => {
         <DialogTitle>Tạo nhóm mới</DialogTitle>
         <DialogContent>
           <DialogContentText>Nhập thông tin nhóm mới.</DialogContentText>
-          {/* Xóa input cho ID Nhóm */}
           <TextField
             margin="dense"
             label="Tên Nhóm"

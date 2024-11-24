@@ -150,7 +150,7 @@ const DashboardTeacher = () => {
           width:
             sidebarOpen && !isMobile ? `calc(100% - ${drawerWidth}px)` : "100%",
           ml: sidebarOpen && !isMobile ? `${drawerWidth}px` : 0,
-          height: "70px",
+          height: "80px",
         }}
       >
         <Toolbar>
