@@ -11,8 +11,10 @@ import "../../css/HomeAdmin.css";
 import axios from "axios";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 
 const HomeAdmin = () => {
+  const navigate = useNavigate();
   // đếm số lượng đề tài và đề tài đã được phê duyệt
   const [topicStats, setTopicStats] = useState({
     totalTopics: 0,
@@ -200,7 +202,10 @@ const HomeAdmin = () => {
       title: "Tổng số đề tài",
       value: topicStats.totalTopics.toString(),
       // ... các thuộc tính khác giữ nguyên
+      icon: <FaBook className="stats-icon" />,
       description: `Đã phê duyệt: ${topicStats.approvedTopics}`,
+      color: "primary",
+      path: "/dashboardAdmin/manage-topics",
     },
     {
       title: "Sinh viên đăng ký",
@@ -208,6 +213,7 @@ const HomeAdmin = () => {
       icon: <FaUsers className="stats-icon" />,
       description: `Đã có nhóm: ${studentStats.studentsWithGroup}`,
       color: "success",
+      path: "/dashboardAdmin/student-groups",
     },
     {
       title: "Giảng viên",
@@ -215,6 +221,7 @@ const HomeAdmin = () => {
       icon: <FaUserGraduate className="stats-icon" />,
       description: `Đang hướng dẫn: ${teacherStats.teachersWithTopics}`,
       color: "info",
+      path: "/dashboardAdmin/teacher-management",
     },
     {
       title: "Nhóm sinh viên",
@@ -222,6 +229,7 @@ const HomeAdmin = () => {
       icon: <FaUsers className="stats-icon" />,
       description: `Đã có đề tài: ${groupStats.groupsWithTopic}`,
       color: "warning",
+      path: "/dashboardAdmin/student-groups",
     },
     {
       title: "Khóa luận đã nộp",
@@ -229,6 +237,7 @@ const HomeAdmin = () => {
       icon: <FaFileAlt className="stats-icon" />,
       description: `Đã chấm điểm: ${reportStats.approvedReports}`,
       color: "warning",
+      path: "/dashboardAdmin/AdminReportList",
     },
   ];
 
@@ -289,6 +298,8 @@ const HomeAdmin = () => {
         return "warning";
       case "GROUP_CREATED":
         return "secondary";
+      case "REPORT_SENT_TO_ADMIN": // Thêm case mới
+        return "danger"; // Sử dụng màu đỏ để nổi bật
       default:
         return "light";
     }
@@ -307,6 +318,8 @@ const HomeAdmin = () => {
         return "Tạo đề tài";
       case "GROUP_CREATED":
         return "Tạo nhóm";
+      case "REPORT_SENT_TO_ADMIN": // Thêm case mới
+        return "Gửi cho Admin";
       default:
         return "Khác";
     }
@@ -330,7 +343,16 @@ const HomeAdmin = () => {
       <div className="row g-4 mb-4">
         {stats.map((stat, index) => (
           <div key={index} className="col-12 col-md-6 col-lg-3">
-            <div className={`card border-${stat.color} stat-card h-100`}>
+            <div
+              className={`card border-${stat.color} stat-card h-100 ${
+                stat.path ? "cursor-pointer hover-shadow" : ""
+              }`}
+              onClick={() => stat.path && navigate(stat.path)}
+              style={{
+                cursor: stat.path ? "pointer" : "default",
+                transition: "all 0.3s ease",
+              }}
+            >
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <div

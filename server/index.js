@@ -24,6 +24,7 @@ const adminStatistics = require("./routes/adminStatistics");
 const teacherStatistics = require("./routes/teacherStatistics");
 const adminReport = require("./routes/adminReport");
 const adminFeature = require("./routes/adminFeature");
+const teachersManagement = require("./routes/teachersManagement");
 
 // Kết nối CSDL
 const connectDB = async () => {
@@ -83,6 +84,7 @@ app.use("/api/adminStatistics", adminStatistics);
 app.use("/api/teacherStatistics", teacherStatistics);
 app.use("/api/adminReport", adminReport);
 app.use("/api/adminFeature", adminFeature);
+app.use("/api/teachersManagement", teachersManagement);
 
 const { server, io } = initSocket(app);
 

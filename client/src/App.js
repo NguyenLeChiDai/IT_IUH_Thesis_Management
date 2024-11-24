@@ -47,6 +47,7 @@ import PosterTopic from "./components/viewTeacher/PosterTopic";
 import ViewScore from "./components/viewTeacher/ViewScore";
 import StatisticsTeacher from "./components/viewTeacher/StatisticsTeacher";
 import FeatureManagement from "./components/viewsAdmin/FeatureManagement";
+import TeacherManagement from "./components/viewsAdmin/TeacherManagement";
 
 function App() {
   return (
@@ -115,9 +116,15 @@ function App() {
                 path="manage-score"
                 element={<ScoreStudentForAdmin />}
               />{" "}
+              {/* đường dẫn quản lý chức năng */}
               <Route
                 path="feature-management"
                 element={<FeatureManagement />}
+              />{" "}
+              {/* đường dẫn quản lý giảng viên */}
+              <Route
+                path="teacher-management"
+                element={<TeacherManagement />}
               />{" "}
             </Route>
             {/* Sinh viên */}

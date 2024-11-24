@@ -75,6 +75,11 @@ const DashboardAdmin = () => {
           icon: <AccountCircleIcon />,
           onClick: () => navigate("/dashboardAdmin/manage-teacher-accounts"),
         },
+        {
+          text: "Danh sách giảng viên", // Thêm mục "Nhóm sinh viên"
+          icon: <ListAltIcon />,
+          onClick: () => navigate("/dashboardAdmin/teacher-management"), // Chuyển đến trang "Nhóm sinh viên"
+        },
       ],
     },
     {
@@ -102,11 +107,11 @@ const DashboardAdmin = () => {
           icon: <TopicIcon />,
           onClick: () => navigate("/dashboardAdmin/manage-topics"),
         },
-        {
+        /*  {
           text: "Danh sách đề tài", // Thêm mục "Nhóm sinh viên"
           icon: <ListAltIcon />,
           onClick: () => navigate("/dashboardAdmin"), // Chuyển đến trang "Nhóm sinh viên"
-        },
+        }, */
       ],
     },
     //Phân công chấm đề tài/poster

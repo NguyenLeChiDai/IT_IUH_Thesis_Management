@@ -14,6 +14,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const archiver = require("archiver");
+const Activity = require("../models/Activity");
 
 // Lấy danh sách báo cáo trong thư mục (cho giảng viên)
 router.get(
@@ -895,7 +896,7 @@ router.get(
 );
 
 // API để giảng viên gửi báo cáo cho admin
-router.post(
+/* router.post(
   "/submit-to-admin/:reportId",
   verifyToken,
   checkRole("Giảng viên"),
@@ -959,6 +960,107 @@ router.post(
       // Cập nhật trạng thái báo cáo gốc
       report.adminSubmissionStatus = "Đã gửi";
       await report.save();
+
+      res.json({
+        success: true,
+        message: "Đã gửi báo cáo cho admin thành công",
+      });
+    } catch (error) {
+      console.error("Error in submitting report to admin:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi gửi báo cáo cho admin",
+        error: error.message,
+      });
+    }
+  }
+); */
+// Hàm tạo hoạt động cho trang admin
+const createActivity = async (activityData) => {
+  try {
+    const activity = new Activity(activityData);
+    await activity.save();
+    return activity;
+  } catch (error) {
+    console.error("Lỗi khi tạo hoạt động:", error);
+    throw error;
+  }
+};
+router.post(
+  "/submit-to-admin/:reportId",
+  verifyToken,
+  checkRole("Giảng viên"),
+  async (req, res) => {
+    try {
+      const report = await ThesisReport.findById(req.params.reportId)
+        .populate("student", "name studentId")
+        .populate({
+          path: "group",
+          populate: {
+            path: "profileStudents.student",
+            select: "name studentId",
+          },
+        })
+        .populate("topic", "nameTopic")
+        .populate("folder", "name")
+        .populate("teacher", "name");
+
+      if (!report) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy báo cáo",
+        });
+      }
+
+      // Kiểm tra xem báo cáo đã được gửi cho admin chưa
+      const existingAdminReport = await AdminReport.findOne({
+        originalReport: report._id,
+      });
+      if (existingAdminReport) {
+        return res.status(400).json({
+          success: false,
+          message: "Báo cáo này đã được gửi cho admin",
+        });
+      }
+
+      // Lấy danh sách students từ nhóm
+      let studentIds = [];
+      if (report.group && report.group.profileStudents) {
+        studentIds = report.group.profileStudents.map((ps) => ps.student._id);
+      } else {
+        studentIds = [report.student._id];
+      }
+
+      // Tạo bản ghi mới trong AdminReport
+      const adminReport = new AdminReport({
+        originalReport: report._id,
+        students: studentIds,
+        group: report.group?._id,
+        topic: report.topic._id,
+        folder: report.folder._id,
+        teacher: report.teacher._id,
+        fileName: report.fileName,
+        fileUrl: report.fileUrl,
+        submissionDate: report.submissionDate,
+        teacherApprovalDate: new Date(),
+      });
+
+      await adminReport.save();
+
+      // Cập nhật trạng thái báo cáo gốc
+      report.adminSubmissionStatus = "Đã gửi";
+      await report.save();
+
+      // Tạo hoạt động mới
+      const activityDescription = `Giảng viên ${report.teacher.name} đã gửi báo cáo "${report.fileName}" của đề tài "${report.topic.nameTopic}" cho Admin`;
+
+      await createActivity({
+        type: "REPORT_SENT_TO_ADMIN",
+        description: activityDescription,
+        actor: req.userId,
+        relatedTopic: report.topic._id,
+        relatedGroup: report.group?._id,
+      });
 
       res.json({
         success: true,

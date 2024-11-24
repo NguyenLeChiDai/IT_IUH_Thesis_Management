@@ -12,6 +12,7 @@ const ActivitySchema = new Schema({
       "TOPIC_CREATED",
       "GROUP_CREATED",
       "NOTIFICATION_SENT",
+      "REPORT_SENT_TO_ADMIN", // Thêm loại hoạt động mới
     ],
   },
   description: {
