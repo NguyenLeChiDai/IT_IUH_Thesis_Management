@@ -236,14 +236,34 @@ function ListGroupAssignmentCouncil() {
 
   return (
     <div className="group-list-container">
-      <h2>Danh sách nhóm đủ điều kiện chấm hội đồng</h2>
+      <h2 style={{ fontFamily: "revert-layer" }}>
+        Danh sách phân công chấm hội đồng
+      </h2>
 
       <input
         type="text"
         placeholder="Tìm kiếm nhóm theo tên hoặc chủ đề"
         value={searchTerm}
         onChange={handleSearch}
-        style={{ width: "30%" }}
+        style={{
+          marginBottom: "20px",
+          width: "50%",
+          padding: "10px 10px",
+          fontSize: "14px",
+          border: "2px solid #e1e1e1",
+          borderRadius: "8px",
+          outline: "none",
+          transition: "all 0.3s ease",
+          backgroundColor: "#ffffff",
+          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+          "&:focus": {
+            borderColor: "#3b82f6",
+            boxShadow: "0 2px 8px rgba(59, 130, 246, 0.2)",
+          },
+          "&::placeholder": {
+            color: "#9ca3af",
+          },
+        }}
       />
 
       {groups.length === 0 ? (

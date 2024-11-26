@@ -6,6 +6,7 @@ const ProfileStudent = require("./models/ProfileStudent");
 const Group = require("./models/StudentGroup");
 const jwt = require("jsonwebtoken");
 const StudentGroup = require("./models/StudentGroup");
+const MessageNotification = require("./models/MessageNotification");
 
 let io;
 let server;
@@ -68,7 +69,7 @@ const initSocket = (app) => {
     socket.join("all-notifications");
 
     // Handle group joining
-    socket.on("joinGroups", async () => {
+    /* socket.on("joinGroups", async () => {
       try {
         let groups;
         if (userRole === "Giảng viên") {
@@ -81,6 +82,47 @@ const initSocket = (app) => {
             user: userId,
           }).populate("studentGroups");
           groups = student.studentGroups;
+        }
+
+        groups.forEach((group) => {
+          socket.join(`group_${group._id}`);
+        });
+
+        userGroups.set(
+          userId,
+          groups.map((g) => g._id.toString())
+        );
+      } catch (error) {
+        console.error("Error joining groups:", error);
+      }
+    }); */
+    socket.on("joinGroups", async () => {
+      try {
+        let groups = [];
+        if (userRole === "Giảng viên") {
+          const teacher = await ProfileTeacher.findOne({
+            user: userId,
+          }).populate("studentGroups");
+
+          // Kiểm tra và xử lý khi không tìm thấy giảng viên
+          if (!teacher) {
+            console.error(`No teacher profile found for user ${userId}`);
+            return;
+          }
+
+          groups = teacher.studentGroups || [];
+        } else if (userRole === "Sinh viên") {
+          const student = await ProfileStudent.findOne({
+            user: userId,
+          }).populate("studentGroups");
+
+          // Kiểm tra và xử lý khi không tìm thấy sinh viên
+          if (!student) {
+            console.error(`No student profile found for user ${userId}`);
+            return;
+          }
+
+          groups = student.studentGroups || [];
         }
 
         groups.forEach((group) => {
@@ -217,6 +259,83 @@ const emitGroupUpdate = async (groupId) => {
   }
 };
 
+// Hàm gửi thông báo tin nhắn mới
+const sendMessageNotification = async (message, group, sender) => {
+  if (!io) return;
+
+  try {
+    // Tìm tất cả thành viên của nhóm
+    const fullGroup = await Group.findById(group._id).populate([
+      {
+        path: "profileStudents.student",
+        populate: { path: "user", select: "_id" },
+      },
+      {
+        path: "teacher",
+        populate: { path: "user", select: "_id" },
+      },
+    ]);
+
+    if (!fullGroup) {
+      console.error("Group not found for message notification");
+      return;
+    }
+
+    // Danh sách user ID để gửi thông báo
+    const userIds = [
+      ...(fullGroup.profileStudents || []).map((ps) =>
+        ps.student.user._id.toString()
+      ),
+      ...(fullGroup.teacher ? [fullGroup.teacher.user._id.toString()] : []),
+    ];
+
+    // Loại trừ người gửi
+    const senderId = sender._id.toString();
+    const recipientIds = userIds.filter((userId) => userId !== senderId);
+
+    // Đếm số thông báo chưa đọc cho mỗi người nhận
+    const unreadCountPromises = recipientIds.map(async (userId) => {
+      const userUnreadCount = await MessageNotification.countDocuments({
+        recipient: group._id,
+        sender: { $ne: sender._id },
+        isRead: false,
+      });
+      return { userId, unreadCount: userUnreadCount };
+    });
+
+    const unreadCounts = await Promise.all(unreadCountPromises);
+
+    // Gửi thông báo đến từng người nhận
+    unreadCounts.forEach(({ userId, unreadCount }) => {
+      const socketId = userSockets.get(userId);
+      if (socketId) {
+        io.to(socketId).emit("newMessageNotification", {
+          groupId: group._id.toString(),
+          groupName: group.groupName,
+          sender: {
+            _id: sender._id,
+            name: sender.name,
+            role: sender.role,
+          },
+          message: {
+            content: message.content,
+            timestamp: message.timestamp,
+          },
+          unreadCount: unreadCount,
+        });
+      }
+    });
+
+    // Broadcast cho room của group
+    io.to(`group_${group._id}`).emit("groupMessageUpdate", {
+      groupId: group._id.toString(),
+      newMessage: true,
+    });
+  } catch (error) {
+    console.error("Error in sendMessageNotification:", error);
+  }
+};
+
 const getIO = () => {
   if (!io) {
     throw new Error("Socket.io not initialized");
@@ -239,4 +358,5 @@ module.exports = {
   userGroups,
   sendNotificationToUsers,
   emitGroupUpdate,
+  sendMessageNotification,
 };

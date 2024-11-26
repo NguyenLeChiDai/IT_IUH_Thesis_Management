@@ -196,14 +196,23 @@ const TopicStudent = () => {
                 <div className="topic-info">
                   {topicItem.registrationDate && (
                     <p>
-                      Ngày đăng ký:{" "}
+                      <strong style={{ fontWeight: "bold" }}>
+                        Ngày đăng ký:
+                      </strong>{" "}
                       {new Date(
                         topicItem.registrationDate
                       ).toLocaleDateString()}
                     </p>
                   )}
-                  <p>Trạng thái: {topicItem.status || "Đã đăng ký"}</p>
-                  <p>Giảng Viên: {topicItem.teacher.fullName}</p>
+                  <p>
+                    {" "}
+                    <strong style={{ fontWeight: "bold" }}>Trạng thái: </strong>
+                    {topicItem.status || "Đã đăng ký"}
+                  </p>
+                  <p>
+                    <strong style={{ fontWeight: "bold" }}>Giảng Viên: </strong>
+                    {topicItem.teacher.fullName}
+                  </p>
                 </div>
                 <button
                   className="leave-topic-button"
@@ -267,9 +276,10 @@ const TopicStudent = () => {
                     borderRadius: "5px",
                     cursor: "pointer",
                     border: "none",
+                    marginLeft: "10px",
                   }}
                 >
-                  Chat với giảng viên
+                  Nhắn tin với giảng viên
                 </button>
                 {expandedTopicId === topicItem.topicId && (
                   <div className="topic-description">

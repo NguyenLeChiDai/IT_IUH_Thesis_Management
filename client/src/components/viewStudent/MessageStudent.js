@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Toast, ToastContainer } from "react-bootstrap";
@@ -29,60 +29,74 @@ const MessageStudent = () => {
 
   const getToken = () => localStorage.getItem("token");
 
-  // Fetch user info and validate on component mount and after any auth changes
-  // Fetch user info and validate on component mount and after any auth changes
-  // Lắng nghe tin nhắn realtime từ Firebase
-  useEffect(() => {
-    if (!groupInfo?._id) return;
+  // Sửa lại hàm formatMessages để bao gồm senderId
+  const formatMessages = useCallback((msgs) => {
+    return msgs.map((msg) => {
+      const sender = msg.sender || {};
+      const role = sender.role || "Unknown";
 
-    // Lấy tin nhắn cũ từ Firebase khi component mount
+      return {
+        id: msg._id || msg.id,
+        senderId: sender._id, // Thêm senderId vào đây
+        senderModel:
+          role === "Giảng viên" ? "profileTeacher" : "profileStudent",
+        text: msg.content || "",
+        senderName: sender.name || "Unknown User",
+        time: new Date(msg.timestamp).toLocaleString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }),
+      };
+    });
+  }, []);
+
+  // useEffect cho việc subscribe messages
+  useEffect(() => {
+    console.log("UseEffect triggered with groupInfo:", {
+      groupInfo,
+      id: groupInfo?.id,
+      _id: groupInfo?._id,
+    });
+
+    // Sử dụng groupId đã được chuẩn hóa
+    const groupId = groupInfo?.id || groupInfo?._id;
+    if (!groupId) {
+      console.log("Missing groupId, returning early");
+      return;
+    }
+
+    firebaseMessageService.clearDeletedMessagesCache();
+
     const fetchInitialMessages = async () => {
       try {
+        console.log("Fetching messages for group:", groupId);
         const initialMessages = await firebaseMessageService.getGroupMessages(
-          groupInfo._id
+          groupId
         );
+        console.log("Initial messages:", initialMessages);
         setMessages(formatMessages(initialMessages));
       } catch (error) {
-        console.error("Error fetching messages:", error);
+        console.error("Error fetching initial messages:", error);
         toast.error("Không thể tải tin nhắn cũ");
       }
     };
 
     fetchInitialMessages();
 
-    // Lắng nghe tin nhắn mới
-    firebaseMessageService.subscribeToGroupMessages(
-      groupInfo._id,
-      (newMessages) => {
-        setMessages(formatMessages(newMessages));
-      }
-    );
+    firebaseMessageService.subscribeToGroupMessages(groupId, (newMessages) => {
+      console.log("New messages received:", newMessages);
+      setMessages(formatMessages(newMessages));
+    });
 
     return () => {
-      firebaseMessageService.unsubscribeFromGroupMessages(groupInfo._id);
+      console.log("Cleaning up subscription for group:", groupId);
+      firebaseMessageService.unsubscribeFromGroupMessages(groupId);
+      firebaseMessageService.clearDeletedMessagesCache();
     };
-  }, [groupInfo?._id]);
-
-  // Format tin nhắn để hiển thị
-  const formatMessages = (msgs) => {
-    return msgs.map((msg) => ({
-      id: msg._id || msg.id,
-      senderId: msg.sender?._id,
-      senderModel:
-        msg.senderModel || msg.sender?.role === "Giảng viên"
-          ? "profileTeacher"
-          : "profileStudent",
-      text: msg.content,
-      senderName: msg.sender?.name,
-      time: new Date(msg.timestamp).toLocaleString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }),
-    }));
-  };
+  }, [groupInfo, formatMessages]);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -277,7 +291,7 @@ const MessageStudent = () => {
     const fetchMessages = async () => {
       if (!groupInfo?._id) {
         console.error("GroupInfo không có _id:", groupInfo);
-        toast.error("Không thể tải tin nhắn: Thiếu thông tin nhóm");
+        // toast.error("Không thể tải tin nhắn: Thiếu thông tin nhóm");
         return;
       }
 
@@ -396,30 +410,55 @@ const MessageStudent = () => {
 
   const handleDeleteMessage = async (messageId) => {
     try {
-      const token = getToken();
+      // Log để debug
+      console.log("Debug values:", {
+        messageId,
+        groupInfo,
+        groupId: groupInfo?.id || groupInfo?._id,
+      });
+
+      if (!messageId) {
+        throw new Error("MessageId không tồn tại");
+      }
+      if (!groupInfo) {
+        throw new Error("GroupInfo không tồn tại");
+      }
+
+      // Sử dụng groupInfo.id hoặc groupInfo._id
+      const groupId = groupInfo.id || groupInfo._id;
+      if (!groupId) {
+        throw new Error("GroupId không tồn tại");
+      }
+
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token không hợp lệ");
+
+      // Gọi API xóa từ MongoDB trước
       const response = await axios.delete(
         `http://localhost:5000/api/messages/delete/${messageId}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
       if (response.data.success) {
-        setMessages((prevMessages) =>
-          prevMessages.filter((msg) => msg.id !== messageId)
+        // Sử dụng groupId đã xác định ở trên
+        await firebaseMessageService.deleteMessageFromFirebase(
+          groupId,
+          messageId
         );
+
         setSelectedMessage(null);
-        // toast.success('Tin nhắn đã được xóa!');
-      } else {
-        toast.error(response.data.message || "Không thể xóa tin nhắn");
+        toast.success("Xóa tin nhắn thành công");
       }
     } catch (err) {
       console.error("Error deleting message:", err);
-      toast.error(
-        err.response?.data?.message || "Có lỗi xảy ra khi xóa tin nhắn"
-      );
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Có lỗi xảy ra khi xóa tin nhắn";
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -434,7 +473,9 @@ const MessageStudent = () => {
             {teacherInfo?.name?.charAt(0) || "T"}
           </div>
           <div className="ms-3">
-            <h5 className="mb-0">{teacherInfo?.name || "Loading..."}</h5>
+            <h5 className="mb-0">
+              {teacherInfo?.name || "Nhóm chat với giảng viên"}
+            </h5>
             <small className="text-muted">Giảng viên</small>
           </div>
         </div>

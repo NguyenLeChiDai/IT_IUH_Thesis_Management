@@ -39,6 +39,13 @@ const MessageSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  firebaseId: {
+    type: String,
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // Đảm bảo model được export với tên chuẩn

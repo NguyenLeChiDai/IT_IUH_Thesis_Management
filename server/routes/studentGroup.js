@@ -635,4 +635,31 @@ router.get("/get-group-id", verifyToken, async (req, res) => {
       .json({ success: false, message: "Lỗi Server", error: error.message });
   }
 });
+// ĐẾM SỐ LƯỢNG THÀNH VIÊN TRONG NHÓM
+router.get("/members/:groupId", verifyToken, async (req, res) => {
+  try {
+    const group = await StudentGroup.findById(req.params.groupId);
+
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Nhóm không tồn tại",
+      });
+    }
+
+    // Đếm số lượng thành viên trong nhóm
+    const membersCount = group.profileStudents.length + (group.teacher ? 1 : 0); // Bao gồm cả giáo viên hướng dẫn
+
+    res.json({
+      success: true,
+      membersCount,
+    });
+  } catch (error) {
+    console.error("Error getting group members:", error);
+    res.status(500).json({
+      success: false,
+      message: "Không thể lấy số lượng thành viên nhóm",
+    });
+  }
+});
 module.exports = router;

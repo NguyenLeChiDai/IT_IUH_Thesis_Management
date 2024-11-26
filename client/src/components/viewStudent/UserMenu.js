@@ -457,7 +457,7 @@ const UserMenu = () => {
   return (
     <div className="user-dropdown d-flex align-items-center gap-3">
       {/* Render MessageNotificationBell only if the user is not an admin */}
-      {/*  {user?.role !== "admin" && <MessageNotificationBell />} */}
+      {user?.role !== "admin" && <MessageNotificationBell />}
       <div
         className="position-relative"
         style={{ marginTop: "10px" }}

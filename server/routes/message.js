@@ -8,6 +8,7 @@ const ProfileStudent = require("../models/ProfileStudent");
 const ProfileTeacher = require("../models/ProfileTeacher");
 const Topic = require("../models/Topic");
 const MessageNotification = require("../models/MessageNotification");
+const { sendMessageNotification } = require("../socket");
 // @route GET api/messages/history/:partnerId
 // @desc Lấy lịch sử chat với một người/nhóm
 // @access Private
@@ -101,6 +102,119 @@ router.get("/unread", verifyToken, async (req, res) => {
   }
 });
 
+// Tạo thông báo khi có tin nhắn mới
+const createNotifications = async (message, group, sender) => {
+  try {
+    // Kiểm tra tính hợp lệ của sender
+    if (!sender || !sender._id) {
+      console.error("Invalid sender information");
+      return null;
+    }
+
+    const notification = {
+      recipient: group._id,
+      sender: sender._id,
+      senderModel: message.senderModel,
+      messageType: "group",
+      message: message._id,
+    };
+
+    const savedNotification = await MessageNotification.create(notification);
+
+    // Chỉ gọi socket khi có thông tin hợp lệ
+    if (group && sender) {
+      await sendMessageNotification(message, group, sender);
+    }
+
+    return savedNotification;
+  } catch (error) {
+    console.error("Error creating notifications:", error);
+    throw error;
+  }
+};
+// API để đánh dấu thông báo đã đọc
+router.put("/mark-as-read/:notificationId", verifyToken, async (req, res) => {
+  try {
+    const notification = await MessageNotification.findById(
+      req.params.notificationId
+    );
+
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message: "Notification not found",
+      });
+    }
+
+    notification.isRead = true;
+    await notification.save();
+
+    res.json({
+      success: true,
+      message: "Notification marked as read",
+    });
+  } catch (error) {
+    console.error("Error marking notification as read:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+});
+
+// Route để lấy số lượng thông báo chưa đọc
+/* router.get("/unread-count", verifyToken, async (req, res) => {
+  try {
+    let userProfile;
+
+    // Xác định profile người dùng
+    if (req.role === "Giảng viên") {
+      userProfile = await ProfileTeacher.findOne({ user: req.userId });
+    } else {
+      userProfile = await ProfileStudent.findOne({ user: req.userId });
+    }
+
+    if (!userProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "User profile not found",
+      });
+    }
+
+    // Tìm các nhóm của người dùng
+    let userGroups = [];
+    if (req.role === "Giảng viên") {
+      userGroups = await Group.find({ teacher: userProfile._id });
+    } else {
+      userGroups = await Group.find({
+        "profileStudents.student": userProfile._id,
+      });
+    }
+
+    const groupIds = userGroups.map((group) => group._id);
+
+    // Đếm số thông báo chưa đọc
+    const count = await MessageNotification.countDocuments({
+      recipient: { $in: groupIds },
+      sender: { $ne: userProfile._id },
+      isRead: false,
+    });
+
+    res.json({
+      success: true,
+      count,
+    });
+  } catch (error) {
+    console.error("Error getting unread count:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+}); */
+
 router.post("/send-new", verifyToken, async (req, res) => {
   try {
     const { content, groupId } = req.body;
@@ -163,6 +277,8 @@ router.post("/send-new", verifyToken, async (req, res) => {
 
     // Lưu tin nhắn vào MongoDB
     const savedMessage = await newMessage.save();
+    // Sau khi lưu tin nhắn thành công, tạo thông báo
+    await createNotifications(savedMessage, group, sender);
 
     // Lấy thông tin chi tiết của người gửi
     const populatedMessage = await Message.findById(savedMessage._id).populate({
@@ -241,9 +357,9 @@ router.put("/read/:messageId", verifyToken, async (req, res) => {
 router.delete("/delete/:id", verifyToken, async (req, res) => {
   try {
     const messageId = req.params.id;
-    const userId = req.userId; // ID người dùng từ token
+    const userId = req.userId;
 
-    // Tìm tin nhắn cần xóa
+    // Tìm tin nhắn trong MongoDB
     const message = await Message.findById(messageId);
     if (!message) {
       return res.status(404).json({
@@ -252,42 +368,40 @@ router.delete("/delete/:id", verifyToken, async (req, res) => {
       });
     }
 
-    // Kiểm tra nếu người gửi là giảng viên hay sinh viên
+    // Kiểm tra quyền xóa tin nhắn
     let senderProfile;
     if (message.senderModel === "profileStudent") {
-      // Nếu là sinh viên, tìm profile sinh viên
       senderProfile = await ProfileStudent.findOne({ user: userId });
     } else if (message.senderModel === "profileTeacher") {
-      // Nếu là giảng viên, tìm profile giảng viên
       senderProfile = await ProfileTeacher.findOne({ user: userId });
     }
 
-    if (!senderProfile) {
-      return res.status(404).json({
-        success: false,
-        message: `${
-          message.senderModel === "profileStudent" ? "Student" : "Teacher"
-        } profile not found`,
-      });
-    }
-
-    // Kiểm tra quyền xóa tin nhắn
-    if (message.sender.toString() !== senderProfile._id.toString()) {
+    if (
+      !senderProfile ||
+      message.sender.toString() !== senderProfile._id.toString()
+    ) {
       return res.status(403).json({
         success: false,
         message: "You do not have permission to delete this message",
       });
     }
 
-    // Xóa tin nhắn
-    await Message.findByIdAndDelete(messageId);
-    res.json({
+    // Soft delete trong MongoDB
+    message.isDeleted = true;
+    await message.save();
+
+    // Trả về response
+    return res.json({
       success: true,
       message: "Message deleted successfully",
+      deletedMessage: {
+        messageId: message._id,
+        groupId: message.groupId,
+      },
     });
   } catch (error) {
     console.error("Error in delete message:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Internal server error",
       error: error.message,
@@ -297,30 +411,92 @@ router.delete("/delete/:id", verifyToken, async (req, res) => {
 
 // Route: GET /api/messages/group/:groupId
 // Mục đích: Lấy tất cả tin nhắn của một nhóm dựa trên groupId
-router.get("/group/:groupId", async (req, res) => {
+// Route: GET /api/messages/group/:groupId
+
+router.get("/group/:groupId", verifyToken, async (req, res) => {
   try {
-    const groupId = req.params.groupId.trim(); // Loại bỏ khoảng trắng hoặc ký tự dòng mới
+    const groupId = req.params.groupId.trim();
 
-    // Tìm tất cả tin nhắn thuộc về groupId
-    const messages = await Message.find({ groupId })
-      .populate("sender", "name email")
-      .populate("receiver", "name email")
-      .exec();
-
-    if (!messages) {
+    // Kiểm tra xem group có tồn tại không
+    const group = await Group.findById(groupId);
+    if (!group) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy tin nhắn cho nhóm này.",
+        message: "Nhóm không tồn tại.",
       });
     }
 
-    res.status(200).json({ success: true, messages });
+    // Nếu không có tin nhắn, trả về mảng rỗng thay vì báo lỗi
+    const messages = await Message.find({
+      groupId: groupId,
+      isDeleted: false,
+    })
+      .populate("sender", "name email")
+      .populate("receiver", "name email")
+      .sort({ timestamp: 1 })
+      .exec();
+
+    res.status(200).json({
+      success: true,
+      messages: messages || [],
+    });
   } catch (error) {
     console.error("Error fetching messages:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Lỗi khi tải tin nhắn của nhóm." });
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi tải tin nhắn của nhóm.",
+    });
   }
 });
 
+// Route để lấy tất cả các nhóm của user
+router.get("/user-groups", verifyToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const userRole = req.role;
+    let groups;
+
+    if (userRole === "Giảng viên") {
+      // Nếu là giảng viên, tìm các nhóm mà họ là teacher
+      groups = await Group.find({ teacher: userId })
+        .populate("teacher", "name email")
+        .populate("profileStudents.student", "name email");
+    } else {
+      // Nếu là sinh viên, tìm các nhóm mà họ là thành viên
+      groups = await Group.find({
+        "profileStudents.student": userId,
+      })
+        .populate("teacher", "name email")
+        .populate("profileStudents.student", "name email");
+    }
+
+    if (!groups) {
+      return res.status(404).json({
+        success: false,
+        message: "No groups found",
+      });
+    }
+
+    // Format response data
+    const formattedGroups = groups.map((group) => ({
+      _id: group._id,
+      groupName: group.groupName,
+      teacher: group.teacher,
+      students: group.profileStudents,
+      createdAt: group.createdAt,
+    }));
+
+    res.json({
+      success: true,
+      studentGroups: formattedGroups,
+    });
+  } catch (error) {
+    console.error("Error in getting user groups:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+});
 module.exports = router;

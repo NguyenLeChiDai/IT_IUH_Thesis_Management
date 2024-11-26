@@ -188,7 +188,9 @@ function ListGroupAssignmentReview() {
   return (
     <div className="list-group-assignment-review-container">
       <div className="header-assignment">
-        <h2>Quản lý Phân công Chấm Phản Biện</h2>
+        <h2 style={{ fontFamily: "revert-layer" }}>
+          Quản lý Phân công Chấm Phản Biện
+        </h2>
         <div className="search-bar">
           <input
             type="text"

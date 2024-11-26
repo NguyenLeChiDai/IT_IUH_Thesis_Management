@@ -79,6 +79,10 @@
   background-color: #28a745;
   border-color: #28a745;
   transition: all 0.3s ease;
+  width: 120px; /* Chiều rộng cố định cho button */
+  text-align: center;
+  margin: 0 auto; /* Căn giữa button trong cell */
+  display: block; /* Để margin auto hoạt động */
 }
 
 .custom-button:hover {

@@ -33,56 +33,78 @@ function MessageTeacher() {
 
   const getToken = () => localStorage.getItem("token");
 
-  // Firebase realtime listener
-  // Lắng nghe tin nhắn realtime
-  useEffect(() => {
-    if (!groupInfo?.id) return;
+  const formatMessages = useCallback((msgs) => {
+    return msgs.map((msg) => {
+      // Log để debug
+      console.log("Original message:", msg);
 
-    // Đầu tiên, lấy tin nhắn cũ
+      const sender = msg.sender || {};
+      const role = sender.role || "Unknown";
+
+      const formattedMessage = {
+        id: msg._id || msg.id, // Đảm bảo luôn có id
+        senderModel:
+          role === "Giảng viên" ? "profileTeacher" : "profileStudent",
+        text: msg.content || "",
+        senderName: sender.name || "Unknown User",
+        time: new Date(msg.timestamp).toLocaleString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }),
+      };
+
+      // Log formatted message
+      console.log("Formatted message:", formattedMessage);
+      return formattedMessage;
+    });
+  }, []);
+
+  useEffect(() => {
+    console.log("UseEffect triggered with groupInfo:", {
+      groupInfo,
+      id: groupInfo?.id,
+      _id: groupInfo?._id,
+    });
+
+    // Sử dụng groupId đã được chuẩn hóa
+    const groupId = groupInfo?.id || groupInfo?._id;
+    if (!groupId) {
+      console.log("Missing groupId, returning early");
+      return;
+    }
+
+    firebaseMessageService.clearDeletedMessagesCache();
+
     const fetchInitialMessages = async () => {
       try {
+        console.log("Fetching messages for group:", groupId);
         const initialMessages = await firebaseMessageService.getGroupMessages(
-          groupInfo.id
+          groupId
         );
+        console.log("Initial messages:", initialMessages);
         setMessages(formatMessages(initialMessages));
       } catch (error) {
         console.error("Error fetching initial messages:", error);
-        setError("Không thể tải tin nhắn cũ");
+        toast.error("Không thể tải tin nhắn cũ");
       }
     };
 
     fetchInitialMessages();
 
-    // Sau đó lắng nghe tin nhắn mới
-    firebaseMessageService.subscribeToGroupMessages(
-      groupInfo.id,
-      (newMessages) => {
-        setMessages(formatMessages(newMessages));
-      }
-    );
+    firebaseMessageService.subscribeToGroupMessages(groupId, (newMessages) => {
+      console.log("New messages received:", newMessages);
+      setMessages(formatMessages(newMessages));
+    });
 
     return () => {
-      firebaseMessageService.unsubscribeFromGroupMessages(groupInfo.id);
+      console.log("Cleaning up subscription for group:", groupId);
+      firebaseMessageService.unsubscribeFromGroupMessages(groupId);
+      firebaseMessageService.clearDeletedMessagesCache();
     };
-  }, [groupInfo?.id]);
-
-  // Format tin nhắn để hiển thị
-  const formatMessages = useCallback((msgs) => {
-    return msgs.map((msg) => ({
-      id: msg._id || msg.id,
-      senderModel:
-        msg.sender.role === "Giảng viên" ? "profileTeacher" : "profileStudent",
-      text: msg.content,
-      senderName: msg.sender.name,
-      time: new Date(msg.timestamp).toLocaleString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }),
-    }));
-  }, []);
+  }, [groupInfo, formatMessages]); // Thay đổi dependency
 
   // Load initial messages
   useEffect(() => {
@@ -135,10 +157,32 @@ function MessageTeacher() {
     };
   }, []);
 
-  // Thêm hàm xử lý xóa tin nhắn
   const handleDeleteMessage = async (messageId) => {
     try {
-      const token = getToken();
+      // Log để debug
+      console.log("Debug values:", {
+        messageId,
+        groupInfo,
+        groupId: groupInfo?.id, // Thử dùng .id thay vì ._id
+      });
+
+      if (!messageId) {
+        throw new Error("MessageId không tồn tại");
+      }
+      if (!groupInfo) {
+        throw new Error("GroupInfo không tồn tại");
+      }
+
+      // Sử dụng groupInfo.id thay vì groupInfo._id
+      const groupId = groupInfo.id || groupInfo._id;
+      if (!groupId) {
+        throw new Error("GroupId không tồn tại");
+      }
+
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token không hợp lệ");
+
+      // Gọi API xóa từ MongoDB trước
       const response = await axios.delete(
         `http://localhost:5000/api/messages/delete/${messageId}`,
         {
@@ -147,33 +191,25 @@ function MessageTeacher() {
       );
 
       if (response.data.success) {
-        // Xóa tin nhắn khỏi state
-        setMessages((prevMessages) =>
-          prevMessages.filter((msg) => msg.id !== messageId)
+        // Sử dụng groupId đã xác định ở trên
+        await firebaseMessageService.deleteMessageFromFirebase(
+          groupId,
+          messageId
         );
-        setSelectedMessage(null); // Đóng popover
+
+        setSelectedMessage(null);
+        toast.success("Xóa tin nhắn thành công");
       }
     } catch (err) {
       console.error("Error deleting message:", err);
-      setError(err.response?.data?.message || "Có lỗi xảy ra khi xóa tin nhắn");
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Có lỗi xảy ra khi xóa tin nhắn";
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
-  // useEffect(() => {
-  //   if (groupInfo?.id) {  // Thay groupId bằng groupInfo?.id
-  //     // Clear cache khi component mount
-  //     firebaseMessageService.clearDeletedMessagesCache();
-
-  //     // Subscribe to messages
-  //     firebaseMessageService.subscribeToGroupMessages(groupInfo.id, (messages) => {
-  //       setMessages(messages);
-  //     });
-
-  //     return () => {
-  //       // Cleanup khi unmount
-  //       firebaseMessageService.unsubscribeFromGroupMessages(groupInfo.id);
-  //     };
-  //   }
-  // }, [groupInfo?.id]);  // Dependency cũng cần được thay đổi
 
   const MessagePopover = ({ message }) => (
     <div
@@ -231,7 +267,7 @@ function MessageTeacher() {
   }, []);
 
   // Initialize component data
-  const initializeData = useCallback(async () => {
+  /* const initializeData = useCallback(async () => {
     if (!groupInfo) {
       navigate("/dashboardTeacher/listStudentGroupForTeacher");
       return;
@@ -275,7 +311,97 @@ function MessageTeacher() {
       setError("Không thể tải dữ liệu");
       console.error("Error initializing data:", err);
     }
+  }, [groupInfo, navigate, fetchTeacherProfile]); */
+
+  const initializeData = useCallback(async () => {
+    if (!groupInfo) {
+      navigate("/dashboardTeacher/listStudentGroupForTeacher");
+      return;
+    }
+
+    try {
+      // First get teacher profile
+      const profile = await fetchTeacherProfile();
+
+      // Then fetch messages
+      const token = getToken();
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/api/messages/group/${groupInfo.id.trim()}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        // Kiểm tra và xử lý khi không có tin nhắn
+        if (response.data.success) {
+          const messages = response.data.messages || [];
+          const formattedMessages =
+            messages.length > 0
+              ? messages.map((msg) => ({
+                  id: msg._id,
+                  senderModel: msg.senderModel,
+                  text: msg.content,
+                  senderName:
+                    msg.senderModel === "profileTeacher"
+                      ? profile?.name || msg.sender?.name || "Giảng viên"
+                      : msg.sender?.name || "Sinh viên",
+                  time: new Date(msg.timestamp).toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    minute: "numeric",
+                    hour12: true,
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  }),
+                }))
+              : []; // Trả về mảng rỗng nếu không có tin nhắn
+
+          setMessages(formattedMessages);
+        }
+        setIsInitialized(true);
+      } catch (err) {
+        // Xử lý riêng trường hợp 404
+        if (err.response?.status === 404) {
+          setMessages([]); // Đặt danh sách tin nhắn thành rỗng
+          setIsInitialized(true);
+        } else {
+          setError("Không thể tải dữ liệu");
+          console.error("Error initializing data:", err);
+        }
+      }
+    } catch (err) {
+      setError("Không thể tải dữ liệu");
+      console.error("Error initializing data:", err);
+    }
   }, [groupInfo, navigate, fetchTeacherProfile]);
+
+  const [groupMembers, setGroupMembers] = useState(0);
+  // Thêm hàm fetch số lượng thành viên nhóm
+  const fetchGroupMembers = useCallback(async () => {
+    try {
+      if (!groupInfo?.id) return;
+
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `http://localhost:5000/api/studentgroups/members/${groupInfo.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.data.success) {
+        setGroupMembers(response.data.membersCount);
+      }
+    } catch (error) {
+      console.error("Error fetching group members:", error);
+    }
+  }, [groupInfo?.id]);
+
+  // Gọi hàm fetch members khi component mount hoặc groupInfo thay đổi
+  useEffect(() => {
+    fetchGroupMembers();
+  }, [fetchGroupMembers]);
 
   // Initialize when component mounts
   useEffect(() => {
@@ -358,14 +484,20 @@ function MessageTeacher() {
           </div>
           <div className="ms-3">
             <h5 className="mb-0">{groupInfo?.name}</h5>
-            <small className="text-muted">
+            {/* <small className="text-muted">
               {groupInfo?.members?.length || 0} thành viên
-            </small>
+            </small> */}
+            <small className="text-muted">{groupMembers} thành viên</small>
           </div>
         </div>
       </div>
 
       <div className="messages-area">
+        {messages.length === 0 && (
+          <div className="text-center text-muted py-4">
+            Chưa có tin nhắn trong nhóm này
+          </div>
+        )}
         {messages.map((msg) => (
           <div
             key={msg.id}
