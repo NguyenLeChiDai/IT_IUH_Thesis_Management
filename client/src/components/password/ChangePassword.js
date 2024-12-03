@@ -48,6 +48,13 @@ const ChangePassword = () => {
     setIsLoading(true);
     setMessage("");
 
+    // New validation for password length
+    if (newPassword.length < 6) {
+      setMessage("Mật khẩu mới phải có ít nhất 6 ký tự.");
+      setIsLoading(false);
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       setMessage("Mật khẩu mới và xác nhận mật khẩu không khớp.");
       setIsLoading(false);

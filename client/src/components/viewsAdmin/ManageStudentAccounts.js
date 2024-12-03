@@ -302,12 +302,33 @@ const ManageStudentAccounts = () => {
   // Điều kiện các thường phải nhập
   const validateForm = () => {
     const newErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Regex kiểm tra định dạng email đơn giản
+
     if (!newUser.username) newErrors.username = "Tên đăng nhập là bắt buộc.";
-    if (!newUser.password) newErrors.password = "Mật khẩu là bắt buộc.";
-    if (!newUser.role) newErrors.role = "Vai trò là bắt buộc.";
+
+    // New password validation
+    if (!newUser.password) {
+      newErrors.password = "Mật khẩu là bắt buộc.";
+    } else if (newUser.password.length < 6) {
+      newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự.";
+    }
+
+    if (!newUser.role) {
+      newErrors.role = "Vai trò là bắt buộc.";
+    } else if (newUser.role !== "Sinh viên") {
+      newErrors.role = "Vai trò phải là 'Sinh viên'.";
+    }
+
     if (!newProfile.studentId)
       newErrors.studentId = "Mã sinh viên là bắt buộc.";
     if (!newProfile.name) newErrors.name = "Họ và tên là bắt buộc.";
+
+    // Email validation
+    if (!newProfile.email) {
+      newErrors.email = "Email là bắt buộc.";
+    } else if (!emailRegex.test(newProfile.email)) {
+      newErrors.email = "Định dạng email không hợp lệ.";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0; // Return true if no errors
@@ -606,6 +627,8 @@ const ManageStudentAccounts = () => {
             onChange={(e) =>
               setNewProfile({ ...newProfile, email: e.target.value })
             }
+            error={!!errors.email}
+            helperText={errors.email}
           />
           <TextField
             margin="dense"

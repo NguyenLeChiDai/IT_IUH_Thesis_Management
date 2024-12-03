@@ -142,6 +142,10 @@ function App() {
               <Route path="submit-report" element={<ThesisReport />} />{" "}
               <Route path="score-student" element={<ScoreStudent />} />{" "}
               <Route path="messageStudent" element={<MessageStudent />} />
+              <Route
+                path="notification-page-student"
+                element={<NotificationPage />}
+              />
             </Route>
 
             {/* Giảng viên */}
@@ -166,7 +170,10 @@ function App() {
               />
               <Route path="input-score" element={<InputScore />} />
               <Route path="messageTeacher" element={<MessageTeacher />} />
-              <Route path="notification-page" element={<NotificationPage />} />
+              <Route
+                path="notification-page-teacher"
+                element={<NotificationPage />}
+              />
               <Route path="topic-review" element={<TopicReview />} />
               <Route path="topic-council" element={<CouncilTopic />} />
               <Route path="topic-poster" element={<PosterTopic />} />

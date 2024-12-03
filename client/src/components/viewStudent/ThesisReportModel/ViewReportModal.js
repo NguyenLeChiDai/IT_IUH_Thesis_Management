@@ -4,7 +4,14 @@ import { FileText, Download } from "lucide-react";
 import "../../../css/ViewReportModal.css";
 import { toast } from "react-toastify";
 
-const ViewReportModal = ({ show, onHide, report, onEdit, onDownload }) => {
+const ViewReportModal = ({
+  show,
+  onHide,
+  report,
+  onEdit,
+  onDownload,
+  onDownloadTeacher,
+}) => {
   if (!report) return null;
 
   return (
@@ -88,7 +95,7 @@ const ViewReportModal = ({ show, onHide, report, onEdit, onDownload }) => {
                   variant="link"
                   className="ms-2"
                   onClick={() =>
-                    onDownload(report.teacherFileUrl, report.teacherFileName)
+                    onDownloadTeacher(report.fileUrl, report.fileName)
                   }
                 >
                   <Download size={16} className="me-1" />

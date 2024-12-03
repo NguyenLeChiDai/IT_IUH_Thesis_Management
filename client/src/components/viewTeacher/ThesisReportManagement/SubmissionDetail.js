@@ -51,7 +51,7 @@ const SubmissionDetail = () => {
       const endpoint =
         fileType === "submission"
           ? `http://localhost:5000/api/reportManagements/download-report/${submissionId}`
-          : `http://localhost:5000/api/reportManagements/feedback-file/${submissionId}`;
+          : `http://localhost:5000/api/reportManagements/feedback-file/${submissionId}`; // Endpoint tải file phản hồi
 
       const response = await axios.get(endpoint, {
         responseType: "blob",
@@ -61,7 +61,12 @@ const SubmissionDetail = () => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", submission?.file?.name || "download");
+      link.setAttribute(
+        "download",
+        fileType === "submission"
+          ? submission?.file?.name
+          : submission?.feedback?.file?.name || "download"
+      );
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -88,7 +93,7 @@ const SubmissionDetail = () => {
       }
 
       const response = await axios.post(
-        `/api/reportManagements/submission/${submissionId}/feedback`,
+        `http://localhost:5000/api/reportManagements/submission/${submissionId}/feedback`,
         formData,
         {
           headers: {

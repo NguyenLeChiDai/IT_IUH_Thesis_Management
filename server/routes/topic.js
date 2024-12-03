@@ -965,6 +965,10 @@ router.get("/teacher/students", verifyToken, async (req, res) => {
             major: studentRegistration.student.major,
             gender: studentRegistration.student.gender,
           },
+          group: {
+            groupId: groupRegistration.group.groupId,
+            groupName: groupRegistration.group.groupName, // Thêm thông tin nhóm
+          },
           role: studentRegistration.role,
           topic: {
             topicId: topic._id,

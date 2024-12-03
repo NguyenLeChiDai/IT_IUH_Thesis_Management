@@ -47,7 +47,7 @@ const Auth = ({ authRoute }) => {
     <div className="auth-page">
       <Header />
       <div className="auth-content">
-        <div className="auth-form" style={{ width: 550, height: 600 }}>
+        <div className="auth-form" style={{ width: 550, height: 650 }}>
           <h2 className="auth-title">
             <strong>
               {authRoute === "forgot-password"

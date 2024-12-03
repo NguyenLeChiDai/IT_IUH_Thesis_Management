@@ -164,11 +164,13 @@ const ListStudentTeacher = () => {
             <TableRow>
               <TableCell>Mã sinh viên</TableCell>
               <TableCell>Tên sinh viên</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Số điện thoại</TableCell>
+              <TableCell>Nhóm</TableCell>
+              {/*  <TableCell>Email</TableCell>
+              <TableCell>Số điện thoại</TableCell> */}
               <TableCell>Lớp</TableCell>
               <TableCell>Chuyên ngành</TableCell>
               <TableCell>Giới tính</TableCell>
+
               <TableCell>Nhập điểm</TableCell>
             </TableRow>
           </TableHead>
@@ -179,11 +181,15 @@ const ListStudentTeacher = () => {
                 <TableRow key={studentData.student.studentId}>
                   <TableCell>{studentData.student.studentId}</TableCell>
                   <TableCell>{studentData.student.name}</TableCell>
-                  <TableCell>{studentData.student.email}</TableCell>
-                  <TableCell>{studentData.student.phone}</TableCell>
+                  <TableCell>
+                    {studentData.group?.groupName || "Chưa có nhóm"}
+                  </TableCell>
+                  {/*     <TableCell>{studentData.student.email}</TableCell>
+                  <TableCell>{studentData.student.phone}</TableCell> */}
                   <TableCell>{studentData.student.class}</TableCell>
                   <TableCell>{studentData.student.major}</TableCell>
                   <TableCell>{studentData.student.gender}</TableCell>
+
                   <TableCell>
                     <Button
                       variant="contained"

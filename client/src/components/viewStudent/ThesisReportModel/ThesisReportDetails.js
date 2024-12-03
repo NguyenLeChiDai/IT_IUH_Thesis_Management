@@ -209,6 +209,38 @@ const ThesisReportDetails = ({
     }
   };
 
+  const handleDownloadFileTeacher = async (reportId) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/reportManagements/feedback-file/${reportId}`,
+        {
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      // Tạo URL để tải xuống
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+
+      // Sử dụng tên file từ báo cáo
+      link.setAttribute("download", selectedReport.teacherFileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error downloading teacher feedback file:", error);
+      if (error.response && error.response.status === 404) {
+        toast.error("File phản hồi không tồn tại hoặc đã bị xóa.");
+      } else {
+        toast.error("Không thể tải xuống file phản hồi. Vui lòng thử lại sau.");
+      }
+    }
+  };
+
   const renderReportStatus = (report) => {
     return (
       <div>
@@ -325,6 +357,7 @@ const ThesisReportDetails = ({
         report={selectedReport}
         onEdit={handleEditReport}
         onDownload={handleDownloadFile}
+        onDownloadTeacher={() => handleDownloadFileTeacher(selectedReport._id)}
       />
 
       <EditReportModal

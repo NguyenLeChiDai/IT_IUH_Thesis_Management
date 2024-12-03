@@ -44,6 +44,16 @@ function LoginForm() {
   const login = async (event) => {
     event.preventDefault();
 
+    // Validate password length
+    if (password.length < 6) {
+      setAlert({
+        type: "danger",
+        message: "Mật khẩu phải chứa ít nhất 6 ký tự",
+      });
+      setTimeout(() => setAlert(null), 5000);
+      return;
+    }
+
     try {
       const loginData = await loginUser(loginForm);
       console.log(loginData); // Kiểm tra kết quả trả về của loginUser

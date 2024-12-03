@@ -323,6 +323,16 @@ const StatisticsTeacher = () => {
     }
   };
 
+  //tỉ lệ đề tài được duyệt
+  const topicApprovalPercentage = teacherTopicStats.approvedTopics
+    ? Math.round(
+        (teacherTopicStats.approvedTopics / teacherTopicStats.totalTopics) * 100
+      )
+    : 0;
+
+  //Tỉ lệ nhóm được chấm điểm
+  const groupCompletedPercentage = groupStats.completedPercentage || 0;
+
   return (
     <div className="container-fluid py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -419,25 +429,24 @@ const StatisticsTeacher = () => {
             <div className="card-body">
               <div className="mb-4">
                 <div className="d-flex justify-content-between mb-2">
-                  <span>Tỉ lệ sinh viên đã có nhóm</span>
-                  <span className="text-success">
-                    {/* {quickStats.studentGroupPercentage}% */}
-                    20%
+                  <span>Tỉ lệ đề tài đã được phê duyệt</span>
+                  <span className="text-primary">
+                    {topicApprovalPercentage}%
                   </span>
                 </div>
                 <div className="progress">
                   <div
-                    className="progress-bar bg-success"
+                    className="progress-bar bg-primary"
                     role="progressbar"
-                    style={{ width: "20%" }}
-                    aria-valuenow="20%"
+                    style={{ width: `${topicApprovalPercentage}%` }}
+                    aria-valuenow={topicApprovalPercentage}
                     aria-valuemin="0"
                     aria-valuemax="100"
                   ></div>
                 </div>
               </div>
 
-              <div className="mb-4">
+              {/* <div className="mb-4">
                 <div className="d-flex justify-content-between mb-2">
                   <span>Tỉ lệ đề tài đã được phê duyệt</span>
                   <span className="text-primary">20%</span>
@@ -452,19 +461,21 @@ const StatisticsTeacher = () => {
                     aria-valuemax="100"
                   ></div>
                 </div>
-              </div>
+              </div> */}
 
               <div>
                 <div className="d-flex justify-content-between mb-2">
                   <span>Tỉ lệ khóa luận đã chấm điểm</span>
-                  <span className="text-warning">20%</span>
+                  <span className="text-warning">
+                    {groupCompletedPercentage}%
+                  </span>
                 </div>
                 <div className="progress">
                   <div
                     className="progress-bar bg-warning"
                     role="progressbar"
-                    style={{ width: "20%" }}
-                    aria-valuenow="20%"
+                    style={{ width: `${groupCompletedPercentage}%` }}
+                    aria-valuenow={groupCompletedPercentage}
                     aria-valuemin="0"
                     aria-valuemax="100"
                   ></div>

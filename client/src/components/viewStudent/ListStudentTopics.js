@@ -344,7 +344,7 @@ export const ListStudentTopics = () => {
                   <td>{index + 1 + page * rowsPerPage}</td>
                   <td className="topic-name">{topic.nameTopic}</td>
                   <td>{topic.teacher ? topic.teacher.name : "N/A"}</td>
-                  <td>{topic.registeredGroupsCount || 0}</td>
+                  <td>{topic.registeredGroupsCount || 0}/2</td>
                   <td>
                     <Button
                       variant={buttonProps.variant}

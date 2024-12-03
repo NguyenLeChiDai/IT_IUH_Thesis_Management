@@ -206,9 +206,11 @@ const ManageTeacherAccounts = () => {
 
   //HÀM TẠO TÀI KHOẢN
   const handleCreateUser = async (user) => {
+    if (!validateForm()) return; // Không tiếp tục tiến trình nếu valid thất bại
+    setOpenCreateDialog(false);
     const isConfirmed = await Swal.fire({
       title: "Xác Nhận Tạo Tài Khoản",
-      text: `Bạn có chắc chắn muốn tạo tài khoản "${user.username}"  không?`,
+      text: `Bạn có chắc chắn muốn tạo tài khoản cho giảng viên không?`,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
@@ -290,12 +292,32 @@ const ManageTeacherAccounts = () => {
   // Điều kiện các thường phải nhập
   const validateForm = () => {
     const newErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Regex kiểm tra định dạng email đơn giản
+
     if (!newUser.username) newErrors.username = "Tên đăng nhập là bắt buộc.";
-    if (!newUser.password) newErrors.password = "Mật khẩu là bắt buộc.";
-    if (!newUser.role) newErrors.role = "Vai trò là bắt buộc.";
+
+    if (!newUser.password) {
+      newErrors.password = "Mật khẩu là bắt buộc.";
+    } else if (newUser.password.length < 6) {
+      newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự.";
+    }
+
+    if (!newUser.role) {
+      newErrors.role = "Vai trò là bắt buộc.";
+    } else if (newUser.role !== "Giảng viên") {
+      newErrors.role = "Vai trò phải là 'Giảng viên'.";
+    }
+
     if (!newProfile.teacherId)
       newErrors.teacherId = "Mã giảng viên là bắt buộc.";
     if (!newProfile.name) newErrors.name = "Họ và tên là bắt buộc.";
+
+    // Email validation
+    if (!newProfile.email) {
+      newErrors.email = "Email là bắt buộc.";
+    } else if (!emailRegex.test(newProfile.email)) {
+      newErrors.email = "Định dạng email không hợp lệ.";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0; // Return true if no errors
@@ -484,7 +506,7 @@ const ManageTeacherAccounts = () => {
       </Box>
       {/* Tìm kiếm tài khoản */}
       <TextField
-        label="Tìm kiếm theo Tên đăng nhập hoặc Mã sinh viên"
+        label="Tìm kiếm theo Tên đăng nhập hoặc Mã giảng viên"
         variant="outlined"
         fullWidth
         margin="normal"
@@ -535,7 +557,7 @@ const ManageTeacherAccounts = () => {
             helperText={errors.password}
           />
           {/* Role Field - Dropdown  tạo lựa chọn vai trò*/}
-          <TextField
+          {/* <TextField
             margin="dense"
             label="Vai trò"
             type="text"
@@ -544,7 +566,20 @@ const ManageTeacherAccounts = () => {
             onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
             error={!!errors.role}
             helperText={errors.role}
-          />
+          />*/}
+          <Select
+            margin="dense"
+            label="Vai trò"
+            fullWidth
+            value={newUser.role}
+            onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+            error={!!errors.role}
+            helperText={errors.role}
+          >
+            <MenuItem value="Giảng viên">Giảng viên</MenuItem>
+            {/*   <MenuItem value="Giáo viên">Giáo viên</MenuItem>
+            <MenuItem value="Admin">Admin</MenuItem> */}
+          </Select>
           {/* Thêm các trường của profile */}
           <TextField
             margin="dense"
@@ -589,6 +624,8 @@ const ManageTeacherAccounts = () => {
             onChange={(e) =>
               setNewProfile({ ...newProfile, email: e.target.value })
             }
+            error={!!errors.email}
+            helperText={errors.email}
           />
 
           <TextField

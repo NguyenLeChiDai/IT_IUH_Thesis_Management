@@ -72,7 +72,7 @@ const AuthContextProvider = ({ children }) => {
   }, []);
 
   // Login
-  const loginUser = async (userForm) => {
+  /* const loginUser = async (userForm) => {
     try {
       const response = await axios.post(`${apiUrl}/auth/login`, userForm);
       if (response.data.success) {
@@ -93,6 +93,59 @@ const AuthContextProvider = ({ children }) => {
           }
         } catch (error) {
           console.log("Không lấy được profile, nhưng vẫn cho phép đăng nhập.");
+        }
+
+        if (userResponse.data.success) {
+          dispatch({
+            type: "SET_AUTH",
+            payload: {
+              isAuthenticated: true,
+              user: userResponse.data.user,
+              profile: profileData, // Profile có thể là null
+            },
+          });
+        }
+
+        return response.data;
+      }
+    } catch (error) {
+      if (error.response.data) return error.response.data;
+      else return { success: false, message: error.message };
+    }
+  }; */
+  const loginUser = async (userForm) => {
+    try {
+      const response = await axios.post(`${apiUrl}/auth/login`, userForm);
+      if (response.data.success) {
+        localStorage.setItem(
+          LOCAL_STORAGE_TOKEN_NAME,
+          response.data.accessToken
+        );
+        setAuthToken(response.data.accessToken);
+
+        // Lấy thông tin user
+        const userResponse = await axios.get(`${apiUrl}/auth`);
+        let profileData = null;
+
+        // Lấy profile dựa trên role
+        try {
+          if (userResponse.data.user.role === "Sinh viên") {
+            const profileResponse = await axios.get(
+              `${apiUrl}/student/profile-student`
+            );
+            if (profileResponse.data.success) {
+              profileData = profileResponse.data.profile;
+            }
+          } else if (userResponse.data.user.role === "Giảng viên") {
+            const profileResponse = await axios.get(
+              `${apiUrl}/teachers/profile-teacher`
+            );
+            if (profileResponse.data.success) {
+              profileData = profileResponse.data.profile;
+            }
+          }
+        } catch (error) {
+          console.log("Không lấy được profile", error);
         }
 
         if (userResponse.data.success) {

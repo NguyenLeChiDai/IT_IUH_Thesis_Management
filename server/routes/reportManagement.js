@@ -862,119 +862,34 @@ router.post(
 );
 
 // Tải xuống file phản hồi
-router.get(
-  "/feedback-file/:reportId",
-  verifyToken,
-  checkRole("Giảng viên"),
-  async (req, res) => {
-    try {
-      const report = await ThesisReport.findById(req.params.reportId);
-      if (!report || !report.teacherFileUrl) {
-        return res.status(404).json({
-          success: false,
-          message: "Không tìm thấy file phản hồi",
-        });
-      }
-
-      const filePath = path.join(__dirname, "..", report.teacherFileUrl);
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).json({
-          success: false,
-          message: "File không tồn tại",
-        });
-      }
-
-      res.download(filePath, report.teacherFileName);
-    } catch (error) {
-      res.status(500).json({
+router.get("/feedback-file/:reportId", verifyToken, async (req, res) => {
+  try {
+    const report = await ThesisReport.findById(req.params.reportId);
+    if (!report || !report.teacherFileUrl) {
+      return res.status(404).json({
         success: false,
-        message: "Lỗi khi tải file",
-        error: error.message,
+        message: "Không tìm thấy file phản hồi",
       });
     }
-  }
-);
 
-// API để giảng viên gửi báo cáo cho admin
-/* router.post(
-  "/submit-to-admin/:reportId",
-  verifyToken,
-  checkRole("Giảng viên"),
-  async (req, res) => {
-    try {
-      const report = await ThesisReport.findById(req.params.reportId)
-        .populate("student", "name studentId")
-        .populate({
-          path: "group",
-          populate: {
-            path: "profileStudents.student",
-            select: "name studentId",
-          },
-        })
-        .populate("topic", "nameTopic")
-        .populate("folder", "name")
-        .populate("teacher", "name");
-
-      if (!report) {
-        return res.status(404).json({
-          success: false,
-          message: "Không tìm thấy báo cáo",
-        });
-      }
-
-      // Kiểm tra xem báo cáo đã được gửi cho admin chưa
-      const existingAdminReport = await AdminReport.findOne({
-        originalReport: report._id,
-      });
-      if (existingAdminReport) {
-        return res.status(400).json({
-          success: false,
-          message: "Báo cáo này đã được gửi cho admin",
-        });
-      }
-
-      // Lấy danh sách students từ nhóm
-      let studentIds = [];
-      if (report.group && report.group.profileStudents) {
-        studentIds = report.group.profileStudents.map((ps) => ps.student._id);
-      } else {
-        studentIds = [report.student._id];
-      }
-
-      // Tạo bản ghi mới trong AdminReport
-      const adminReport = new AdminReport({
-        originalReport: report._id,
-        students: studentIds, // Lưu array các student ID
-        group: report.group?._id,
-        topic: report.topic._id,
-        folder: report.folder._id,
-        teacher: report.teacher._id,
-        fileName: report.fileName,
-        fileUrl: report.fileUrl,
-        submissionDate: report.submissionDate,
-        teacherApprovalDate: new Date(),
-      });
-
-      await adminReport.save();
-
-      // Cập nhật trạng thái báo cáo gốc
-      report.adminSubmissionStatus = "Đã gửi";
-      await report.save();
-
-      res.json({
-        success: true,
-        message: "Đã gửi báo cáo cho admin thành công",
-      });
-    } catch (error) {
-      console.error("Error in submitting report to admin:", error);
-      res.status(500).json({
+    const filePath = path.join(__dirname, "..", report.teacherFileUrl);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
         success: false,
-        message: "Lỗi khi gửi báo cáo cho admin",
-        error: error.message,
+        message: "File không tồn tại",
       });
     }
+
+    res.download(filePath, report.teacherFileName);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi tải file",
+      error: error.message,
+    });
   }
-); */
+});
+
 // Hàm tạo hoạt động cho trang admin
 const createActivity = async (activityData) => {
   try {
@@ -986,6 +901,9 @@ const createActivity = async (activityData) => {
     throw error;
   }
 };
+
+// API để giảng viên gửi báo cáo cho admin
+
 router.post(
   "/submit-to-admin/:reportId",
   verifyToken,

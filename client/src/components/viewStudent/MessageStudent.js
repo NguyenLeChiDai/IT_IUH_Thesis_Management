@@ -401,10 +401,22 @@ const MessageStudent = () => {
       setLoading(false);
     }
   };
-  const handleKeyDown = (e) => {
+  /*   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage(e);
+    }
+  }; */
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      if (e.shiftKey) {
+        // Nếu nhấn Shift + Enter, cho phép xuống dòng
+        return;
+      } else {
+        // Nếu chỉ nhấn Enter, ngăn chặn hành vi mặc định và gửi tin nhắn
+        e.preventDefault();
+        handleSendMessage(e);
+      }
     }
   };
 
@@ -449,14 +461,14 @@ const MessageStudent = () => {
         );
 
         setSelectedMessage(null);
-        toast.success("Xóa tin nhắn thành công");
+        toast.success("Thu hồi tin nhắn thành công");
       }
     } catch (err) {
       console.error("Error deleting message:", err);
       const errorMessage =
         err.response?.data?.message ||
         err.message ||
-        "Có lỗi xảy ra khi xóa tin nhắn";
+        "Có lỗi xảy ra khi thu hồi tin nhắn";
       setError(errorMessage);
       toast.error(errorMessage);
     }
@@ -542,7 +554,7 @@ const MessageStudent = () => {
       </div>
 
       <div className="message-input-container">
-        <input
+        {/* <input
           type="text"
           className="form-control"
           value={message}
@@ -550,6 +562,25 @@ const MessageStudent = () => {
           onKeyDown={handleKeyDown}
           placeholder="Nhập tin nhắn..."
           disabled={loading}
+        /> */}
+        <textarea
+          className="form-control"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Nhập tin nhắn..."
+          disabled={loading}
+          rows={1} // Bắt đầu với 1 dòng
+          style={{
+            resize: "none", // Ngăn người dùng kéo giãn
+            overflow: "hidden", // Ẩn thanh cuộn
+            height: "auto", // Tự động điều chỉnh chiều cao
+          }}
+          // Tự động điều chỉnh chiều cao khi nhập
+          onInput={(e) => {
+            e.target.style.height = "auto";
+            e.target.style.height = `${e.target.scrollHeight}px`;
+          }}
         />
         <button
           className="btn btn-primary"

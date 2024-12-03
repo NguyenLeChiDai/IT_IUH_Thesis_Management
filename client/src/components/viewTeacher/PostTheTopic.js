@@ -758,31 +758,67 @@ const PostTheTopic = () => {
         </div>
       )}
 
+      {/* Modal Cập Nhật - Đưa ra ngoài và đặt ngang cấp */}
       {isUpdating && (
-        <div className="modal">
+        <div
+          className="modal-update-overlay"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+          }}
+        >
           <div
-            className="modal-content"
+            className="modal-update-content"
             style={{
-              margin: "5% auto",
-              padding: "20px",
               backgroundColor: "white",
-              borderRadius: "8px",
+              padding: "30px",
+              borderRadius: "10px",
               width: "80%",
-              maxWidth: "1000px",
-              minWidth: "300px", // Thiết lập chiều rộng tối thiểu
+              maxWidth: "600px",
               maxHeight: "80vh",
               overflowY: "auto",
             }}
           >
-            <span className="close" onClick={() => setIsUpdating(false)}>
-              &times;
-            </span>
-            <h2 style={{ fontWeight: "bold" }}>Cập Nhật Đề Tài</h2>
+            <div
+              className="modal-header"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "20px",
+              }}
+            >
+              <h2 style={{ fontWeight: "bold" }}>Cập Nhật Đề Tài</h2>
+              <button
+                onClick={() => setIsUpdating(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "24px",
+                  cursor: "pointer",
+                }}
+              >
+                &times;
+              </button>
+            </div>
+
             <form onSubmit={handleUpdateSubmit}>
               <div className="form-group">
                 <label
                   htmlFor="updateTitle"
-                  style={{ display: "flex", alignItems: "center" }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginBottom: "10px",
+                  }}
                 >
                   <FontAwesomeIcon
                     icon={faPencilAlt}
@@ -795,13 +831,24 @@ const PostTheTopic = () => {
                   value={updateTitle}
                   onChange={(e) => setUpdateTitle(e.target.value)}
                   placeholder="Nhập tên đề tài"
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #ccc",
+                    minHeight: "100px",
+                  }}
                 />
               </div>
 
-              <div className="form-group">
+              <div className="form-group" style={{ marginTop: "20px" }}>
                 <label
                   htmlFor="updateDescription"
-                  style={{ display: "flex", alignItems: "center" }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginBottom: "10px",
+                  }}
                 >
                   <i className="fa fa-edit" style={{ marginRight: "5px" }}></i>
                   Mô Tả Đề Tài
@@ -811,13 +858,52 @@ const PostTheTopic = () => {
                   value={updateDescription}
                   onChange={(e) => setUpdateDescription(e.target.value)}
                   placeholder="Nhập mô tả đề tài"
-                  rows="12"
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #ccc",
+                    minHeight: "200px",
+                  }}
                 />
               </div>
 
-              <button type="submit" className="submit-btn">
-                Cập nhật
-              </button>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginTop: "20px",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setIsUpdating(false)}
+                  style={{
+                    marginRight: "10px",
+                    padding: "10px 20px",
+                    backgroundColor: "#6c757d",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    padding: "10px 20px",
+                    backgroundColor: "#007bff",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cập nhật
+                </button>
+              </div>
             </form>
           </div>
         </div>

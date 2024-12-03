@@ -103,8 +103,9 @@ router.get(
         });
       }
 
+      // Sửa đổi đường dẫn file để phù hợp với fileUrl lưu trong database
       const uploadDir = path.resolve(__dirname, "..", "uploadReports");
-      const filePath = path.join(uploadDir, report.fileName);
+      const filePath = path.join(uploadDir, path.basename(report.fileUrl));
 
       if (!fs.existsSync(filePath)) {
         return res.status(404).json({
@@ -113,15 +114,16 @@ router.get(
         });
       }
 
-      res.download(filePath, report.fileName, (err) => {
-        if (err) {
-          res.status(500).json({
-            success: false,
-            message: "Lỗi khi tải file",
-            error: err.message,
-          });
-        }
-      });
+      // Thiết lập header để download file
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${encodeURIComponent(report.fileName)}"`
+      );
+      res.setHeader("Content-Type", "application/octet-stream");
+
+      // Stream file về client
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
     } catch (error) {
       res.status(500).json({
         success: false,
