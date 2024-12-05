@@ -48,6 +48,7 @@ app.use(
     origin: [
       "http://localhost:3000", // Cho phép trong quá trình phát triển
       "https://it-iuh-thesis-management.onrender.com", // Cho phép khi deploy
+      "*", // Thêm dòng này để cho phép tất cả các origin
     ],
     credentials: true,
   })

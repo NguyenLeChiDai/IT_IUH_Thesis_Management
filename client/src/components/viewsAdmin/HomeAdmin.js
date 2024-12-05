@@ -26,7 +26,7 @@ const HomeAdmin = () => {
     const fetchTopicStatistics = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/adminStatistics/topic-statistics",
+          `${apiUrl}adminStatistics/topic-statistics`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -59,7 +59,7 @@ const HomeAdmin = () => {
     const fetchStudentStatistics = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/adminStatistics/student-statistics",
+          `${apiUrl}/adminStatistics/student-statistics`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -101,7 +101,7 @@ const HomeAdmin = () => {
     const fetchTeacherStatistics = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/adminStatistics/teacher-statistics",
+          `${apiUrl}/adminStatistics/teacher-statistics`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -140,7 +140,7 @@ const HomeAdmin = () => {
     const fetchQuickStatistics = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/adminStatistics/quick-statistics",
+          `${apiUrl}/adminStatistics/quick-statistics`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -175,7 +175,7 @@ const HomeAdmin = () => {
     const fetchReportStatistics = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/adminStatistics/report-statistics",
+          `${apiUrl}/adminStatistics/report-statistics`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -249,14 +249,11 @@ const HomeAdmin = () => {
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/adminStatistics/recent",
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        const response = await axios.get(`${apiUrl}/adminStatistics/recent`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
 
         if (response.data.success) {
           setActivities(response.data.activities);
