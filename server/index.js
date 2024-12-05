@@ -86,6 +86,19 @@ app.use("/api/adminReport", adminReport);
 app.use("/api/adminFeature", adminFeature);
 app.use("/api/teachersManagement", teachersManagement);
 
+//------- Deploy
+const __dirname1 = path.resolve();
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname1, "../frontend/build")));
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname1, "../client", "build", "index.html"));
+  });
+} else {
+  app.get("/", (req, res) => {
+    res.send("API is running successfully");
+  });
+}
+
 const { server, io } = initSocket(app);
 
 const PORT = process.env.PORT || 5000;
