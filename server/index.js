@@ -45,7 +45,10 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: [
+      "http://localhost:3000", // Cho phép trong quá trình phát triển
+      "https://it-iuh-thesis-management.onrender.com", // Cho phép khi deploy
+    ],
     credentials: true,
   })
 );

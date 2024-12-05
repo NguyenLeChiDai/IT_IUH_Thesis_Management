@@ -8,6 +8,7 @@ import "../../css/AdminNotifications.css";
 import io from "socket.io-client";
 import Swal from "sweetalert2";
 import { toast, ToastContainer } from "react-toastify";
+import { apiUrl, LOCAL_STORAGE_TOKEN_NAME } from "../contexts/constants";
 
 const AdminNotifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -50,14 +51,11 @@ const AdminNotifications = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/notification/all",
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const response = await axios.get(`${apiUrl}/notification/all`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       if (response.data.success) {
         setNotifications(response.data.notifications);
       }

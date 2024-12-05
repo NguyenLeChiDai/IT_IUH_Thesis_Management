@@ -72,47 +72,6 @@ const AuthContextProvider = ({ children }) => {
   }, []);
 
   // Login
-  /* const loginUser = async (userForm) => {
-    try {
-      const response = await axios.post(`${apiUrl}/auth/login`, userForm);
-      if (response.data.success) {
-        localStorage.setItem(
-          LOCAL_STORAGE_TOKEN_NAME,
-          response.data.accessToken
-        );
-        setAuthToken(response.data.accessToken);
-
-        const userResponse = await axios.get(`${apiUrl}/auth`);
-        let profileData = null;
-
-        // Lấy profile nhưng không bắt buộc
-        try {
-          const profileResponse = await axios.get(`${apiUrl}/profile/profile`);
-          if (profileResponse.data.success) {
-            profileData = profileResponse.data.profile;
-          }
-        } catch (error) {
-          console.log("Không lấy được profile, nhưng vẫn cho phép đăng nhập.");
-        }
-
-        if (userResponse.data.success) {
-          dispatch({
-            type: "SET_AUTH",
-            payload: {
-              isAuthenticated: true,
-              user: userResponse.data.user,
-              profile: profileData, // Profile có thể là null
-            },
-          });
-        }
-
-        return response.data;
-      }
-    } catch (error) {
-      if (error.response.data) return error.response.data;
-      else return { success: false, message: error.message };
-    }
-  }; */
   const loginUser = async (userForm) => {
     try {
       const response = await axios.post(`${apiUrl}/auth/login`, userForm);

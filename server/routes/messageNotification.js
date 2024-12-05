@@ -9,68 +9,6 @@ const StudentGroup = require("../models/StudentGroup"); // Thêm dòng này
 const ChatSession = require("../models/ChatSession");
 const Topic = require("../models/Topic");
 
-// Thêm route này trong file router
-/* router.get("/notification-details", verifyToken, async (req, res) => {
-  try {
-    const { groupId, senderRole } = req.query;
-
-    if (!groupId) {
-      return res.status(400).json({
-        success: false,
-        message: "Group ID is required",
-      });
-    }
-
-    let details = {};
-
-    if (senderRole === "Sinh viên") {
-      // Nếu người gửi là sinh viên, tìm giáo viên hướng dẫn nhóm
-      const group = await Group.findById(groupId).populate({
-        path: "teacher",
-        select: "_id name teacherId",
-      });
-
-      if (group && group.teacher) {
-        details = {
-          id: group.teacher._id,
-          name: group.teacher.name,
-          teacherId: group.teacher.teacherId,
-          role: "teacher",
-        };
-      }
-    } else if (senderRole === "Giảng viên") {
-      // Nếu người gửi là giảng viên, tìm thông tin nhóm
-      const group = await Group.findById(groupId).populate({
-        path: "profileStudents.student",
-        select: "name studentId",
-      });
-
-      if (group) {
-        details = {
-          _id: group._id,
-          name: group.groupName,
-          students: group.profileStudents.map((ps) => ({
-            id: ps.student._id,
-            name: ps.student.name,
-            studentId: ps.student.studentId,
-          })),
-        };
-      }
-    }
-
-    res.json({
-      success: true,
-      details,
-    });
-  } catch (error) {
-    console.error("Error getting notification details:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error: error.message,
-    });
-  }
-}); */
 router.get("/notification-details", verifyToken, async (req, res) => {
   try {
     const { groupId, senderRole } = req.query;
