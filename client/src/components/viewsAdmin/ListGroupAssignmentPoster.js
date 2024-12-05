@@ -5,6 +5,7 @@ import { TablePagination } from "@mui/material";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
+import { apiUrl } from "../../contexts/constants";
 
 function ListGroupAssignmentPoster() {
   const { teacherId } = useParams();
@@ -24,7 +25,7 @@ function ListGroupAssignmentPoster() {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:5000/api/posterAssignment/get-eligible-poster-students/${teacherId}`,
+        `${apiUrl}/posterAssignment/get-eligible-poster-students/${teacherId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -87,7 +88,7 @@ function ListGroupAssignmentPoster() {
 
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://localhost:5000/api/posterAssignment/assign-poster-teacher",
+        `${apiUrl}/posterAssignment/assign-poster-teacher`,
         { teacherId, groupId: group._id },
         {
           headers: {
@@ -158,7 +159,7 @@ function ListGroupAssignmentPoster() {
       const token = localStorage.getItem("token");
       const response = await axios.delete(
         // Sử dụng councilInfo._id thay vì group._id vì ta cần id của assignment
-        `http://localhost:5000/api/posterAssignment/cancel-poster-assignment/${group.posterInfo._id}`,
+        `${apiUrl}/posterAssignment/cancel-poster-assignment/${group.posterInfo._id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

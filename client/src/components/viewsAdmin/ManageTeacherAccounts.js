@@ -30,6 +30,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx"; // import file excel
+import { apiUrl } from "../../contexts/constants";
 
 const ManageTeacherAccounts = () => {
   const [users, setUsers] = useState([]);
@@ -89,9 +90,7 @@ const ManageTeacherAccounts = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/users/list-teachers"
-      ); // Gọi API lấy danh sách user
+      const response = await axios.get(`${apiUrl}/users/list-teachers`); // Gọi API lấy danh sách user
       setUsers(response.data.users); // Lưu danh sách user vào state
     } catch (error) {
       console.error("Lỗi không tải được danh sách giảng viên:", error);
@@ -107,9 +106,7 @@ const ManageTeacherAccounts = () => {
     if (!isConfirmed) return; // Nếu không xác nhận, thoát khỏi hàm
 
     try {
-      await axios.delete(
-        `http://localhost:5000/api/users/delete-teacher/${userId}`
-      );
+      await axios.delete(`${apiUrl}/users/delete-teacher/${userId}`);
 
       toast.success(`Tài khoản giảng viên "${user.username}" đã bị xóa!`, {
         position: "top-right",
@@ -154,7 +151,7 @@ const ManageTeacherAccounts = () => {
     if (!isConfirmed) return; // Nếu không xác nhận, thoát khỏi hàm
 
     try {
-      await axios.put(`http://localhost:5000/api/users/${editUser._id}`, {
+      await axios.put(`${apiUrl}/users/${editUser._id}`, {
         username: editUser.username,
         password: editUser.password,
       }); // Gọi API cập nhật user
@@ -222,22 +219,19 @@ const ManageTeacherAccounts = () => {
     if (!isConfirmed.isConfirmed) return;
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/register",
-        {
-          username: newUser.username,
-          password: newUser.password,
-          role: newUser.role,
-          profile: {
-            teacherId: newProfile.teacherId,
-            name: newProfile.name,
-            phone: newProfile.phone,
-            email: newProfile.email,
-            major: newProfile.major,
-            gender: newProfile.gender,
-          },
-        }
-      );
+      const response = await axios.post(`${apiUrl}/auth/register`, {
+        username: newUser.username,
+        password: newUser.password,
+        role: newUser.role,
+        profile: {
+          teacherId: newProfile.teacherId,
+          name: newProfile.name,
+          phone: newProfile.phone,
+          email: newProfile.email,
+          major: newProfile.major,
+          gender: newProfile.gender,
+        },
+      });
 
       if (response.data.success) {
         Swal.fire({
@@ -393,7 +387,7 @@ const ManageTeacherAccounts = () => {
 
       try {
         const response = await axios.post(
-          "http://localhost:5000/api/users/bulk-create-teachers",
+          `${apiUrl}/users/bulk-create-teachers`,
           { users: processedData },
           {
             headers: {

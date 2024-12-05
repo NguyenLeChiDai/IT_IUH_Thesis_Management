@@ -26,7 +26,7 @@ const HomeAdmin = () => {
     const fetchTopicStatistics = async () => {
       try {
         const response = await axios.get(
-          `${apiUrl}adminStatistics/topic-statistics`,
+          `${apiUrl}/adminStatistics/topic-statistics`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,

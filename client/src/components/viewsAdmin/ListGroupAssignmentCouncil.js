@@ -6,6 +6,7 @@ import { TablePagination } from "@mui/material";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
+import { apiUrl } from "../../contexts/constants";
 
 function ListGroupAssignmentCouncil() {
   const { teacherId } = useParams();
@@ -25,7 +26,7 @@ function ListGroupAssignmentCouncil() {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:5000/api/councilAssignment/get-eligible-council-students/${teacherId}`,
+        `${apiUrl}/councilAssignment/get-eligible-council-students/${teacherId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -88,7 +89,7 @@ function ListGroupAssignmentCouncil() {
 
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://localhost:5000/api/councilAssignment/assign-council-teacher",
+        `${apiUrl}/councilAssignment/assign-council-teacher`,
         { teacherId, groupId: group._id },
         {
           headers: {
@@ -159,7 +160,7 @@ function ListGroupAssignmentCouncil() {
       const token = localStorage.getItem("token");
       const response = await axios.delete(
         // Sử dụng councilInfo._id thay vì group._id vì ta cần id của assignment
-        `http://localhost:5000/api/councilAssignment/cancel-council-assignment/${group.councilInfo._id}`,
+        `${apiUrl}/councilAssignment/cancel-council-assignment/${group.councilInfo._id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

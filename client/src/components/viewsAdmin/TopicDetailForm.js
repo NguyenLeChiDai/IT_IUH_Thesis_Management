@@ -1,6 +1,6 @@
 import React from "react";
 import "../../css/TopicDetailForm.css"; // Import file CSS để style
-
+import { apiUrl } from "../../contexts/constants";
 function TopicDetailForm({ topic, onClose }) {
   return (
     <>

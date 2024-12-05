@@ -3,6 +3,7 @@ import { Table, Button, Container } from "react-bootstrap";
 import axios from "axios";
 import { Eye, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../../contexts/constants";
 
 const AdminReports = () => {
   const [reports, setReports] = useState([]);
@@ -15,12 +16,9 @@ const AdminReports = () => {
 
   const fetchAdminReports = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/adminReport/admin/reports",
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
+      const response = await axios.get(`${apiUrl}/adminReport/admin/reports`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
 
       if (response.data.success) {
         setReports(response.data.reports);
@@ -35,7 +33,7 @@ const AdminReports = () => {
   const handleDownload = async (reportId, fileName) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/adminReport/admin/download-report/${reportId}`,
+        `${apiUrl}/adminReport/admin/download-report/${reportId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           responseType: "blob",

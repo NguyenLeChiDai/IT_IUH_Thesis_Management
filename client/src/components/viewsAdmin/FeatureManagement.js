@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Card, Form, Button, Alert } from "react-bootstrap";
 import { Info, ToggleLeft, ToggleRight } from "lucide-react";
-
+import { apiUrl } from "../../contexts/constants";
 const FeatureManagement = () => {
   const [features, setFeatures] = useState([
     {
@@ -29,9 +29,7 @@ const FeatureManagement = () => {
 
   const fetchFeatureStatus = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/adminFeature/feature-status"
-      );
+      const response = await axios.get(`${apiUrl}/adminFeature/feature-status`);
       if (response.data.success) {
         const serverConfigs = response.data.configs;
         setFeatures((prevFeatures) =>
@@ -59,7 +57,7 @@ const FeatureManagement = () => {
     try {
       const updatedFeature = features.find((f) => f.feature === feature);
       const response = await axios.put(
-        "http://localhost:5000/api/adminFeature/feature-status",
+        `${apiUrl}/adminFeature/feature-status`,
         {
           feature,
           isEnabled,

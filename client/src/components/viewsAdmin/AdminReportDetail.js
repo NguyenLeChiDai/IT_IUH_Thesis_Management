@@ -4,6 +4,7 @@ import axios from "axios";
 import { useParams } from "react-router-dom";
 import { Download, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../../contexts/constants";
 
 const AdminReportDetail = () => {
   const [report, setReport] = useState(null);
@@ -18,7 +19,7 @@ const AdminReportDetail = () => {
   const fetchReportDetail = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/adminReport/admin/report/${reportId}`,
+        `${apiUrl}/adminReport/admin/report/${reportId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -37,7 +38,7 @@ const AdminReportDetail = () => {
   const handleDownload = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/adminReport/admin/download-report/${reportId}`,
+        `${apiUrl}/adminReport/admin/download-report/${reportId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           responseType: "blob",

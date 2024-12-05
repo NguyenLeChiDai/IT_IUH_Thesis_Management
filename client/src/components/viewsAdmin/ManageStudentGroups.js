@@ -24,6 +24,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
+import { apiUrl } from "../../contexts/constants";
 
 const ManageStudentGroups = () => {
   const [groups, setGroups] = useState([]);
@@ -47,9 +48,7 @@ const ManageStudentGroups = () => {
 
   const fetchGroups = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/studentgroups/list-groups"
-      );
+      const response = await axios.get(`${apiUrl}/studentgroups/list-groups`);
 
       if (response.data.success) {
         setGroups(response.data.groups);
@@ -68,7 +67,7 @@ const ManageStudentGroups = () => {
   const fetchGroupDetails = async (groupId) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/studentgroups/group-details/${groupId}`
+        `${apiUrl}/studentgroups/group-details/${groupId}`
       );
 
       if (response.data.success) {
@@ -86,7 +85,7 @@ const ManageStudentGroups = () => {
   const handleCreateGroup = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/studentgroups/create-group",
+        `${apiUrl}/studentgroups/create-group`,
         {
           groupName: newGroup.groupName,
           groupStatus: newGroup.groupStatus,
@@ -120,7 +119,7 @@ const ManageStudentGroups = () => {
 
       if (result.isConfirmed) {
         const response = await axios.post(
-          "http://localhost:5000/api/studentgroups/auto-create-groups"
+          `${apiUrl}/studentgroups/auto-create-groups`
         );
 
         if (response.data.success) {
@@ -150,7 +149,7 @@ const ManageStudentGroups = () => {
 
       if (result.isConfirmed) {
         const response = await axios.delete(
-          `http://localhost:5000/api/studentgroups/delete-group/${groupId}`
+          `${apiUrl}/studentgroups/delete-group/${groupId}`
         );
 
         if (response.data.success) {
@@ -179,7 +178,7 @@ const ManageStudentGroups = () => {
 
       if (result.isConfirmed) {
         const response = await axios.put(
-          `http://localhost:5000/api/studentgroups/update-group/${editGroup._id}`,
+          `${apiUrl}/studentgroups/update-group/${editGroup._id}`,
           {
             groupName: editGroup.groupName,
             groupStatus: editGroup.groupStatus,

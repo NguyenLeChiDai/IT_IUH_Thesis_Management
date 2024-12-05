@@ -30,6 +30,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx"; // import file excel
+import { apiUrl } from "../../contexts/constants";
 
 const ManageStudentAccounts = () => {
   const [users, setUsers] = useState([]);
@@ -93,9 +94,7 @@ const ManageStudentAccounts = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/users/list-students"
-      ); // Gọi API lấy danh sách user
+      const response = await axios.get(`${apiUrl}/users/list-students`); // Gọi API lấy danh sách user
       setUsers(response.data.users); // Lưu danh sách user vào state
     } catch (error) {
       console.error("Lỗi không tải được sinh viên:", error);
@@ -111,9 +110,7 @@ const ManageStudentAccounts = () => {
     if (!isConfirmed) return; // Nếu không xác nhận, thoát khỏi hàm
 
     try {
-      await axios.delete(
-        `http://localhost:5000/api/users/delete-student/${userId}`
-      );
+      await axios.delete(`${apiUrl}/users/delete-student/${userId}`);
 
       toast.success(`Tài khoản sinh viên "${user.username}" đã bị xóa!`, {
         position: "top-right",
@@ -158,7 +155,7 @@ const ManageStudentAccounts = () => {
     if (!isConfirmed) return; // Nếu không xác nhận, thoát khỏi hàm
 
     try {
-      await axios.put(`http://localhost:5000/api/users/${editUser._id}`, {
+      await axios.put(`${apiUrl}/users/${editUser._id}`, {
         username: editUser.username,
         password: editUser.password,
       }); // Gọi API cập nhật user
@@ -226,25 +223,22 @@ const ManageStudentAccounts = () => {
     if (!isConfirmed.isConfirmed) return;
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/register",
-        {
-          username: newUser.username,
-          password: newUser.password,
-          role: newUser.role,
-          profile: {
-            studentId: newProfile.studentId,
-            name: newProfile.name,
-            phone: newProfile.phone,
-            email: newProfile.email,
-            class: newProfile.class,
-            major: newProfile.major,
-            gender: newProfile.gender,
-            groupName: newProfile.groupName,
-            groupStatus: newProfile.groupStatus,
-          },
-        }
-      );
+      const response = await axios.post(`${apiUrl}/auth/register`, {
+        username: newUser.username,
+        password: newUser.password,
+        role: newUser.role,
+        profile: {
+          studentId: newProfile.studentId,
+          name: newProfile.name,
+          phone: newProfile.phone,
+          email: newProfile.email,
+          class: newProfile.class,
+          major: newProfile.major,
+          gender: newProfile.gender,
+          groupName: newProfile.groupName,
+          groupStatus: newProfile.groupStatus,
+        },
+      });
 
       if (response.data.success) {
         Swal.fire({
@@ -405,7 +399,7 @@ const ManageStudentAccounts = () => {
 
       try {
         const response = await axios.post(
-          "http://localhost:5000/api/users/bulk-create-students",
+          `${apiUrl}/users/bulk-create-students`,
           { users: processedData },
           {
             headers: {

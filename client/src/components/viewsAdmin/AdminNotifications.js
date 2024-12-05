@@ -70,7 +70,7 @@ const AdminNotifications = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/notification",
+        `${apiUrl}/notification`,
         newNotification,
         {
           headers: {
@@ -113,14 +113,11 @@ const AdminNotifications = () => {
     });
     if (result.isConfirmed) {
       try {
-        const response = await axios.delete(
-          `http://localhost:5000/api/notification/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        const response = await axios.delete(`${apiUrl}/notification/${id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
         if (response.data.success) {
           fetchNotifications();
           toast.success("Xóa thông báo thành công!", {

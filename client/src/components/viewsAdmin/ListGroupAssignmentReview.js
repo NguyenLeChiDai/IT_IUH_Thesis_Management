@@ -6,6 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
 import "../../css/ListGroupAssignmentReview.css";
 import { TablePagination } from "@mui/material";
+import { apiUrl } from "../../contexts/constants";
 
 function ListGroupAssignmentReview() {
   const { teacherId } = useParams();
@@ -26,7 +27,7 @@ function ListGroupAssignmentReview() {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:5000/api/reviewAssignment/get-groups-for-review/${teacherId}`,
+        `${apiUrl}/reviewAssignment/get-groups-for-review/${teacherId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -74,7 +75,7 @@ function ListGroupAssignmentReview() {
       if (result.isConfirmed) {
         const token = localStorage.getItem("token");
         const response = await axios.post(
-          "http://localhost:5000/api/reviewAssignment/assign-reviewer",
+          `${apiUrl}/reviewAssignment/assign-reviewer`,
           {
             teacherId,
             groupId,
@@ -131,7 +132,7 @@ function ListGroupAssignmentReview() {
       if (result.isConfirmed) {
         const token = localStorage.getItem("token");
         const response = await axios.delete(
-          `http://localhost:5000/api/reviewAssignment/cancel-assignment/${group.assignmentId}`,
+          `${apiUrl}/reviewAssignment/cancel-assignment/${group.assignmentId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

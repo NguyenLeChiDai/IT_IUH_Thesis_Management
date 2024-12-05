@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom"; // Sử dụng hook useNavigate để chuyển trang
 import "../../css/AssignmentReview.css";
 import { TablePagination } from "@mui/material";
+import { apiUrl } from "../../contexts/constants";
 function AssignmentReview() {
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,7 +23,7 @@ function AssignmentReview() {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "http://localhost:5000/api/reviewAssignment/get-all-teachers",
+        `${apiUrl}/reviewAssignment/get-all-teachers`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
