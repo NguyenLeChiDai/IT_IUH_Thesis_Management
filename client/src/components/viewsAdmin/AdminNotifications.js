@@ -8,7 +8,7 @@ import "../../css/AdminNotifications.css";
 import io from "socket.io-client";
 import Swal from "sweetalert2";
 import { toast, ToastContainer } from "react-toastify";
-import { apiUrl, LOCAL_STORAGE_TOKEN_NAME } from "../../contexts/constants";
+import { apiUrl } from "../../contexts/constants";
 
 const AdminNotifications = () => {
   const [notifications, setNotifications] = useState([]);
