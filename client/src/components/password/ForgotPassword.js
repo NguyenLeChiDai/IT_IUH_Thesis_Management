@@ -4,6 +4,7 @@ import axios from "axios";
 import "../../css/ForgotPassword.css";
 import OTPInput from "./OTPInput";
 import { Link } from "react-router-dom";
+import { apiUrl } from "../../contexts/constants";
 const ForgotPassword = () => {
   const [id, setId] = useState("");
   const [otp, setOtp] = useState("");
@@ -19,10 +20,9 @@ const ForgotPassword = () => {
     setSuccess("");
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/forgot-password",
-        { id }
-      );
+      const response = await axios.post(`${apiUrl}/auth/forgot-password`, {
+        id,
+      });
       if (response.data.success) {
         setSuccess("Mã OTP đã được gửi đến email của bạn.");
         setStep(2);
@@ -40,10 +40,10 @@ const ForgotPassword = () => {
     setSuccess("");
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/verify-otp",
-        { id, otp }
-      );
+      const response = await axios.post(`${apiUrl}/auth/verify-otp`, {
+        id,
+        otp,
+      });
       if (response.data.success) {
         setSuccess("Mã OTP hợp lệ.");
         setStep(3);
@@ -66,10 +66,11 @@ const ForgotPassword = () => {
     }
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/reset-password",
-        { id, otp, newPassword }
-      );
+      const response = await axios.post(`${apiUrl}/auth/reset-password`, {
+        id,
+        otp,
+        newPassword,
+      });
       if (response.data.success) {
         setSuccess("Mật khẩu đã được đặt lại thành công");
         // Redirect to login page or clear form

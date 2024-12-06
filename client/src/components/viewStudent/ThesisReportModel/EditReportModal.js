@@ -4,6 +4,7 @@ import { Upload } from "lucide-react";
 import "../../../css/EditReportModal.css";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
+import { apiUrl } from "../../../contexts/constants";
 
 const EditReportModal = ({ show, onHide, report, onSubmit }) => {
   const [title, setTitle] = useState("");

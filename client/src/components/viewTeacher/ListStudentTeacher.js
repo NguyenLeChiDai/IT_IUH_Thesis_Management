@@ -14,6 +14,8 @@ import {
 } from "@mui/material";
 import "../../css/ListStudentGroupForTeacher.css";
 
+import { apiUrl } from "../../contexts/constants";
+
 const ListStudentTeacher = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,9 +34,7 @@ const ListStudentTeacher = () => {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/topics/teacher/students"
-        );
+        const response = await axios.get(`${apiUrl}/topics/teacher/students`);
         if (response.data && Array.isArray(response.data.students)) {
           setStudents(response.data.students);
         } else {
@@ -103,15 +103,12 @@ const ListStudentTeacher = () => {
       // Lấy token từ localStorage hoặc nơi bạn lưu trữ
       const token = localStorage.getItem("token"); // hoặc cookie nếu bạn sử dụng cookie
 
-      const response = await axios.get(
-        "http://localhost:5000/api/scores/export-scores",
-        {
-          responseType: "blob", // Để xử lý file blob
-          headers: {
-            Authorization: `Bearer ${token}`, // Thêm token vào header nếu cần
-          },
-        }
-      );
+      const response = await axios.get(`${apiUrl}/scores/export-scores`, {
+        responseType: "blob", // Để xử lý file blob
+        headers: {
+          Authorization: `Bearer ${token}`, // Thêm token vào header nếu cần
+        },
+      });
 
       // Tạo URL từ blob và tải về
       const url = window.URL.createObjectURL(new Blob([response.data]));

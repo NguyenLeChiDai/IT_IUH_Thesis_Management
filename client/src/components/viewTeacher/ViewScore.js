@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import "../../css/ViewScore.css";
+import { apiUrl } from "../../contexts/constants";
 function ViewScore() {
   const [scores, setScores] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +27,7 @@ function ViewScore() {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "http://localhost:5000/api/scores/get-teacher-students-scores",
+        `${apiUrl}/scores/get-teacher-students-scores`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -71,7 +72,7 @@ function ViewScore() {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "http://localhost:5000/api/scores/export-excel-score-for-teacher",
+        `${apiUrl}/scores/export-excel-score-for-teacher`,
         {
           responseType: "blob",
           headers: {

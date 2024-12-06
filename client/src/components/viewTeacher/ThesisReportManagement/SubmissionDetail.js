@@ -11,7 +11,7 @@ import {
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import moment from "moment";
-
+import { apiUrl } from "../../../contexts/constants";
 const SubmissionDetail = () => {
   const [loading, setLoading] = useState(false);
   const [feedbackNote, setFeedbackNote] = useState("");
@@ -26,7 +26,7 @@ const SubmissionDetail = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `http://localhost:5000/api/reportManagements/submission/${submissionId}`
+          `${apiUrl}/reportManagements/submission/${submissionId}`
         );
         if (response.data.success) {
           setSubmission(response.data.submission);
@@ -50,8 +50,8 @@ const SubmissionDetail = () => {
       setLoading(true);
       const endpoint =
         fileType === "submission"
-          ? `http://localhost:5000/api/reportManagements/download-report/${submissionId}`
-          : `http://localhost:5000/api/reportManagements/feedback-file/${submissionId}`; // Endpoint tải file phản hồi
+          ? `${apiUrl}/reportManagements/download-report/${submissionId}`
+          : `${apiUrl}/reportManagements/feedback-file/${submissionId}`; // Endpoint tải file phản hồi
 
       const response = await axios.get(endpoint, {
         responseType: "blob",
@@ -93,7 +93,7 @@ const SubmissionDetail = () => {
       }
 
       const response = await axios.post(
-        `http://localhost:5000/api/reportManagements/submission/${submissionId}/feedback`,
+        `${apiUrl}/reportManagements/submission/${submissionId}/feedback`,
         formData,
         {
           headers: {

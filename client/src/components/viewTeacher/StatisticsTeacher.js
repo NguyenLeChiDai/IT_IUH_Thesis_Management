@@ -11,6 +11,7 @@ import "../../css/HomeAdmin.css";
 import axios from "axios";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
+import { apiUrl } from "../../contexts/constants";
 
 const StatisticsTeacher = () => {
   //ĐẾM TỔNG SỐ ĐỀ TÀI
@@ -25,7 +26,7 @@ const StatisticsTeacher = () => {
     const fetchTeacherTopicStats = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/teacherStatistics/teacher-topic-statistics",
+          `${apiUrl}/teacherStatistics/teacher-topic-statistics`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -56,7 +57,7 @@ const StatisticsTeacher = () => {
     const fetchGroupStatistics = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/teacherStatistics/teacher-group-statistics",
+          `${apiUrl}/teacherStatistics/teacher-group-statistics`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -86,7 +87,7 @@ const StatisticsTeacher = () => {
     const fetchReviewAssignmentStats = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/teacherStatistics/review-assignment-statistics",
+          `${apiUrl}/teacherStatistics/review-assignment-statistics`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -115,7 +116,7 @@ const StatisticsTeacher = () => {
     const fetchCouncilAssignmentStats = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/teacherStatistics/council-assignment-statistics",
+          `${apiUrl}/teacherStatistics/council-assignment-statistics`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -145,7 +146,7 @@ const StatisticsTeacher = () => {
     const fetchPosterAssignmentStats = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/teacherStatistics/poster-assignment-statistics",
+          `${apiUrl}/teacherStatistics/poster-assignment-statistics`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -175,7 +176,7 @@ const StatisticsTeacher = () => {
     const fetchReportStatistics = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/teacherStatistics/teacher-report-statistics",
+          `${apiUrl}/teacherStatistics/teacher-report-statistics`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -250,14 +251,11 @@ const StatisticsTeacher = () => {
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/adminStatistics/recent",
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        const response = await axios.get(`${apiUrl}/adminStatistics/recent`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
 
         if (response.data.success) {
           setActivities(response.data.activities);

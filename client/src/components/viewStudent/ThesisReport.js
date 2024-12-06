@@ -5,7 +5,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import ThesisReportDetails from "../viewStudent/ThesisReportModel/ThesisReportDetails";
 import "../../css/ThesisReport.css";
-
+import { apiUrl } from "../../contexts/constants";
 const ThesisReport = () => {
   const [folders, setFolders] = useState([]);
   const [selectedFolder, setSelectedFolder] = useState(null);
@@ -20,7 +20,7 @@ const ThesisReport = () => {
       try {
         setError(null);
         const response = await axios.get(
-          "http://localhost:5000/api/thesisReports/student-folders",
+          `${apiUrl}/thesisReports/student-folders`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -38,7 +38,7 @@ const ThesisReport = () => {
             for (const folder of folders) {
               try {
                 const reportsResponse = await axios.get(
-                  `http://localhost:5000/api/thesisReports/get-folder-reports/${folder._id}`,
+                  `${apiUrl}/thesisReports/get-folder-reports/${folder._id}`,
                   {
                     headers: {
                       Authorization: `Bearer ${localStorage.getItem("token")}`,

@@ -16,6 +16,7 @@ import {
 import axios from "axios";
 import Swal from "sweetalert2";
 import "../../css/ListStudentTopics.css";
+import { apiUrl } from "../../contexts/constants";
 
 export const ListStudentTopics = () => {
   const [topics, setTopics] = useState([]);
@@ -35,7 +36,7 @@ export const ListStudentTopics = () => {
     const fetchTopics = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/topics/approved-topics-student",
+          `${apiUrl}/topics/approved-topics-student`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -94,7 +95,7 @@ export const ListStudentTopics = () => {
     const fetchGroupInfo = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/studentGroups/get-group-id",
+          `${apiUrl}/studentGroups/get-group-id`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -106,7 +107,7 @@ export const ListStudentTopics = () => {
 
           // Kiểm tra role của người dùng trong nhóm
           const checkGroupLeaderResponse = await axios.get(
-            "http://localhost:5000/api/topics/check-group-leader",
+            `${apiUrl}/topics/check-group-leader`,
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -117,7 +118,7 @@ export const ListStudentTopics = () => {
             setIsGroupLeader(checkGroupLeaderResponse.data.isGroupLeader);
           }
           const topicResponse = await axios.get(
-            `http://localhost:5000/api/topics/${response.data.groupId}/topics`,
+            `${apiUrl}/topics/${response.data.groupId}/topics`,
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -217,7 +218,7 @@ export const ListStudentTopics = () => {
 
       if (result.isConfirmed) {
         const response = await axios.post(
-          "http://localhost:5000/api/topics/register-topic",
+          `${apiUrl}/topics/register-topic`,
           {
             groupId: groupId,
             topicId: topicId,
@@ -239,7 +240,7 @@ export const ListStudentTopics = () => {
           setRegisteredTopicId(topicId);
 
           const updatedTopics = await axios.get(
-            "http://localhost:5000/api/topics/approved-topics-student",
+            `${apiUrl}/topics/approved-topics-student`,
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,

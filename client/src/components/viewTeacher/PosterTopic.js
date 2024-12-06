@@ -4,6 +4,8 @@ import { TablePagination } from "@mui/material";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+import { apiUrl } from "../../contexts/constants";
+
 function PosterTopic() {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,15 +35,12 @@ function PosterTopic() {
     try {
       const token = localStorage.getItem("token");
       const promises = students.map((student) =>
-        axios.get(
-          `http://localhost:5000/api/scores/get-scores/${student.studentId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        )
+        axios.get(`${apiUrl}/scores/get-scores/${student.studentId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
       );
 
       const responses = await Promise.all(promises);
@@ -69,7 +68,7 @@ function PosterTopic() {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "http://localhost:5000/api/posterAssignment/get-poster-assignments",
+        `${apiUrl}/posterAssignment/get-poster-assignments`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -109,15 +108,12 @@ function PosterTopic() {
     try {
       const token = localStorage.getItem("token");
       const promises = students.map((student) =>
-        axios.get(
-          `http://localhost:5000/api/scores/get-scores/${student.studentId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        )
+        axios.get(`${apiUrl}/scores/get-scores/${student.studentId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
       );
 
       const responses = await Promise.all(promises);
@@ -190,7 +186,7 @@ function PosterTopic() {
         const score = scores[student.studentId];
         if (score !== undefined) {
           return axios.post(
-            "http://localhost:5000/api/scores/input-scores-poster",
+            `${apiUrl}/scores/input-scores-poster`,
             {
               studentId: student.studentId,
               posterScore: parseFloat(score),

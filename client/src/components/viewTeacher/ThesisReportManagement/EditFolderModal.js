@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import axios from "axios";
 import "../../../css/EditFolderModal.css";
+import { apiUrl } from "../../../contexts/constants";
 const EditFolderModal = ({
   show,
   onHide,
@@ -24,7 +25,7 @@ const EditFolderModal = ({
       };
 
       const response = await axios.put(
-        `http://localhost:5000/api/reportManagements/folder/${selectedFolder._id}`,
+        `${apiUrl}/reportManagements/folder/${selectedFolder._id}`,
         folderData,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

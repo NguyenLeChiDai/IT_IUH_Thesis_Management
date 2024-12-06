@@ -16,6 +16,8 @@ import "react-toastify/dist/ReactToastify.css";
 import { ref, push, set, onValue, remove } from "firebase/database";
 import { database } from "../../firebase/ConfigFirebase";
 import { firebaseMessageService } from "../../services/firebaseMessageService";
+
+import { apiUrl } from "../../contexts/constants";
 function MessageTeacher() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -184,7 +186,7 @@ function MessageTeacher() {
 
       // Gọi API xóa từ MongoDB trước
       const response = await axios.delete(
-        `http://localhost:5000/api/messages/delete/${messageId}`,
+        `${apiUrl}/messages/delete/${messageId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -242,12 +244,9 @@ function MessageTeacher() {
   const fetchTeacherProfile = useCallback(async () => {
     try {
       const token = getToken();
-      const response = await axios.get(
-        "http://localhost:5000/api/teachers/profile-teacher",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axios.get(`${apiUrl}/teachers/profile-teacher`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (response.data) {
         setTeacherProfile(response.data);
@@ -327,7 +326,7 @@ function MessageTeacher() {
       const token = getToken();
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/messages/group/${groupInfo.id.trim()}`,
+          `${apiUrl}/messages/group/${groupInfo.id.trim()}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -384,7 +383,7 @@ function MessageTeacher() {
 
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:5000/api/studentgroups/members/${groupInfo.id}`,
+        `${apiUrl}/studentgroups/members/${groupInfo.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -422,7 +421,7 @@ function MessageTeacher() {
 
       // Gửi tin nhắn lên server
       const response = await axios.post(
-        "http://localhost:5000/api/messages/send-new",
+        `${apiUrl}/messages/send-new`,
         {
           content: message.trim(),
           groupId: groupInfo.id,

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Modal, Form, Button } from "react-bootstrap";
 import "../../../css/SubmitReportModal.css";
 import { toast } from "react-toastify";
+import { apiUrl } from "../../../contexts/constants";
 
 const SubmitReportModal = ({
   show,

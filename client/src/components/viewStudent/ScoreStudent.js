@@ -11,6 +11,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import "../../css/ScoreStudent.css";
+import { apiUrl } from "../../contexts/constants";
 
 function ScoreStudent() {
   const [studentData, setStudentData] = useState(null);
@@ -34,7 +35,7 @@ function ScoreStudent() {
       }
 
       const studentResponse = await axios.get(
-        "http://localhost:5000/api/student/profile-student",
+        `${apiUrl}/student/profile-student`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -69,7 +70,7 @@ function ScoreStudent() {
       }
 
       const response = await axios.get(
-        `http://localhost:5000/api/scores/get-student-score/${studentId}`,
+        `${apiUrl}/scores/get-student-score/${studentId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

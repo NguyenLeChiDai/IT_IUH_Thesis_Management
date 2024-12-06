@@ -10,6 +10,8 @@ import ReactPaginate from "react-paginate";
 import "font-awesome/css/font-awesome.min.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
+
+import { apiUrl } from "../../contexts/constants";
 //import { TablePagination } from '@mui/material';
 const PostTheTopic = () => {
   const [activeTab, setActiveTab] = useState("add");
@@ -53,13 +55,10 @@ const PostTheTopic = () => {
 
   const fetchTopics = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/topics/teacher-topics",
-        {
-          params: { nameTopic: searchTerm },
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
+      const response = await axios.get(`${apiUrl}/topics/teacher-topics`, {
+        params: { nameTopic: searchTerm },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       if (response.data.topics) {
         setTopics(response.data.topics);
       } else {
@@ -81,7 +80,7 @@ const PostTheTopic = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/topics/post", {
+      const response = await fetch(`${apiUrl}/topics/post`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -152,7 +151,7 @@ const PostTheTopic = () => {
       if (!result.isConfirmed) return;
 
       // Gọi API xóa đề tài
-      await axios.delete(`http://localhost:5000/api/topics/delete/${topicId}`, {
+      await axios.delete(`${apiUrl}/topics/delete/${topicId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
 
@@ -211,7 +210,7 @@ const PostTheTopic = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/topics/update/${editingTopic._id}`,
+        `${apiUrl}/topics/update/${editingTopic._id}`,
         {
           method: "PUT",
           headers: {
@@ -291,7 +290,7 @@ const PostTheTopic = () => {
     try {
       console.log("Đang gửi file:", selectedFile); // Logging trước khi gửi
       const response = await axios.post(
-        "http://localhost:5000/api/topics/upload-excel",
+        `${apiUrl}/topics/upload-excel`,
         formData,
         {
           headers: {
@@ -701,8 +700,10 @@ const PostTheTopic = () => {
                 position: "fixed",
                 top: 0,
                 left: 0,
-                width: "1500px",
-                height: "100%",
+                // width: "1500px",
+                // height: "100%",
+                width: "100vw", // Sử dụng viewport width
+                height: "100vh", // Sử dụng viewport height để đảm bảo phủ toàn bộ màn hình
                 backgroundColor: "rgba(0,0,0,0.5)",
                 zIndex: 1000,
               }}
@@ -717,7 +718,7 @@ const PostTheTopic = () => {
                   width: "80%",
                   maxWidth: "1000px",
                   minWidth: "300px", // Thiết lập chiều rộng tối thiểu
-                  maxHeight: "80vh",
+                  maxHeight: "90vh",
                   overflowY: "auto",
                   // marginRight: "70px",
                 }}

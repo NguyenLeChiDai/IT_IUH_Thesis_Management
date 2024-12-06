@@ -4,6 +4,8 @@ import axios from "axios";
 import setAuthToken from "../../utils/setAuthToken"; // Đảm bảo bạn đã import setAuthToken đúng cách
 import { AuthContext } from "../../contexts/AuthContext"; // Import AuthContext
 import "../../css/TeacherInfo.css";
+import { apiUrl } from "../../contexts/constants";
+
 const TeacherInfo = () => {
   const { updateProfile } = useContext(AuthContext); // Lấy updateProfile từ context
   const [userData, setUserData] = useState({});
@@ -31,7 +33,7 @@ const TeacherInfo = () => {
 
     // Gọi API để lấy thông tin hồ sơ của người dùng
     axios
-      .get("http://localhost:5000/api/teachers/profile-teacher")
+      .get(`${apiUrl}/teachers/profile-teacher`)
       .then((response) => {
         const data = response.data;
         if (data.success) {
@@ -55,7 +57,7 @@ const TeacherInfo = () => {
     e.preventDefault();
 
     axios
-      .post("http://localhost:5000/api/teachers/update", profile)
+      .post(`${apiUrl}/teachers/update`, profile)
       .then((response) => {
         const data = response.data;
         if (data.success) {

@@ -3,7 +3,7 @@ import axios from "axios";
 import { TablePagination } from "@mui/material";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import { apiUrl } from "../../contexts/constants";
 function CouncilTopic() {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,15 +33,12 @@ function CouncilTopic() {
     try {
       const token = localStorage.getItem("token");
       const promises = students.map((student) =>
-        axios.get(
-          `http://localhost:5000/api/scores/get-scores/${student.studentId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        )
+        axios.get(`${apiUrl}/scores/get-scores/${student.studentId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
       );
 
       const responses = await Promise.all(promises);
@@ -69,7 +66,7 @@ function CouncilTopic() {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "http://localhost:5000/api/councilAssignment/get-council-assignments",
+        `${apiUrl}/councilAssignment/get-council-assignments`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -109,15 +106,12 @@ function CouncilTopic() {
     try {
       const token = localStorage.getItem("token");
       const promises = students.map((student) =>
-        axios.get(
-          `http://localhost:5000/api/scores/get-scores/${student.studentId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        )
+        axios.get(`${apiUrl}/scores/get-scores/${student.studentId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
       );
 
       const responses = await Promise.all(promises);
@@ -190,7 +184,7 @@ function CouncilTopic() {
         const score = scores[student.studentId];
         if (score !== undefined) {
           return axios.post(
-            "http://localhost:5000/api/scores/input-scores-council",
+            `${apiUrl}/scores/input-scores-council`,
             {
               studentId: student.studentId,
               councilScore: parseFloat(score),

@@ -8,7 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../css/MessageStudent.css";
 import { firebaseMessageService } from "../../services/firebaseMessageService";
-
+import { apiUrl } from "../../contexts/constants";
 const MessageStudent = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -109,14 +109,11 @@ const MessageStudent = () => {
           return;
         }
 
-        const response = await axios.get(
-          "http://localhost:5000/api/student/profile-student",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await axios.get(`${apiUrl}/student/profile-student`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         // Kiểm tra response và data - Sửa lại từ student thành profile
         if (response?.data?.success && response?.data?.profile) {
@@ -181,14 +178,11 @@ const MessageStudent = () => {
           return;
         }
 
-        const response = await axios.get(
-          "http://localhost:5000/api/student/profile-student",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await axios.get(`${apiUrl}/student/profile-student`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         // Kiểm tra response và data - Sửa lại từ student thành profile
         if (response?.data?.success && response?.data?.profile) {
@@ -299,7 +293,7 @@ const MessageStudent = () => {
         setLoading(true);
         const token = getToken();
         const response = await axios.get(
-          `http://localhost:5000/api/messages/group/${groupInfo._id}`,
+          `${apiUrl}/messages/group/${groupInfo._id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -355,7 +349,7 @@ const MessageStudent = () => {
 
       // 1. Gửi tin nhắn lên server
       const response = await axios.post(
-        "http://localhost:5000/api/messages/send-new",
+        `${apiUrl}/messages/send-new`,
         {
           receiverIds: [teacherInfo.id],
           content: message.trim(),
@@ -447,7 +441,7 @@ const MessageStudent = () => {
 
       // Gọi API xóa từ MongoDB trước
       const response = await axios.delete(
-        `http://localhost:5000/api/messages/delete/${messageId}`,
+        `${apiUrl}/messages/delete/${messageId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

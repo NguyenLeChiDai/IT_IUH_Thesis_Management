@@ -4,7 +4,7 @@ import moment from "moment";
 import "moment/locale/vi";
 import NotificationDetailModal from "../Notification/NotificationDetailModal";
 import "../../css/NotificationPage.css";
-
+import { apiUrl } from "../../contexts/constants";
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);
   const [selectedNotification, setSelectedNotification] = useState(null);
@@ -16,12 +16,9 @@ const NotificationPage = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/notification",
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
+      const response = await axios.get(`${apiUrl}/notification`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       if (response.data.success) {
         setNotifications(response.data.notifications);
       }
@@ -33,7 +30,7 @@ const NotificationPage = () => {
   const handleReadNotification = async (id) => {
     try {
       await axios.put(
-        `http://localhost:5000/api/notification/${id}/read`,
+        `${apiUrl}/notification/${id}/read`,
         {},
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

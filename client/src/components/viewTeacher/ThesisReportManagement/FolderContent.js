@@ -13,6 +13,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import "../../../css/FolderContent.css";
 import Swal from "sweetalert2";
+import { apiUrl } from "../../../contexts/constants";
 
 const FolderContent = () => {
   const [loading, setLoading] = useState(true);
@@ -35,7 +36,7 @@ const FolderContent = () => {
 
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/reportManagements/folder-content/${folderId}`,
+        `${apiUrl}/reportManagements/folder-content/${folderId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -64,7 +65,7 @@ const FolderContent = () => {
   const handleDownload = async (reportId, fileName) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/reportManagements/download-report/${reportId}`,
+        `${apiUrl}/reportManagements/download-report/${reportId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           responseType: "blob",
@@ -86,7 +87,7 @@ const FolderContent = () => {
   const handleDownloadAll = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/reportManagements/download-all/${folderId}`,
+        `${apiUrl}/reportManagements/download-all/${folderId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           responseType: "blob",
@@ -129,7 +130,7 @@ const FolderContent = () => {
 
       if (result.isConfirmed) {
         const response = await axios.post(
-          `http://localhost:5000/api/reportManagements/submit-to-admin/${reportId}`,
+          `${apiUrl}/reportManagements/submit-to-admin/${reportId}`,
           {},
           {
             headers: {

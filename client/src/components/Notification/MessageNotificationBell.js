@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { AuthContext } from "../../contexts/AuthContext";
 import { useContext } from "react";
 import io from "socket.io-client";
-
+import { apiUrl } from "../../contexts/constants";
 const MessageNotificationBell = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
@@ -24,7 +24,7 @@ const MessageNotificationBell = () => {
   //SOCKET
   useEffect(() => {
     // Kết nối socket
-    const newSocket = io("http://localhost:5000", {
+    const newSocket = io(`${apiUrl}`, {
       auth: {
         token: localStorage.getItem("token"),
       },
@@ -73,7 +73,7 @@ const MessageNotificationBell = () => {
   const fetchUnreadCount = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/messageNotification/unread-count",
+        `${apiUrl}/messageNotification/unread-count`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -89,7 +89,7 @@ const MessageNotificationBell = () => {
   const fetchNotifications = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/messageNotification/notifications",
+        `${apiUrl}/messageNotification/notifications`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -144,7 +144,7 @@ const MessageNotificationBell = () => {
   const markNotificationsAsRead = async (groupId) => {
     try {
       await axios.put(
-        "http://localhost:5000/api/messageNotification/mark-notifications-read",
+        `${apiUrl}/messageNotification/mark-notifications-read`,
         { groupId },
         {
           headers: {
@@ -184,7 +184,7 @@ const MessageNotificationBell = () => {
       // Gọi API để lấy chi tiết
       // Gọi API để lấy chi tiết
       const response = await axios.get(
-        `http://localhost:5000/api/messageNotification/notification-details`,
+        `${apiUrl}/messageNotification/notification-details`,
         {
           params: {
             groupId: notification.group._id,

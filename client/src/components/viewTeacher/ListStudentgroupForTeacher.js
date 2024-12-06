@@ -5,6 +5,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { MessageCircle } from "lucide-react";
 import { TablePagination } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../../contexts/constants";
 
 const ListStudentGroupForTeacher = () => {
   const [groups, setGroups] = useState([]);
@@ -26,9 +27,7 @@ const ListStudentGroupForTeacher = () => {
     const fetchGroups = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(
-          "http://localhost:5000/api/topics/teacher/groups"
-        );
+        const response = await axios.get(`${apiUrl}/topics/teacher/groups`);
         if (response.data && Array.isArray(response.data.groups)) {
           setGroups(response.data.groups);
         } else {

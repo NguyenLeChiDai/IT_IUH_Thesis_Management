@@ -8,6 +8,7 @@ import { AuthContext } from "../../contexts/AuthContext";
 import { Dialog, DialogContent, DialogTitle, Button } from "@mui/material";
 import Swal from "sweetalert2";
 import { io } from "socket.io-client";
+import { apiUrl } from "../../contexts/constants";
 
 export const ListStudentGroups = () => {
   const [groups, setGroups] = useState([]);
@@ -20,7 +21,7 @@ export const ListStudentGroups = () => {
 
   // Khởi tạo socket connection
   useEffect(() => {
-    const newSocket = io("http://localhost:5000", {
+    const newSocket = io(`${apiUrl}`, {
       auth: {
         token: localStorage.getItem("token"),
       },
@@ -88,12 +89,9 @@ export const ListStudentGroups = () => {
   const fetchMyGroup = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(
-        "http://localhost:5000/api/studentGroups/my-group",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axios.get(`${apiUrl}/studentGroups/my-group`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (response.data.groupName) {
         setMyGroup(response.data);
@@ -112,9 +110,7 @@ export const ListStudentGroups = () => {
   // Lấy danh sách tất cả nhóm có thể đăng ký
   const fetchGroups = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/studentgroups/list-groups"
-      );
+      const response = await axios.get(`${apiUrl}/studentgroups/list-groups`);
       if (response.data.success) {
         setGroups(response.data.groups);
       } else {
@@ -131,7 +127,7 @@ export const ListStudentGroups = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:5000/api/studentGroups/group-details/${groupId}`,
+        `${apiUrl}/studentGroups/group-details/${groupId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -150,7 +146,7 @@ export const ListStudentGroups = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `http://localhost:5000/api/studentGroups/join-group/${groupId}`,
+        `${apiUrl}/studentGroups/join-group/${groupId}`,
         {},
         {
           headers: {
@@ -207,7 +203,7 @@ export const ListStudentGroups = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `http://localhost:5000/api/studentGroups/join-group/${groupId}`,
+        `${apiUrl}/studentGroups/join-group/${groupId}`,
         { confirmation: true },
         {
           headers: {
@@ -251,7 +247,7 @@ export const ListStudentGroups = () => {
         const token = localStorage.getItem("token");
         try {
           const response = await axios.post(
-            "http://localhost:5000/api/studentGroups/leave-group",
+            `${apiUrl}/studentGroups/leave-group`,
             {},
             {
               headers: { Authorization: `Bearer ${token}` },
@@ -299,7 +295,7 @@ export const ListStudentGroups = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `http://localhost:5000/api/studentGroups/change-leader/${groupId}/${newLeaderId}`,
+        `${apiUrl}/studentGroups/change-leader/${groupId}/${newLeaderId}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },

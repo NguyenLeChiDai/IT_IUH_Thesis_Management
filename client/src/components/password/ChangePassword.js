@@ -12,7 +12,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../contexts/AuthContext"; // Đảm bảo đường dẫn này chính xác
 import Swal from "sweetalert2";
-
+import { apiUrl } from "../../contexts/constants";
 const ChangePassword = () => {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -70,7 +70,7 @@ const ChangePassword = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/auth/change-password/${authState.user._id}`,
+        `${apiUrl}/auth/change-password/${authState.user._id}`,
         {
           oldPassword,
           newPassword,

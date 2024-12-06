@@ -17,7 +17,7 @@ import "../../css/InputScore.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
-
+import { apiUrl } from "../../contexts/constants";
 function InputScore() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -61,7 +61,7 @@ function InputScore() {
 
   const fetchScores = async (studentId) => {
     try {
-      const url = `http://localhost:5000/api/scores/get-scores/${studentId}`;
+      const url = `${apiUrl}/scores/get-scores/${studentId}`;
       const token = localStorage.getItem("token");
       const response = await axios.get(url, {
         headers: {
@@ -152,7 +152,7 @@ function InputScore() {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.post(
-          "http://localhost:5000/api/scores/input-scores",
+          `${apiUrl}/scores/input-scores`,
           scoreData,
           {
             headers: {

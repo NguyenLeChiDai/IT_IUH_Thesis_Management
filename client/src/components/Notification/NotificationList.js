@@ -3,7 +3,7 @@ import axios from "axios";
 import { AuthContext } from "../../contexts/AuthContext";
 import moment from "moment";
 import "moment/locale/vi";
-
+import { apiUrl } from "../../contexts/constants";
 const NotificationList = () => {
   const [notifications, setNotifications] = useState([]);
   const { authState } = useContext(AuthContext);
@@ -14,14 +14,11 @@ const NotificationList = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/notification",
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const response = await axios.get(`${apiUrl}/notification`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       if (response.data.success) {
         setNotifications(response.data.notifications);
       }
@@ -33,7 +30,7 @@ const NotificationList = () => {
   const markAsRead = async (id) => {
     try {
       await axios.put(
-        `http://localhost:5000/api/notification/${id}/read`,
+        `${apiUrl}/notification/${id}/read`,
         {},
         {
           headers: {

@@ -5,6 +5,7 @@ import { TablePagination } from "@mui/material";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
+import { apiUrl } from "../../contexts/constants";
 function TopicReview() {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,15 +36,12 @@ function TopicReview() {
     try {
       const token = localStorage.getItem("token");
       const promises = students.map((student) =>
-        axios.get(
-          `http://localhost:5000/api/scores/get-scores/${student.studentId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        )
+        axios.get(`${apiUrl}/scores/get-scores/${student.studentId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
       );
 
       const responses = await Promise.all(promises);
@@ -92,7 +90,7 @@ function TopicReview() {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        "http://localhost:5000/api/reviewAssignment/get-assigned-groups",
+        `${apiUrl}/reviewAssignment/get-assigned-groups`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -138,15 +136,12 @@ function TopicReview() {
     try {
       const token = localStorage.getItem("token");
       const promises = students.map((student) =>
-        axios.get(
-          `http://localhost:5000/api/scores/get-scores/${student.studentId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        )
+        axios.get(`${apiUrl}/scores/get-scores/${student.studentId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
       );
 
       const responses = await Promise.all(promises);
@@ -231,7 +226,7 @@ function TopicReview() {
         const score = scores[student.studentId];
         if (score !== undefined) {
           return axios.post(
-            "http://localhost:5000/api/scores/input-scores-review",
+            `${apiUrl}/scores/input-scores-review`,
             {
               studentId: student.studentId,
               reviewerScore: parseFloat(score),
