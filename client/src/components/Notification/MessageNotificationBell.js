@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { AuthContext } from "../../contexts/AuthContext";
 import { useContext } from "react";
 import io from "socket.io-client";
-import { apiUrl } from "../../contexts/constants";
+import { apiUrl, socketUrl } from "../../contexts/constants";
 const MessageNotificationBell = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
@@ -24,7 +24,7 @@ const MessageNotificationBell = () => {
   //SOCKET
   useEffect(() => {
     // Kết nối socket
-    const newSocket = io(`${apiUrl}`, {
+    const newSocket = io(`${socketUrl}`, {
       auth: {
         token: localStorage.getItem("token"),
       },

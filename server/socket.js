@@ -23,7 +23,11 @@ const initSocket = (app) => {
 
   io = new Server(server, {
     cors: {
-      origin: process.env.FRONTEND_URL || "http://localhost:3000",
+      origin: [
+        "http://localhost:3000", // Cho phép trong quá trình phát triển
+        "https://khoaluantotnghiep-iuh.onrender.com", // Cho phép khi deploy
+        "*", // Thêm dòng này để cho phép tất cả các origin
+      ],
       methods: ["GET", "POST"],
       credentials: true,
     },
@@ -69,33 +73,6 @@ const initSocket = (app) => {
     socket.join("all-notifications");
 
     // Handle group joining
-    /* socket.on("joinGroups", async () => {
-      try {
-        let groups;
-        if (userRole === "Giảng viên") {
-          const teacher = await ProfileTeacher.findOne({
-            user: userId,
-          }).populate("studentGroups");
-          groups = teacher.studentGroups;
-        } else {
-          const student = await ProfileStudent.findOne({
-            user: userId,
-          }).populate("studentGroups");
-          groups = student.studentGroups;
-        }
-
-        groups.forEach((group) => {
-          socket.join(`group_${group._id}`);
-        });
-
-        userGroups.set(
-          userId,
-          groups.map((g) => g._id.toString())
-        );
-      } catch (error) {
-        console.error("Error joining groups:", error);
-      }
-    }); */
     socket.on("joinGroups", async () => {
       try {
         let groups = [];

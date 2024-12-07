@@ -8,7 +8,7 @@ import { AuthContext } from "../../contexts/AuthContext";
 import { Dialog, DialogContent, DialogTitle, Button } from "@mui/material";
 import Swal from "sweetalert2";
 import { io } from "socket.io-client";
-import { apiUrl } from "../../contexts/constants";
+import { apiUrl, socketUrl } from "../../contexts/constants";
 
 export const ListStudentGroups = () => {
   const [groups, setGroups] = useState([]);
@@ -21,7 +21,7 @@ export const ListStudentGroups = () => {
 
   // Khởi tạo socket connection
   useEffect(() => {
-    const newSocket = io(`${apiUrl}`, {
+    const newSocket = io(`${socketUrl}`, {
       auth: {
         token: localStorage.getItem("token"),
       },

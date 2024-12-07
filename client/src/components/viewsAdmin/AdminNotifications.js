@@ -8,7 +8,7 @@ import "../../css/AdminNotifications.css";
 import io from "socket.io-client";
 import Swal from "sweetalert2";
 import { toast, ToastContainer } from "react-toastify";
-import { apiUrl } from "../../contexts/constants";
+import { apiUrl, socketUrl } from "../../contexts/constants";
 
 const AdminNotifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -25,7 +25,7 @@ const AdminNotifications = () => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const newSocket = io("http://localhost:5000", {
+    const newSocket = io(`${socketUrl}`, {
       withCredentials: true,
       auth: {
         token: localStorage.getItem("token"),

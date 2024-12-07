@@ -11,7 +11,7 @@ import avatar from "../../assets/avatar.png";
 import NotificationDetailModal from "../Notification/NotificationDetailModal";
 import MessageNotificationBell from "../Notification/MessageNotificationBell";
 import io from "socket.io-client";
-import { apiUrl } from "../../contexts/constants";
+import { apiUrl, socketUrl } from "../../contexts/constants";
 const UserMenu = () => {
   const navigate = useNavigate();
   const { authState, logoutUser } = useContext(AuthContext);
@@ -26,7 +26,7 @@ const UserMenu = () => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const newSocket = io(`${apiUrl}`, {
+    const newSocket = io(`${socketUrl}`, {
       withCredentials: true,
       auth: {
         token: localStorage.getItem("token"),
