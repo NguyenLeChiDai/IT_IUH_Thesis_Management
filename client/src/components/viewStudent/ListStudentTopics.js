@@ -54,42 +54,6 @@ export const ListStudentTopics = () => {
     fetchTopics();
   }, []);
 
-  /*  useEffect(() => {
-    const fetchGroupInfo = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:5000/api/studentGroups/get-group-id",
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        if (response.data.success) {
-          setGroupId(response.data.groupId);
-          const topicResponse = await axios.get(
-            `http://localhost:5000/api/topics/${response.data.groupId}/topics`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
-          );
-          if (
-            topicResponse.data.success &&
-            topicResponse.data.topics.length > 0
-          ) {
-            setRegisteredTopicId(topicResponse.data.topics[0].topicId);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching group info:", error);
-      }
-    };
-
-    fetchGroupInfo();
-  }, []); */
-
   //kiểm tra nhóm trưởng
   useEffect(() => {
     const fetchGroupInfo = async () => {
@@ -166,19 +130,18 @@ export const ListStudentTopics = () => {
   };
 
   const handleRegister = async (topicId, topicName) => {
-    if (!isGroupLeader) {
-      Swal.fire(
-        "Không thể đăng ký",
-        "Chỉ nhóm trưởng mới có quyền đăng ký đề tài.",
-        "warning"
-      );
-      return;
-    }
-
     if (!groupId) {
       Swal.fire(
         "Không thể đăng ký",
         "Bạn cần tham gia nhóm trước khi đăng ký đề tài.",
+        "warning"
+      );
+      return;
+    }
+    if (!isGroupLeader) {
+      Swal.fire(
+        "Không thể đăng ký",
+        "Chỉ nhóm trưởng mới có quyền đăng ký đề tài.",
         "warning"
       );
       return;
