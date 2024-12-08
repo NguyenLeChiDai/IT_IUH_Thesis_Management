@@ -247,7 +247,6 @@ const StatisticsTeacher = () => {
   ];
 
   //HOẠT ĐỘNG GẦN ĐÂY
-  //HOẠT ĐỘNG GẦN ĐÂY
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -431,6 +430,7 @@ const StatisticsTeacher = () => {
           </div>
         ))}
       </div>
+
       {/* HOẠT ĐỘNG GẦN ĐÂY */}
       <div className="row g-4">
         <div className="col-12 col-lg-7">
