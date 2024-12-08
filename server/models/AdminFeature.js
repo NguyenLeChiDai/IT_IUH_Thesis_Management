@@ -4,7 +4,14 @@ const Schema = mongoose.Schema;
 const AdminFeatureSchema = new Schema({
   feature: {
     type: String,
-    enum: ["leave_group", "leave_topic"],
+    enum: [
+      "leave_group",
+      "leave_topic",
+      "ChamHuongDan",
+      "ChamPhanBien",
+      "ChamPoster",
+      "ChamHoiDong",
+    ],
     required: true,
   },
   isEnabled: {

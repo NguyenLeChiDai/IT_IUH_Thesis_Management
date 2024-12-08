@@ -16,7 +16,12 @@ import {
 import axios from "axios";
 import Swal from "sweetalert2";
 import "../../css/ListStudentTopics.css";
-import { apiUrl } from "../../contexts/constants";
+import {
+  apiUrl,
+  LOCAL_STORAGE_TOKEN_NAME,
+  socketUrl,
+} from "../../contexts/constants";
+import { io } from "socket.io-client";
 
 export const ListStudentTopics = () => {
   const [topics, setTopics] = useState([]);
@@ -31,6 +36,38 @@ export const ListStudentTopics = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const MAX_GROUPS_PER_TOPIC = 2; // Thêm hằng số cho số nhóm tối đa
   const [isGroupLeader, setIsGroupLeader] = useState(false);
+  const [socket, setSocket] = useState(null);
+
+  // Kết nối socket
+  useEffect(() => {
+    // Kết nối socket
+    const token = localStorage.getItem("token");
+    const newSocket = io(`${socketUrl}`, {
+      auth: { token: token },
+    });
+
+    // Listener cho cập nhật số lượng nhóm đăng ký
+    newSocket.on(
+      "topicGroupCountUpdate",
+      ({ topicId, registeredGroupsCount }) => {
+        setTopics((prevTopics) =>
+          prevTopics.map((topic) =>
+            topic._id === topicId ? { ...topic, registeredGroupsCount } : topic
+          )
+        );
+      }
+    );
+
+    // Join room danh sách đề tài đã phê duyệt
+    newSocket.emit("joinApprovedTopicsList");
+
+    setSocket(newSocket);
+
+    // Cleanup socket khi component unmount
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     const fetchTopics = async () => {
@@ -81,6 +118,7 @@ export const ListStudentTopics = () => {
           if (checkGroupLeaderResponse.data.success) {
             setIsGroupLeader(checkGroupLeaderResponse.data.isGroupLeader);
           }
+          //ẩn các trường sau khi đk đề tài
           const topicResponse = await axios.get(
             `${apiUrl}/topics/${response.data.groupId}/topics`,
             {
@@ -202,6 +240,8 @@ export const ListStudentTopics = () => {
 
           setRegisteredTopicId(topicId);
 
+          // Loại bỏ việc fetch lại danh sách topics
+          // Socket sẽ tự động cập nhật
           const updatedTopics = await axios.get(
             `${apiUrl}/topics/approved-topics-student`,
             {

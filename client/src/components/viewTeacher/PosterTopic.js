@@ -3,7 +3,7 @@ import axios from "axios";
 import { TablePagination } from "@mui/material";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import Swal from "sweetalert2";
 import { apiUrl } from "../../contexts/constants";
 
 function PosterTopic() {
@@ -226,8 +226,22 @@ function PosterTopic() {
       toast.success("Nhập điểm thành công! 🎉");
       setScores({});
       await fetchPosterAssignments();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Có lỗi xảy ra khi lưu điểm");
+    } catch (error) {
+      // Xử lý trường hợp chức năng bị khóa
+      if (error.response && error.response.status === 403) {
+        await Swal.fire({
+          title: "Chức Năng Bị Khóa",
+          text:
+            error.response.data.message ||
+            "Chức năng nhập điểm hội đồng hiện đang bị khóa",
+          icon: "warning",
+          confirmButtonText: "Đóng",
+        });
+      } else {
+        toast.error(
+          error.response?.data?.message || "Có lỗi xảy ra khi lưu điểm"
+        );
+      }
     } finally {
       setSubmitting(false);
     }

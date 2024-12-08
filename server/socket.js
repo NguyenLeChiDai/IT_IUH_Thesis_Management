@@ -7,6 +7,7 @@ const Group = require("./models/StudentGroup");
 const jwt = require("jsonwebtoken");
 const StudentGroup = require("./models/StudentGroup");
 const MessageNotification = require("./models/MessageNotification");
+const Topic = require("./models/Topic");
 
 let io;
 let server;
@@ -135,6 +136,11 @@ const initSocket = (app) => {
       if (groupSockets.has(groupId)) {
         groupSockets.get(groupId).delete(socket.id);
       }
+    });
+
+    // Handler khi client xem danh sách đề tài đã phê duyệt
+    socket.on("joinApprovedTopicsList", () => {
+      socket.join("approvedTopicsList");
     });
 
     socket.on("disconnect", () => {
@@ -313,6 +319,30 @@ const sendMessageNotification = async (message, group, sender) => {
   }
 };
 
+//hàm helper để emit sự kiện cập nhật số lượng nhóm của đề tài:
+const emitTopicGroupCountUpdate = async (topicId) => {
+  if (!io) return;
+
+  try {
+    // Tìm đề tài và đếm số lượng nhóm
+    const topic = await Topic.findById(topicId);
+    if (!topic) {
+      console.error("Topic not found for group count update");
+      return;
+    }
+
+    const registeredGroupsCount = topic.Groups.length;
+
+    // Emit sự kiện cập nhật số lượng nhóm cho tất cả client
+    io.to("approvedTopicsList").emit("topicGroupCountUpdate", {
+      topicId: topicId.toString(),
+      registeredGroupsCount: registeredGroupsCount,
+    });
+  } catch (error) {
+    console.error("Error in emitTopicGroupCountUpdate:", error);
+  }
+};
+
 const getIO = () => {
   if (!io) {
     throw new Error("Socket.io not initialized");
@@ -336,4 +366,5 @@ module.exports = {
   sendNotificationToUsers,
   emitGroupUpdate,
   sendMessageNotification,
+  emitTopicGroupCountUpdate,
 };

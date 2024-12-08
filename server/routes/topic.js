@@ -14,6 +14,8 @@ const path = require("path");
 const fs = require("fs");
 const Activity = require("../models/Activity");
 const AdminFeature = require("../models/AdminFeature");
+const { getIO } = require("../socket");
+const { emitTopicGroupCountUpdate } = require("../socket");
 //Get topicGroup
 router.get("/:groupId/topics", verifyToken, async (req, res) => {
   try {
@@ -581,6 +583,7 @@ router.post("/register-topic", verifyToken, async (req, res) => {
     // Thêm groupId vào danh sách nhóm của đề tài
     topic.Groups.push({ group: group._id });
     await topic.save();
+    await emitTopicGroupCountUpdate(topic._id); //socket
 
     res.json({ success: true, message: "Đăng ký đề tài thành công", topic });
   } catch (error) {
@@ -639,61 +642,6 @@ router.get("/check-group-leader", verifyToken, async (req, res) => {
       .json({ success: false, message: "Lỗi Server", error: error.message });
   }
 });
-/* router.post("/register-topic", verifyToken, async (req, res) => {
-  const { groupId, topicId } = req.body;
-
-  try {
-    // Tìm nhóm và đề tài theo ID
-    const group = await StudentGroup.findById(groupId);
-    const topic = await Topic.findById(topicId);
-
-    if (!group || !topic) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Nhóm hoặc đề tài không tồn tại" });
-    }
-
-    // Kiểm tra xem nhóm có đủ 2 thành viên chưa
-    if (group.profileStudents.length < 2) {
-      return res.status(400).json({
-        success: false,
-        message: "Nhóm phải có đủ 2 thành viên mới được đăng ký đề tài",
-      });
-    }
-
-    // Kiểm tra xem nhóm đã đăng ký bất kỳ đề tài nào chưa
-    const existingRegistration = await Topic.findOne({
-      "Groups.group": groupId,
-    });
-    if (existingRegistration) {
-      return res.status(400).json({
-        success: false,
-        message: "Nhóm đã đăng ký một đề tài khác. Không thể đăng ký thêm.",
-      });
-    }
-
-    // Kiểm tra xem nhóm đã đăng ký đề tài này chưa
-    const alreadyRegistered = topic.Groups.some(
-      (g) => g.group.toString() === groupId
-    );
-    if (alreadyRegistered) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Nhóm đã đăng ký đề tài này" });
-    }
-
-    // Thêm groupId vào danh sách nhóm của đề tài
-    topic.Groups.push({ group: group._id });
-    await topic.save();
-
-    res.json({ success: true, message: "Đăng ký đề tài thành công", topic });
-  } catch (error) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ success: false, message: "Lỗi Server", error: error.message });
-  }
-}); */
 
 // Xóa nhóm ra khỏi đề tài đã đăng ký
 router.delete("/leave-topic", verifyToken, async (req, res) => {
@@ -756,6 +704,7 @@ router.delete("/leave-topic", verifyToken, async (req, res) => {
     // Xóa nhóm khỏi danh sách Groups của đề tài
     topic.Groups.splice(groupIndex, 1);
     await topic.save();
+    await emitTopicGroupCountUpdate(topic._id); // socket
 
     res.json({
       success: true,

@@ -185,11 +185,23 @@ function InputScore() {
         }
       } catch (error) {
         console.error("Lỗi khi gửi yêu cầu nhập điểm:", error);
-        Swal.fire({
-          title: "Lỗi!",
-          text: "Đã xảy ra lỗi khi lưu điểm.",
-          icon: "error",
-        });
+        // Xử lý trường hợp chức năng bị khóa
+        if (error.response && error.response.status === 403) {
+          await Swal.fire({
+            title: "Chức Năng Bị Khóa",
+            text:
+              error.response.data.message ||
+              "Chức năng nhập điểm hướng dẫn hiện đang bị khóa",
+            icon: "warning",
+            confirmButtonText: "Đóng",
+          });
+        } else {
+          Swal.fire({
+            title: "Lỗi!",
+            text: "Đã xảy ra lỗi khi lưu điểm.",
+            icon: "error",
+          });
+        }
       }
     }
   };
