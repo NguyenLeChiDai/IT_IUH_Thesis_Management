@@ -196,11 +196,9 @@ function InputScore() {
             confirmButtonText: "Đóng",
           });
         } else {
-          Swal.fire({
-            title: "Lỗi!",
-            text: "Đã xảy ra lỗi khi lưu điểm.",
-            icon: "error",
-          });
+          toast.error(
+            error.response?.data?.message || "Có lỗi xảy ra khi lưu điểm"
+          );
         }
       }
     }

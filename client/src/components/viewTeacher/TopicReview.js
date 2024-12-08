@@ -271,7 +271,6 @@ function TopicReview() {
       // Fetch lại điểm và trạng thái
       await fetchAssignedGroups();
     } catch (error) {
-      /*  toast.error(err.response?.data?.message || "Có lỗi xảy ra khi lưu điểm"); */
       // Xử lý trường hợp chức năng bị khóa
       if (error.response && error.response.status === 403) {
         await Swal.fire({
@@ -283,11 +282,9 @@ function TopicReview() {
           confirmButtonText: "Đóng",
         });
       } else {
-        Swal.fire({
-          title: "Lỗi!",
-          text: "Đã xảy ra lỗi khi lưu điểm.",
-          icon: "error",
-        });
+        toast.error(
+          error.response?.data?.message || "Có lỗi xảy ra khi lưu điểm"
+        );
       }
     } finally {
       setSubmitting(false);
