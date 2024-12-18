@@ -42,6 +42,10 @@ const TopicSchema = new Schema({
       },
     },
   ],
+  isPublished: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 module.exports = mongoose.model("topics", TopicSchema);

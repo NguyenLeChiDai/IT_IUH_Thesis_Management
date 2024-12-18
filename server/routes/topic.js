@@ -16,6 +16,7 @@ const Activity = require("../models/Activity");
 const AdminFeature = require("../models/AdminFeature");
 const { getIO } = require("../socket");
 const { emitTopicGroupCountUpdate } = require("../socket");
+
 //Get topicGroup
 router.get("/:groupId/topics", verifyToken, async (req, res) => {
   try {
@@ -87,7 +88,7 @@ router.get("/:groupId/topics", verifyToken, async (req, res) => {
   }
 });
 // Chỉ get những đề tài đã được phê duyệt (dành cho sinh viên)
-router.get(
+/* router.get(
   "/approved-topics-student",
   verifyToken,
   checkRole("Sinh viên"),
@@ -115,7 +116,35 @@ router.get(
     }
   }
 );
+ */
+router.get(
+  "/approved-topics-student",
+  verifyToken,
+  checkRole("Sinh viên"),
+  async (req, res) => {
+    try {
+      const approvedTopics = await Topic.find({
+        status: "Đã phê duyệt",
+        isPublished: true, // Chỉ lấy các đề tài đã được công bố
+      })
+        .populate("teacher", "name")
+        .sort({ createdAt: -1 });
 
+      const topicsWithGroupCount = approvedTopics.map((topic) => ({
+        ...topic._doc,
+        registeredGroupsCount: topic.Groups.length,
+      }));
+
+      res.json({ success: true, topics: topicsWithGroupCount });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Lỗi server",
+        error: error.message,
+      });
+    }
+  }
+);
 // Route để lấy danh sách đề tài của giảng viên
 router.get("/teacher-topics", verifyToken, async (req, res) => {
   try {
@@ -179,7 +208,7 @@ router.get("/get-topic", verifyToken, async (req, res) => {
   }
 });
 
-//Get all topic đã duyệt cho sinh viên đăng ký
+//Get all topic để admin phê duyệt
 router.get("/get-all-topics", verifyToken, async (req, res) => {
   try {
     // Lấy tất cả các đề tài và populate thông tin giảng viên
@@ -937,4 +966,42 @@ router.get("/teacher/students", verifyToken, async (req, res) => {
       .json({ success: false, message: "Lỗi server", error: error.message });
   }
 });
+
+//CÔNG BỐ ĐỀ TÀI
+// Route công bố/ẩn tất cả các đề tài
+router.put(
+  "/toggle-publish-all",
+  verifyToken,
+  checkRole("admin"),
+  async (req, res) => {
+    try {
+      // Tìm tất cả các đề tài đã được phê duyệt
+      const approvedTopics = await Topic.find({ status: "Đã phê duyệt" });
+
+      // Lấy trạng thái hiện tại của đề tài đầu tiên để xác định hành động
+      const currentPublishStatus =
+        approvedTopics.length > 0 ? approvedTopics[0].isPublished : false;
+
+      // Cập nhật trạng thái công bố cho tất cả các đề tài đã phê duyệt
+      await Topic.updateMany(
+        { status: "Đã phê duyệt" },
+        { isPublished: !currentPublishStatus }
+      );
+
+      res.json({
+        success: true,
+        message: !currentPublishStatus
+          ? "Đã công bố tất cả đề tài"
+          : "Đã ẩn tất cả đề tài",
+        isPublished: !currentPublishStatus,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Lỗi server",
+        error: error.message,
+      });
+    }
+  }
+);
 module.exports = router;

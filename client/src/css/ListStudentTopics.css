@@ -62,11 +62,13 @@
   white-space: normal; /* Cho phép xuống dòng */
   word-wrap: break-word; /* Đảm bảo từ dài sẽ xuống dòng */
   word-break: break-word; /* Nếu từ quá dài, sẽ ngắt từ đó để xuống dòng */
+  text-align: left; /* Thay từ center thành left */
+  padding-left: 15px; /* Thêm padding để không sát mép */
 }
 
 /* Cột giảng viên mở rộng */
 .custom-table td:nth-child(3) {
-  width: 23%;
+  width: 21%;
 }
 
 /* Cột hành động mở rộng */
@@ -165,4 +167,14 @@
   .custom-table td:nth-child(3) {
     width: auto;
   }
+}
+/* điều chỉnh màu của nút .custom-button khi có variant "secondary": */
+.custom-button.btn-secondary {
+  background-color: #6c757d; /* Màu xám */
+  border-color: #6c757d;
+  color: white;
+}
+
+.custom-button.btn-secondary:hover {
+  background-color: #545b62; /* Màu xám đậm hơn khi hover */
 }

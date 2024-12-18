@@ -64,9 +64,79 @@ function PosterTopic() {
     }
   };
 
+  // const fetchPosterAssignments = async () => {
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     const response = await axios.get(
+  //       `${apiUrl}/posterAssignment/get-poster-assignments`,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
+
+  //     if (response.data.success) {
+  //       const transformedAssignments = response.data.assignments.map(assignment => ({
+  //         assignmentId: assignment._id,
+  //         assignedDate: assignment.assignedDate,
+  //         assignmentStatus: assignment.status || "Chờ chấm điểm",
+  //         groupInfo: {
+  //           groupName: assignment.studentGroup[0].groupName,
+  //           students: assignment.studentGroup[0].profileStudents.map(profile => ({
+  //             name: profile.student.name,
+  //             studentId: profile.student.studentId,
+  //             email: profile.student.email,
+  //             phone: profile.student.phone,
+  //             role: profile.role
+  //           }))
+  //         },
+  //         topicInfo: {
+  //           name: assignment.topic[0].nameTopic,
+  //           description: assignment.topic[0].descriptionTopic,
+  //           advisor: {
+  //             name: assignment.topic[0].teacher.name
+  //           }
+  //         }
+  //       }));
+
+  //       const assignmentsData = await Promise.all(
+  //         transformedAssignments.map(async (assignment) => {
+  //           const hasScores = await checkGroupScores(assignment.groupInfo.students);
+  //           return {
+  //             ...assignment,
+  //             assignmentStatus: hasScores ? "Đã chấm điểm" : "Chờ chấm điểm",
+  //           };
+  //         })
+  //       );
+
+  //       setAssignments(assignmentsData);
+  //       setError(null);
+  //     } else {
+  //       setError(response.data.message);
+  //     }
+  //   } catch (err) {
+  //     console.error("Full error:", err);
+  //     setError(
+  //       err.response?.data?.message ||
+  //       "Có lỗi xảy ra khi tải danh sách nhóm được phân công"
+  //     );
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const fetchPosterAssignments = async () => {
     try {
+      // Thiết lập trạng thái ban đầu
+      setLoading(true);
+      setError(null);
+
+      // Lấy token từ localStorage
       const token = localStorage.getItem("token");
+
+      // Gọi API để lấy danh sách phân công poster
       const response = await axios.get(
         `${apiUrl}/posterAssignment/get-poster-assignments`,
         {
@@ -77,29 +147,73 @@ function PosterTopic() {
         }
       );
 
+      // Kiểm tra phản hồi thành công
       if (response.data.success) {
+        // Biến đổi dữ liệu assignments
+        const transformedAssignments = response.data.assignments.flatMap(
+          (assignment) =>
+            assignment.studentGroup.map((group) => ({
+              assignmentId: assignment._id,
+              assignedDate: assignment.assignedDate,
+              assignmentStatus: assignment.status || "Chờ chấm điểm",
+              groupInfo: {
+                groupId: group._id,
+                groupName: group.groupName,
+                groupStatus: group.groupStatus,
+                students: group.profileStudents.map((profile) => ({
+                  name: profile.student.name,
+                  studentId: profile.student.studentId,
+                  email: profile.student.email,
+                  phone: profile.student.phone,
+                  role: profile.role,
+                })),
+              },
+              topicInfo: {
+                name: assignment.topic[0].nameTopic,
+                description: assignment.topic[0].descriptionTopic,
+                advisor: {
+                  name: assignment.topic[0].teacher.name,
+                  teacherId: assignment.topic[0].teacher.teacherId,
+                },
+              },
+            }))
+        );
+
+        // Kiểm tra điểm số cho từng nhóm
         const assignmentsData = await Promise.all(
-          response.data.assignments.map(async (assignment) => {
-            const hasScores = await checkGroupScores(
-              assignment.groupInfo.students
-            );
-            return {
-              ...assignment,
-              assignmentStatus: hasScores ? "Đã chấm điểm" : "Chờ chấm điểm",
-            };
+          transformedAssignments.map(async (assignment) => {
+            try {
+              const hasScores = await checkGroupScores(
+                assignment.groupInfo.students
+              );
+              return {
+                ...assignment,
+                assignmentStatus: hasScores ? "Đã chấm điểm" : "Chờ chấm điểm",
+              };
+            } catch (scoreError) {
+              console.error("Error checking scores:", scoreError);
+              return assignment; // Trả về trạng thái ban đầu nếu có lỗi
+            }
           })
         );
+
+        // Cập nhật state
         setAssignments(assignmentsData);
-        setError(null);
       } else {
-        setError(response.data.message);
+        // Xử lý khi không có dữ liệu
+        setError(response.data.message || "Không có dữ liệu phân công");
+        setAssignments([]);
       }
     } catch (err) {
+      // Xử lý lỗi
+      console.error("Full error in fetchPosterAssignments:", err);
       setError(
         err.response?.data?.message ||
           "Có lỗi xảy ra khi tải danh sách nhóm được phân công"
       );
+      setAssignments([]);
     } finally {
+      // Kết thúc quá trình tải
       setLoading(false);
     }
   };
@@ -117,7 +231,7 @@ function PosterTopic() {
       );
 
       const responses = await Promise.all(promises);
-      return responses.some(
+      return responses.every(
         (response) =>
           response.data.success &&
           response.data.scores &&
@@ -225,8 +339,9 @@ function PosterTopic() {
 
       toast.success("Nhập điểm thành công! 🎉");
       setScores({});
-      await fetchPosterAssignments();
+      /*  await fetchPosterAssignments(); */
     } catch (error) {
+      // toast.error(err.response?.data?.message || "Có lỗi xảy ra khi lưu điểm");
       // Xử lý trường hợp chức năng bị khóa
       if (error.response && error.response.status === 403) {
         await Swal.fire({

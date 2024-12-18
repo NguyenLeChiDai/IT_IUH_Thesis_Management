@@ -27,6 +27,12 @@ const NotificationSchema = new Schema({
       },
     },
   ],
+  recipients: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "profileStudent", // hoặc ref tới user tùy cấu trúc
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now,

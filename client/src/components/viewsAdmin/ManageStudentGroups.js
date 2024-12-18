@@ -25,6 +25,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { apiUrl } from "../../contexts/constants";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
 const ManageStudentGroups = () => {
   const [groups, setGroups] = useState([]);
@@ -37,6 +39,10 @@ const ManageStudentGroups = () => {
 
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [editGroup, setEditGroup] = useState(null);
+
+  // Thêm state cho phân trang
+  const [currentPage, setCurrentPage] = useState(1);
+  const groupsPerPage = 10; //giới hạn 10 nhóm
 
   // Thêm state mới cho dialog chi tiết nhóm
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
@@ -199,6 +205,148 @@ const ManageStudentGroups = () => {
     }
   };
 
+  // Tính toán phân trang
+  const indexOfLastGroup = currentPage * groupsPerPage;
+  const indexOfFirstGroup = indexOfLastGroup - groupsPerPage;
+  const currentGroups = groups.slice(indexOfFirstGroup, indexOfLastGroup);
+  // Chuyển trang
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Render phân trang
+  const renderPagination = () => {
+    const pageNumbers = [];
+    const totalPages = Math.ceil(groups.length / groupsPerPage);
+
+    // Logic để hiển thị trang động
+    const renderPageNumbers = () => {
+      // Nếu tổng số trang <= 5, hiển thị hết
+      if (totalPages <= 5) {
+        return pageNumbers.map((number) => (
+          <Button
+            key={number}
+            onClick={() => paginate(number)}
+            variant={currentPage === number ? "contained" : "outlined"}
+            color="primary"
+          >
+            {number}
+          </Button>
+        ));
+      }
+
+      // Logic cho nhiều hơn 5 trang
+      let startPage, endPage;
+
+      if (currentPage <= 3) {
+        // Nếu đang ở 3 trang đầu
+        startPage = 1;
+        endPage = 5;
+      } else if (currentPage >= totalPages - 2) {
+        // Nếu đang ở 3 trang cuối
+        startPage = totalPages - 4;
+        endPage = totalPages;
+      } else {
+        // Vị trí giữa
+        startPage = currentPage - 2;
+        endPage = currentPage + 2;
+      }
+
+      // Tạo mảng các nút trang
+      const displayPages = [];
+
+      // Nút trang đầu tiên nếu không bắt đầu từ 1
+      if (startPage > 1) {
+        displayPages.push(
+          <Button
+            key="first"
+            onClick={() => paginate(1)}
+            variant="outlined"
+            color="primary"
+          >
+            1
+          </Button>
+        );
+
+        if (startPage > 2) {
+          displayPages.push(
+            <Typography key="ellipsis1" style={{ margin: "0 10px" }}>
+              ...
+            </Typography>
+          );
+        }
+      }
+
+      // Các nút trang
+      for (let i = startPage; i <= endPage; i++) {
+        displayPages.push(
+          <Button
+            key={i}
+            onClick={() => paginate(i)}
+            variant={currentPage === i ? "contained" : "outlined"}
+            color="primary"
+          >
+            {i}
+          </Button>
+        );
+      }
+
+      // Nút trang cuối nếu không kết thúc ở trang cuối
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          displayPages.push(
+            <Typography key="ellipsis2" style={{ margin: "0 10px" }}>
+              ...
+            </Typography>
+          );
+        }
+
+        displayPages.push(
+          <Button
+            key="last"
+            onClick={() => paginate(totalPages)}
+            variant="outlined"
+            color="primary"
+          >
+            {totalPages}
+          </Button>
+        );
+      }
+
+      return displayPages;
+    };
+
+    // Tạo mảng trang
+    for (let i = 1; i <= totalPages; i++) {
+      pageNumbers.push(i);
+    }
+
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          marginTop: "20px",
+          alignItems: "center",
+        }}
+      >
+        <Button
+          onClick={() => currentPage > 1 && paginate(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          <ChevronLeftIcon />
+        </Button>
+
+        {renderPageNumbers()}
+
+        <Button
+          onClick={() => currentPage < totalPages && paginate(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          <ChevronRightIcon />
+        </Button>
+      </div>
+    );
+  };
+
   return (
     <div>
       <Typography variant="h4" gutterBottom>
@@ -223,58 +371,62 @@ const ManageStudentGroups = () => {
         Tự động tạo nhóm
       </Button>
 
-      {groups.length === 0 ? (
+      {currentGroups.length === 0 ? (
         <Typography variant="body1" color="textSecondary">
           Không có nhóm nào được tạo.
         </Typography>
       ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID Nhóm</TableCell>
-                <TableCell>Tên Nhóm</TableCell>
-                <TableCell>Trạng thái</TableCell>
-                <TableCell>Hành động</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {groups.map((group) => (
-                <TableRow
-                  key={group._id}
-                  onClick={() => fetchGroupDetails(group._id)}
-                  style={{ cursor: "pointer" }}
-                  hover
-                >
-                  <TableCell>{group.groupId}</TableCell>
-                  <TableCell>{group.groupName}</TableCell>
-                  <TableCell>{group.groupStatus}</TableCell>
-                  <TableCell>
-                    <IconButton
-                      onClick={(e) => {
-                        e.stopPropagation(); // Ngăn chặn sự kiện click lan truyền
-                        setEditGroup(group);
-                        setOpenEditDialog(true);
-                      }}
-                      color="primary"
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      onClick={(e) => {
-                        e.stopPropagation(); // Ngăn chặn sự kiện click lan truyền
-                        handleDeleteGroup(group._id);
-                      }}
-                      color="secondary"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
+        <>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>ID Nhóm</TableCell>
+                  <TableCell>Tên Nhóm</TableCell>
+                  <TableCell>Trạng thái</TableCell>
+                  <TableCell>Hành động</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {currentGroups.map((group) => (
+                  <TableRow
+                    key={group._id}
+                    onClick={() => fetchGroupDetails(group._id)}
+                    style={{ cursor: "pointer" }}
+                    hover
+                  >
+                    <TableCell>{group.groupId}</TableCell>
+                    <TableCell>{group.groupName}</TableCell>
+                    <TableCell>{group.groupStatus}</TableCell>
+                    <TableCell>
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation(); // Ngăn chặn sự kiện click lan truyền
+                          setEditGroup(group);
+                          setOpenEditDialog(true);
+                        }}
+                        color="primary"
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation(); // Ngăn chặn sự kiện click lan truyền
+                          handleDeleteGroup(group._id);
+                        }}
+                        color="secondary"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          {/* Thêm phân trang */}
+          {groups.length > groupsPerPage && renderPagination()}
+        </>
       )}
 
       {/* Dialog hiển thị chi tiết nhóm */}
@@ -385,7 +537,7 @@ const ManageStudentGroups = () => {
                 setEditGroup({ ...editGroup, groupName: e.target.value })
               }
             />
-            <Select
+            {/* <Select
               fullWidth
               value={editGroup.groupStatus}
               onChange={(e) =>
@@ -395,7 +547,7 @@ const ManageStudentGroups = () => {
               <MenuItem value="0/2">0/2</MenuItem>
               <MenuItem value="1/2">1/2</MenuItem>
               <MenuItem value="2/2">2/2</MenuItem>
-            </Select>
+            </Select> */}
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenEditDialog(false)} color="secondary">

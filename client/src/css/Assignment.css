@@ -1,0 +1,140 @@
+/*để front nộp báo cáo hiển thị lên lớp trên cùng màn hình và ko bị che bới drawer*/
+/* Đảm bảo backdrop cũng hiện thị đúng */
+.modal-backdrop {
+  z-index: 9998 !important;
+}
+
+/* Căn chỉnh modal ở giữa màn hình và kéo dài chiều ngang */
+.modal-select-teacher {
+  z-index: 9999 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  height: 100%;
+  overflow: hidden;
+}
+.modal-select-group {
+  z-index: 9999 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Kích thước modal */
+.modal-dialog {
+  width: 120%; /* Tăng chiều rộng lên 120% */
+  max-width: 1400px; /* Giới hạn chiều rộng tối đa */
+  margin: 0 auto;
+}
+
+/* Nội dung modal */
+.modal-content {
+  width: 100%; /* Chiếm toàn bộ chiều rộng của modal-dialog */
+  border-radius: 12px; /* Bo tròn góc nhiều hơn */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Phần tiêu đề */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #ddd; /* Viền ngăn giữa header và body */
+  padding: 15px;
+}
+
+/* Phần nội dung body */
+.modal-body {
+  max-height: 70vh; /* Giới hạn chiều cao nội dung */
+  overflow-y: auto; /* Thêm thanh cuộn nếu nội dung quá dài */
+  padding: 20px;
+}
+
+/* Phần footer */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end; /* Canh các nút sang phải */
+  padding: 10px;
+  border-top: 1px solid #ddd; /* Viền ngăn giữa body và footer */
+}
+
+/* Các nút */
+.btn {
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 15px;
+}
+.card.border-primary {
+  border: 2px solid #007bff; /* Viền màu xanh */
+}
+
+.teacher-card {
+  border: 1px solid #ddd;
+  transition: all 0.3s ease;
+}
+.teacher-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: scale(1.02);
+}
+.teacher-card.selected {
+  border-color: #007bff;
+  background-color: #e6f2ff;
+  box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+}
+.selected-teachers .badge {
+  margin-right: 5px;
+}
+
+/* Thêm CSS mới để canh các nhóm theo hàng ngang */
+.row-eq-height {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.row-eq-height > [class*="col-"] {
+  display: flex;
+  flex-direction: column;
+}
+
+.row-eq-height .card {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.row-eq-height .card-body {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.row-eq-height .card-body > div {
+  margin-top: auto;
+}
+
+/* Responsive cho các màn hình nhỏ hơn */
+@media (max-width: 1600px) {
+  .modal-dialog {
+    width: 100%;
+    max-width: 1200px;
+  }
+}
+
+@media (max-width: 1400px) {
+  .modal-dialog {
+    width: 100%;
+    max-width: 1000px;
+  }
+}

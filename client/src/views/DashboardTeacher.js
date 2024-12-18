@@ -34,6 +34,8 @@ import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import DesignServicesIcon from "@mui/icons-material/DesignServices";
 import SchoolIcon from "@mui/icons-material/School";
+import SendIcon from "@mui/icons-material/Send";
+import EditNotificationsIcon from "@mui/icons-material/EditNotifications";
 import "../css/DashboardTeacher.css";
 
 const drawerWidth = 240;
@@ -42,7 +44,7 @@ const DashboardTeacher = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [openSubMenu, setOpenSubMenu] = useState({});
   const navigate = useNavigate();
-  const location = useLocation();
+  const location = useLocation(); // Thêm hook useLocation
   const isMobile = useMediaQuery("(max-width:600px)");
 
   const toggleSidebar = () => {
@@ -61,6 +63,7 @@ const DashboardTeacher = () => {
       text: "Trang chủ",
       icon: <HomeIcon />,
       onClick: () => navigate("/dashboardTeacher"),
+      path: "/dashboardTeacher",
     },
     {
       text: "Quản lý báo cáo",
@@ -70,6 +73,7 @@ const DashboardTeacher = () => {
           text: "Báo cáo của sinh viên",
           icon: <DocumentScannerIcon />,
           onClick: () => navigate("/dashboardTeacher/manage-report-student"),
+          path: "/dashboardTeacher/manage-report-student",
         },
       ],
     },
@@ -81,6 +85,7 @@ const DashboardTeacher = () => {
           text: "Quản Lý Đề Tài",
           icon: <CloudUploadIcon />,
           onClick: () => navigate("/dashboardTeacher/upload-topic"),
+          path: "/dashboardTeacher/upload-topic",
         },
       ],
     },
@@ -93,6 +98,7 @@ const DashboardTeacher = () => {
           icon: <ListAltIcon />,
           onClick: () =>
             navigate("/dashboardTeacher/list-student-group-teacher"),
+          path: "/dashboardTeacher/list-student-group-teacher",
         },
       ],
     },
@@ -104,16 +110,19 @@ const DashboardTeacher = () => {
           text: "Nhóm được phân công chấm phản biện",
           icon: <PeopleAltIcon />,
           onClick: () => navigate("/dashboardTeacher/topic-review"),
+          path: "/dashboardTeacher/topic-review",
         },
         {
           text: "Nhóm được phân công chấm hội đồng",
           icon: <AccountBalanceIcon />,
           onClick: () => navigate("/dashboardTeacher/topic-council"),
+          path: "/dashboardTeacher/topic-council",
         },
         {
           text: "Nhóm được phân công chấm poster",
           icon: <DesignServicesIcon />,
           onClick: () => navigate("/dashboardTeacher/topic-poster"),
+          path: "/dashboardTeacher/topic-poster",
         },
       ],
     },
@@ -125,21 +134,52 @@ const DashboardTeacher = () => {
           text: "Nhập Điểm",
           icon: <EditIcon />,
           onClick: () => navigate("/dashboardTeacher/list-student-teacher"),
+          path: "/dashboardTeacher/list-student-teacher",
         },
         {
           text: "Xem Điểm",
           icon: <SchoolIcon />,
           onClick: () => navigate("/dashboardTeacher/view-scores"),
+          path: "/dashboardTeacher/view-scores",
         },
       ],
     },
+
+    // gửi thông báo đang phát triển
+    /*     {
+      text: "Thông báo",
+      icon: <EditNotificationsIcon />,
+      submenu: [
+        {
+          text: "Quản Lý Thông Báo",
+          icon: <SendIcon />,
+          onClick: () => navigate("/dashboardTeacher/notifications"),
+        },
+      ],
+    }, */
 
     {
       text: "Thống kê",
       icon: <HomeIcon />,
       onClick: () => navigate("/dashboardTeacher/StatisticsTeacher"),
+      path: "/dashboardTeacher/StatisticsTeacher",
     },
   ];
+
+  // Hàm kiểm tra xem một mục menu có đang được chọn hay không
+  const isMenuItemSelected = (item) => {
+    // Kiểm tra cho menu chính
+    if (item.path && location.pathname === item.path) return true;
+
+    // Kiểm tra cho submenu
+    if (item.subMenu) {
+      return item.subMenu.some(
+        (subItem) => subItem.path && location.pathname === subItem.path
+      );
+    }
+
+    return false;
+  };
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -205,6 +245,15 @@ const DashboardTeacher = () => {
                     item.onClick();
                   }
                 }}
+                sx={{
+                  backgroundColor: isMenuItemSelected(item)
+                    ? "#E0E0E0" // Màu nền khi được chọn
+                    : "transparent",
+                  "&:hover": {
+                    backgroundColor: "#BFBFBF",
+                    fontWeight: "bold",
+                  },
+                }}
               >
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text} />
@@ -218,8 +267,20 @@ const DashboardTeacher = () => {
                       <ListItem
                         button
                         key={subIndex}
+                        /* onClick={subItem.onClick} */
+                        /* sx={{ pl: 4 }}
+                      > */
+                        sx={{
+                          pl: 4,
+                          backgroundColor: isMenuItemSelected(subItem)
+                            ? "#E0E0E0" // Màu nền khi được chọn
+                            : "transparent",
+                          "&:hover": {
+                            backgroundColor: "#BFBFBF",
+                            fontWeight: "bold",
+                          },
+                        }}
                         onClick={subItem.onClick}
-                        sx={{ pl: 4 }}
                       >
                         <ListItemIcon>{subItem.icon}</ListItemIcon>
                         <ListItemText primary={subItem.text} />

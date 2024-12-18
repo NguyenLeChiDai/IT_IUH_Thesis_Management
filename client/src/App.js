@@ -31,6 +31,7 @@ import ScoreStudent from "./components/viewStudent/ScoreStudent";
 import MessageTeacher from "./components/viewTeacher/MessageTeacher";
 import MessageStudent from "./components/viewStudent/MessageStudent";
 import AdminNotifications from "./components/viewsAdmin/AdminNotifications";
+import TeacherNotifications from "./components/viewTeacher/TeacherNofitications";
 import NotificationPage from "./components/Notification/NotificationPage";
 import AdminReportList from "./components/viewsAdmin/AdminReportList";
 import AdminReportDetail from "./components/viewsAdmin/AdminReportDetail";
@@ -48,6 +49,10 @@ import ViewScore from "./components/viewTeacher/ViewScore";
 import StatisticsTeacher from "./components/viewTeacher/StatisticsTeacher";
 import FeatureManagement from "./components/viewsAdmin/FeatureManagement";
 import TeacherManagement from "./components/viewsAdmin/TeacherManagement";
+import ViewTeacherReview from "./components/viewStudent/ViewTeacherReview";
+import ManageReviewAssignmentVer2 from "./components/viewsAdmin/ManageReviewAssignmentVer2";
+import ManagePosterAssignmentVer2 from "./components/viewsAdmin/ManagePosterAssignmentVer2";
+import ManageCouncilAssignmentVer2 from "./components/viewsAdmin/ManageCouncilAssignmentVer2";
 
 function App() {
   return (
@@ -126,6 +131,18 @@ function App() {
                 path="teacher-management"
                 element={<TeacherManagement />}
               />{" "}
+              <Route
+                path="manage-review-teacher"
+                element={<ManageReviewAssignmentVer2 />}
+              />{" "}
+              <Route
+                path="manage-council-teacher"
+                element={<ManageCouncilAssignmentVer2 />}
+              />{" "}
+              <Route
+                path="manage-poster-teacher"
+                element={<ManagePosterAssignmentVer2 />}
+              />{" "}
             </Route>
             {/* Sinh viên */}
             <Route path="/dashboardStudent" element={<DashboardStudent />}>
@@ -142,6 +159,10 @@ function App() {
               <Route path="submit-report" element={<ThesisReport />} />{" "}
               <Route path="score-student" element={<ScoreStudent />} />{" "}
               <Route path="messageStudent" element={<MessageStudent />} />
+              <Route
+                path="review-teacher"
+                element={<ViewTeacherReview />}
+              />{" "}
               <Route
                 path="notification-page-student"
                 element={<NotificationPage />}
@@ -174,6 +195,7 @@ function App() {
                 path="notification-page-teacher"
                 element={<NotificationPage />}
               />
+              <Route path="notifications" element={<TeacherNotifications />} />{" "}
               <Route path="topic-review" element={<TopicReview />} />
               <Route path="topic-council" element={<CouncilTopic />} />
               <Route path="topic-poster" element={<PosterTopic />} />

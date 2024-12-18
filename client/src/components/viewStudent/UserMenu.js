@@ -50,15 +50,38 @@ const UserMenu = () => {
       }
     };
   }, [user]);
+
   // Kiểm tra xem có nên hiển thị thông báo cho user hiện tại không
   const shouldShowNotification = (notification) => {
+    // Nếu là thông báo cho tất cả
+    if (notification.type === "all") return true;
+
+    // Nếu là thông báo cho sinh viên và user hiện tại là sinh viên
+    if (notification.type === "student" && user?.role === "Sinh viên") {
+      // Kiểm tra xem user có trong danh sách recipients không
+      return (
+        notification.recipients &&
+        notification.recipients.some(
+          (recipientId) =>
+            recipientId.toString() === authState.profile?._id.toString()
+        )
+      );
+    }
+
+    // Nếu là thông báo cho giảng viên và user hiện tại là giảng viên
+    if (notification.type === "teacher" && user?.role === "Giảng viên")
+      return true;
+
+    return false;
+  };
+  /* const shouldShowNotification = (notification) => {
     if (notification.type === "all") return true;
     if (notification.type === "student" && user?.role === "Sinh viên")
       return true;
     if (notification.type === "teacher" && user?.role === "Giảng viên")
       return true;
     return false;
-  };
+  }; */
 
   // Hiển thị thông báo trên trình duyệt
   const showBrowserNotification = (notification) => {
@@ -307,7 +330,7 @@ const UserMenu = () => {
           variant="light"
           id="dropdown-basic"
           className="d-flex flex-column align-items-start"
-          style={{ marginTop: "10px" }}
+          style={{ marginTop: "8px" }}
         >
           <span>Chào, {currentProfile?.name || user?.username || "User"}</span>
           <small className="text-muted">{user?.role}</small>

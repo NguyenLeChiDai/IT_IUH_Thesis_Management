@@ -28,8 +28,7 @@
 }
 
 .form-group {
-  display: flex;
-
+  display: block; /* Thay từ flex sang block */
   margin-bottom: 25px;
 }
 

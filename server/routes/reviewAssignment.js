@@ -49,19 +49,64 @@ router.get("/get-all-teachers", verifyToken, async (req, res) => {
   }
 });
 
-// lấy danh sách để phân công giảng viên chấm phản biện
+// get danh sách tất cả các giảng viên ver2
+// @route GET
+// @desc Get all teachers not in any review panel
+// @access Private
+router.get("/get-all-teachers-ver2", verifyToken, async (req, res) => {
+  try {
+    // Tìm tất cả các giảng viên đã được thêm vào hội đồng
+    const assignedReviewPanels = await ReviewAssignment.find({
+      reviewerTeacher: { $exists: true, $ne: null },
+    });
+
+    // Trích xuất danh sách các ID giảng viên đã được phân công
+    const assignedTeacherIds = assignedReviewPanels.reduce((acc, panel) => {
+      return acc.concat(panel.reviewerTeacher);
+    }, []);
+
+    // Lấy danh sách tất cả giảng viên, loại trừ những giảng viên đã có trong hội đồng
+    const teachers = await ProfileTeacher.find({
+      _id: { $nin: assignedTeacherIds }, // Thay đổi từ teacherId sang _id
+    })
+      .select("teacherId name phone email gender major")
+      .populate({
+        path: "user",
+        select: "username role",
+      });
+
+    // Kiểm tra nếu không có giảng viên nào
+    if (!teachers.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy giảng viên nào chưa được phân công",
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Lấy danh sách giảng viên thành công",
+      teachers,
+    });
+  } catch (error) {
+    console.error("Error in get-all-teachers:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi lấy danh sách giảng viên",
+      error: error.message,
+    });
+  }
+});
 
 router.get(
-  "/get-groups-for-review/:teacherId",
+  "/get-groups-for-review/:id", // Đổi từ :teacherId thành :id
   verifyToken,
   async (req, res) => {
     try {
-      const selectedTeacherId = req.params.teacherId;
+      const selectedTeacherId = req.params.id; // Lấy _id từ tham số URL
 
-      // Tìm profile của giảng viên được chọn
-      const teacherProfile = await ProfileTeacher.findOne({
-        teacherId: selectedTeacherId,
-      });
+      // Tìm profile của giảng viên bằng _id
+      const teacherProfile = await ProfileTeacher.findById(selectedTeacherId); // Dùng findById thay vì findOne
       if (!teacherProfile) {
         return res.status(404).json({
           success: false,
@@ -69,27 +114,46 @@ router.get(
         });
       }
 
-      // Lấy danh sách phân công phản biện cho giảng viên này
-      const reviewAssignments = await ReviewAssignment.find({
+      // Tiến hành các bước xử lý như trong mã của bạn
+      // Tìm review panel của giảng viên này
+      const reviewPanel = await ReviewAssignment.findOne({
         reviewerTeacher: teacherProfile._id,
-      }).select("studentGroup _id status");
+      });
 
-      // Tạo map để lưu trữ thông tin assignment
-      const assignmentMap = reviewAssignments.reduce((map, assignment) => {
-        map[assignment.studentGroup.toString()] = {
-          assignmentId: assignment._id,
-          status: assignment.status,
-        };
-        return map;
-      }, {});
+      let excludedTeacherIds = [];
+      let excludedGroupIds = [];
 
-      // Lấy tất cả các đề tài và nhóm
+      if (reviewPanel && reviewPanel.reviewerTeacher.length === 2) {
+        // Tìm giảng viên còn lại trong panel
+        const otherTeacherId = reviewPanel.reviewerTeacher.find(
+          (id) => id.toString() !== teacherProfile._id.toString()
+        );
+
+        // Tìm các đề tài và nhóm của cả hai giảng viên
+        const teacherTopics = await Topic.find({
+          teacher: { $in: [teacherProfile._id, otherTeacherId] },
+        });
+
+        excludedTeacherIds = teacherTopics.map((topic) =>
+          topic.teacher.toString()
+        );
+
+        // Lấy các nhóm thuộc các đề tài của hai giảng viên
+        const excludedGroups = await Group.find({
+          topic: { $in: teacherTopics.map((topic) => topic._id) },
+        });
+
+        excludedGroupIds = excludedGroups.map((group) => group._id.toString());
+      }
+
+      // Lấy tất cả các đề tài và nhóm loại trừ các đề tài và nhóm của giảng viên
       const availableTopics = await Topic.find({
-        teacher: { $ne: teacherProfile._id },
+        teacher: { $nin: excludedTeacherIds },
         Groups: {
           $exists: true,
           $not: { $size: 0 },
         },
+        "Groups.group": { $nin: excludedGroupIds },
       })
         .populate({
           path: "Groups.group",
@@ -104,32 +168,23 @@ router.get(
 
       // Format lại dữ liệu thành mảng phẳng của các nhóm
       const formattedGroups = availableTopics.reduce((acc, topic) => {
-        const validGroups = topic.Groups.filter((g) => g.group).map((g) => {
-          const groupId = g.group._id.toString();
-          const assignmentInfo = assignmentMap[groupId] || {};
-
-          return {
-            topicId: topic._id,
-            topicName: topic.nameTopic,
-            supervisorTeacher: {
-              _id: topic.teacher._id,
-              teacherId: topic.teacher.teacherId,
-              name: topic.teacher.name,
-            },
-            groupId: g.group._id,
-            groupName: g.group.groupName,
-            // Thêm thông tin về assignment
-            hasReviewer: !!assignmentInfo.assignmentId,
-            assignmentId: assignmentInfo.assignmentId, // Thêm assignmentId
-            assignmentStatus: assignmentInfo.status, // Thêm status
-            students: g.group.profileStudents.map((s) => ({
-              studentId: s.student.studentId,
-              name: s.student.name,
-              class: s.student.class,
-              role: s.role,
-            })),
-          };
-        });
+        const validGroups = topic.Groups.filter((g) => g.group).map((g) => ({
+          topicId: topic._id,
+          topicName: topic.nameTopic,
+          supervisorTeacher: {
+            _id: topic.teacher._id,
+            teacherId: topic.teacher.teacherId,
+            name: topic.teacher.name,
+          },
+          groupId: g.group._id,
+          groupName: g.group.groupName,
+          students: g.group.profileStudents.map((s) => ({
+            studentId: s.student.studentId,
+            name: s.student.name,
+            class: s.student.class,
+            role: s.role,
+          })),
+        }));
 
         return [...acc, ...validGroups];
       }, []);
@@ -150,35 +205,73 @@ router.get(
   }
 );
 
-// phân công chấm phản biện
+// ver2
 router.post("/assign-reviewer", verifyToken, async (req, res) => {
-  console.log("Received request to assign reviewer");
   try {
-    const { teacherId, groupId } = req.body;
+    const { reviewPanelId, teacherIds, groupId } = req.body;
 
     // Validate input
-    if (!teacherId || !groupId) {
-      console.log("Missing teacherId or groupId");
+    if (
+      !reviewPanelId ||
+      !teacherIds ||
+      !Array.isArray(teacherIds) ||
+      teacherIds.length !== 2 ||
+      !groupId
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Thiếu thông tin cần thiết để phân công",
+        message:
+          "Vui lòng cung cấp đầy đủ thông tin: ID hội đồng, 2 giảng viên và mã nhóm",
       });
     }
 
-    // Kiểm tra giảng viên tồn tại
-    const teacherProfile = await ProfileTeacher.findOne({ teacherId });
-    if (!teacherProfile) {
-      console.log("Teacher not found with ID:", teacherId);
+    // Kiểm tra hội đồng tồn tại
+    const existingReviewPanel = await ReviewAssignment.findById(reviewPanelId)
+      .populate("studentGroup")
+      .populate("topic")
+      .populate("reviewerTeacher");
+
+    if (!existingReviewPanel) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy giảng viên",
+        message: "Không tìm thấy hội đồng phản biện",
+      });
+    }
+
+    // Đảm bảo các mảng luôn tồn tại
+    existingReviewPanel.studentGroup = existingReviewPanel.studentGroup || [];
+    existingReviewPanel.topic = existingReviewPanel.topic || [];
+    existingReviewPanel.reviewerTeacher =
+      existingReviewPanel.reviewerTeacher || [];
+
+    // Kiểm tra nhóm đã được phân công cho hội đồng nào chưa
+    const groupAssigned = await ReviewAssignment.findOne({
+      studentGroup: groupId,
+    });
+
+    if (groupAssigned) {
+      return res.status(400).json({
+        success: false,
+        message: "Nhóm này đã được phân công cho một hội đồng khác",
+        assignedReviewPanel: groupAssigned,
+      });
+    }
+
+    // Kiểm tra giảng viên tồn tại - sử dụng trực tiếp ObjectId
+    const teacherProfiles = await ProfileTeacher.find({
+      _id: { $in: teacherIds.map((id) => new mongoose.Types.ObjectId(id)) },
+    });
+
+    if (teacherProfiles.length !== 2) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy đủ 2 giảng viên",
       });
     }
 
     // Kiểm tra nhóm tồn tại
     const group = await Group.findById(groupId);
     if (!group) {
-      console.log("Group not found with ID:", groupId);
       return res.status(404).json({
         success: false,
         message: "Không tìm thấy nhóm sinh viên",
@@ -188,60 +281,34 @@ router.post("/assign-reviewer", verifyToken, async (req, res) => {
     // Tìm đề tài của nhóm
     const topic = await Topic.findOne({ "Groups.group": groupId });
     if (!topic) {
-      console.log("Topic not found for group:", groupId);
       return res.status(404).json({
         success: false,
         message: "Không tìm thấy đề tài của nhóm",
       });
     }
 
-    // Kiểm tra xem giảng viên này đã được phân công cho nhóm này chưa
-    const existingAssignment = await ReviewAssignment.findOne({
-      studentGroup: groupId,
-      reviewerTeacher: teacherProfile._id,
-    });
+    // Thêm nhóm và đề tài vào mảng
+    existingReviewPanel.studentGroup.push(groupId);
+    existingReviewPanel.topic.push(topic._id);
 
-    if (existingAssignment) {
-      console.log("This teacher is already assigned to review this group");
-      return res.status(400).json({
-        success: false,
-        message: "Giảng viên này đã được phân công chấm phản biện cho nhóm này",
-      });
+    // Cập nhật giảng viên nếu chưa được set
+    if (existingReviewPanel.reviewerTeacher.length === 0) {
+      existingReviewPanel.reviewerTeacher = teacherIds.map(
+        (id) => new mongoose.Types.ObjectId(id)
+      );
     }
 
-    // Đếm số lượng giảng viên phản biện hiện tại của nhóm
-    const currentReviewersCount = await ReviewAssignment.countDocuments({
-      studentGroup: groupId,
-    });
+    // Cập nhật trạng thái
+    existingReviewPanel.status = "Chờ chấm điểm";
+    existingReviewPanel.assignedDate = new Date();
 
-    // Có thể thêm giới hạn số lượng giảng viên phản biện nếu cần
-    const MAX_REVIEWERS = 3; // Ví dụ giới hạn tối đa 3 giảng viên phản biện
-    if (currentReviewersCount >= MAX_REVIEWERS) {
-      return res.status(400).json({
-        success: false,
-        message: `Nhóm này đã có đủ ${MAX_REVIEWERS} giảng viên phản biện`,
-      });
-    }
+    // Lưu thay đổi
+    await existingReviewPanel.save();
 
-    // Tạo phân công mới
-    const newAssignment = new ReviewAssignment({
-      reviewerTeacher: teacherProfile._id,
-      studentGroup: groupId,
-      topic: topic._id,
-      assignedDate: new Date(),
-      status: "Chờ chấm điểm",
-    });
-
-    await newAssignment.save();
-
-    // Trả về thông tin về số lượng giảng viên phản biện hiện tại
-    console.log("Reviewer assigned successfully");
     return res.json({
       success: true,
       message: "Phân công giảng viên phản biện thành công",
-      assignment: newAssignment,
-      currentReviewersCount: currentReviewersCount + 1,
-      maxReviewers: MAX_REVIEWERS,
+      assignment: existingReviewPanel,
     });
   } catch (error) {
     console.error("Error in assign-reviewer:", error);
@@ -253,13 +320,11 @@ router.post("/assign-reviewer", verifyToken, async (req, res) => {
   }
 });
 
-//get danh sách phân công cho giảng viên
+//get danh sach phân công giảng viên
 router.get("/get-assigned-groups", verifyToken, async (req, res) => {
   try {
-    // Lấy thông tin user từ token (giả sử đã được xử lý trong middleware verifyToken)
     const userId = req.userId;
 
-    // Tìm profile của giảng viên dựa trên userId
     const teacherProfile = await ProfileTeacher.findOne({ user: userId });
     if (!teacherProfile) {
       return res.status(404).json({
@@ -268,7 +333,6 @@ router.get("/get-assigned-groups", verifyToken, async (req, res) => {
       });
     }
 
-    // Tìm tất cả các phân công chấm phản biện của giảng viên này
     const assignments = await ReviewAssignment.find({
       reviewerTeacher: teacherProfile._id,
     })
@@ -277,55 +341,69 @@ router.get("/get-assigned-groups", verifyToken, async (req, res) => {
         populate: {
           path: "profileStudents.student",
           model: "profileStudent",
-          select: "name studentId email phone", // Chọn các trường cần thiết
+          select: "name studentId email phone",
         },
       })
       .populate({
         path: "topic",
-        select: "topicId nameTopic descriptionTopic status",
+        select: "topicId nameTopic descriptionTopic status teacher",
         populate: {
           path: "teacher",
           model: "profileTeacher",
-          select: "name teacherId email", // Thông tin giảng viên hướng dẫn
+          select: "name teacherId email",
         },
       })
-      .sort({ assignedDate: -1 }); // Sắp xếp theo ngày phân công mới nhất
+      .sort({ assignedDate: -1 });
 
-    // Xử lý và định dạng dữ liệu trước khi gửi về client
-    const formattedAssignments = assignments.map((assignment) => {
-      const students = assignment.studentGroup.profileStudents.map(
-        (student) => ({
+    const formattedAssignments = assignments.flatMap((assignment) =>
+      assignment.studentGroup.map((group, index) => {
+        const students = group.profileStudents.map((student) => ({
           name: student.student.name,
           studentId: student.student.studentId,
           email: student.student.email,
           phone: student.student.phone,
           role: student.role,
-        })
-      );
+        }));
 
-      return {
-        assignmentId: assignment._id,
-        assignmentStatus: assignment.status,
-        assignedDate: assignment.assignedDate,
-        groupInfo: {
-          groupId: assignment.studentGroup.groupId,
-          groupName: assignment.studentGroup.groupName,
-          groupStatus: assignment.studentGroup.groupStatus,
-          students: students,
-        },
-        topicInfo: {
-          topicId: assignment.topic.topicId,
-          name: assignment.topic.nameTopic,
-          description: assignment.topic.descriptionTopic,
-          status: assignment.topic.status,
-          advisor: {
-            name: assignment.topic.teacher.name,
-            teacherId: assignment.topic.teacher.teacherId,
-            email: assignment.topic.teacher.email,
+        // Lấy topic tương ứng với từng nhóm
+        const topicForGroup = assignment.topic[index] || assignment.topic[0];
+
+        return {
+          assignmentId: assignment._id,
+          assignmentStatus: assignment.status,
+          assignedDate: assignment.assignedDate,
+          groupInfo: {
+            groupId: group.groupId,
+            groupName: group.groupName,
+            groupStatus: group.groupStatus,
+            students: students,
           },
-        },
-      };
-    });
+          topicInfo: topicForGroup
+            ? {
+                topicId: topicForGroup.topicId || "",
+                name: topicForGroup.nameTopic || "",
+                description: topicForGroup.descriptionTopic || "",
+                status: topicForGroup.status || "",
+                advisor: topicForGroup.teacher
+                  ? [
+                      {
+                        name: topicForGroup.teacher.name || "",
+                        teacherId: topicForGroup.teacher.teacherId || "",
+                        email: topicForGroup.teacher.email || "",
+                      },
+                    ]
+                  : [],
+              }
+            : {
+                topicId: "",
+                name: "",
+                description: "",
+                status: "",
+                advisor: [],
+              },
+        };
+      })
+    );
 
     return res.json({
       success: true,
@@ -422,19 +500,16 @@ router.get("/assigned-groups/:teacherId", verifyToken, async (req, res) => {
   }
 });
 
-// API để hủy phân công giảng viên phản biện
-router.delete(
-  "/cancel-assignment/:assignmentId",
+//ver3
+router.put(
+  "/cancel-assignment/:assignmentId/:studentGroupId/:topicId",
   verifyToken,
   async (req, res) => {
     try {
-      const assignmentId = req.params.assignmentId;
+      const { assignmentId, studentGroupId, topicId } = req.params;
 
       // Kiểm tra xem assignment có tồn tại không
-      const existingAssignment = await ReviewAssignment.findById(assignmentId)
-        .populate("reviewerTeacher", "name teacherId")
-        .populate("studentGroup", "groupName")
-        .populate("topic", "nameTopic");
+      const existingAssignment = await ReviewAssignment.findById(assignmentId);
 
       if (!existingAssignment) {
         return res.status(404).json({
@@ -451,28 +526,30 @@ router.delete(
         });
       }
 
-      // Thực hiện xóa assignment
-      await ReviewAssignment.findByIdAndDelete(assignmentId);
+      // Loại bỏ studentGroup và topic khỏi mảng
+      existingAssignment.studentGroup = existingAssignment.studentGroup.filter(
+        (group) => group.toString() !== studentGroupId
+      );
+      existingAssignment.topic = existingAssignment.topic.filter(
+        (topic) => topic.toString() !== topicId
+      );
+
+      // Nếu không còn nhóm sinh viên thì reset trạng thái
+      if (existingAssignment.studentGroup.length === 0) {
+        existingAssignment.status = "Chờ chấm điểm";
+      }
+
+      // Lưu thay đổi
+      await existingAssignment.save();
 
       return res.json({
         success: true,
-        message: "Hủy phân công chấm phản biện thành công",
+        message: "Hủy phân công nhóm sinh viên thành công",
         canceledAssignment: {
           assignmentId: existingAssignment._id,
-          reviewer: {
-            id: existingAssignment.reviewerTeacher.teacherId,
-            name: existingAssignment.reviewerTeacher.name,
-          },
-          group: {
-            id: existingAssignment.studentGroup._id,
-            name: existingAssignment.studentGroup.groupName,
-          },
-          topic: {
-            id: existingAssignment.topic._id,
-            name: existingAssignment.topic.nameTopic,
-          },
+          remainingStudentGroups: existingAssignment.studentGroup,
+          remainingTopics: existingAssignment.topic,
           status: existingAssignment.status,
-          assignedDate: existingAssignment.assignedDate,
         },
       });
     } catch (error) {
@@ -485,5 +562,406 @@ router.delete(
     }
   }
 );
+
+router.get("/get-group-teacher-reviewers", verifyToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Tìm thông tin sinh viên
+    const studentProfile = await ProfileStudent.findOne({ user: userId });
+    if (!studentProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy thông tin sinh viên",
+      });
+    }
+
+    // Tìm nhóm sinh viên
+    const studentGroup = await StudentGroup.findOne({
+      "profileStudents.student": studentProfile._id,
+    });
+    if (!studentGroup) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy nhóm của sinh viên",
+      });
+    }
+
+    // Tìm tất cả các thông tin phân công cho nhóm này
+    const assignments = await ReviewAssignment.find({
+      studentGroup: studentGroup._id,
+    }).populate({
+      path: "reviewerTeacher",
+      select: "name email teacherId",
+    });
+
+    if (!assignments || assignments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy thông tin phân công chấm phản biện",
+      });
+    }
+
+    // Chuẩn bị thông tin giảng viên từ tất cả các phân công
+    const reviewers = assignments.flatMap((assignment) =>
+      assignment.reviewerTeacher.map((teacher) => ({
+        name: teacher.name,
+        email: teacher.email,
+        teacherId: teacher.teacherId,
+      }))
+    );
+
+    return res.json({
+      success: true,
+      message: "Lấy thông tin giảng viên chấm phản biện thành công",
+      reviewers: reviewers,
+      assignmentStatus: assignments[0].status, // Lấy trạng thái từ bản ghi đầu tiên
+      assignedDate: assignments[0].assignedDate,
+    });
+  } catch (error) {
+    console.error("Error in get-group-reviewers:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi lấy thông tin giảng viên chấm phản biện",
+      error: error.message,
+    });
+  }
+});
+
+//------------------------------------------------------------------------
+// tạo hội đồng chấm phản biện ver1
+router.post("/create-review-teacher", verifyToken, async (req, res) => {
+  try {
+    const { reviewerTeacher } = req.body;
+
+    // Kiểm tra xem có đúng 2 giảng viên không
+    if (!reviewerTeacher || reviewerTeacher.length !== 2) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng chọn chính xác 2 giảng viên",
+      });
+    }
+
+    // Kiểm tra xem giảng viên đã được phân công vào hội đồng nào chưa
+    const existingAssignments = await ReviewAssignment.find({
+      reviewerTeacher: { $in: reviewerTeacher },
+    });
+
+    // Nếu bất kỳ giảng viên nào đã được phân công, trả về lỗi
+    if (existingAssignments.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Một hoặc hai giảng viên đã được phân công vào hội đồng khác",
+        assignedTeachers: existingAssignments
+          .map((assignment) => assignment.reviewerTeacher)
+          .flat(),
+      });
+    }
+
+    // Tạo mới bản ghi
+    const newReviewAssignment = new ReviewAssignment({
+      reviewerTeacher: reviewerTeacher,
+      // Tạm thời để trống studentGroup và topic
+      studentGroup: null,
+      topic: null,
+    });
+
+    await newReviewAssignment.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Tạo hội đồng chấm phản biện thành công",
+      reviewAssignment: newReviewAssignment,
+    });
+  } catch (error) {
+    console.error("Lỗi tạo hội đồng:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi tạo hội đồng",
+      error: error.message,
+    });
+  }
+});
+
+// @route DELETE /api/review-panels/remove-teacher
+// @desc Remove a teacher from a review panel
+// @access Private
+router.delete("/remove-teacher-review", verifyToken, async (req, res) => {
+  try {
+    const { reviewPanelId, teacherId } = req.body;
+
+    // Kiểm tra xem có đủ thông tin không
+    if (!reviewPanelId || !teacherId) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng cung cấp ID hội đồng và ID giảng viên cần xóa",
+      });
+    }
+
+    // Tìm hội đồng cần sửa
+    const reviewPanel = await ReviewAssignment.findById(reviewPanelId);
+
+    // Kiểm tra xem hội đồng có tồn tại không
+    if (!reviewPanel) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy hội đồng phản biện",
+      });
+    }
+
+    // Kiểm tra xem giảng viên có trong hội đồng không
+    const teacherIndex = reviewPanel.reviewerTeacher.indexOf(teacherId);
+    if (teacherIndex === -1) {
+      return res.status(400).json({
+        success: false,
+        message: "Giảng viên không thuộc hội đồng này",
+      });
+    }
+
+    // Loại bỏ giảng viên khỏi mảng
+    reviewPanel.reviewerTeacher.splice(teacherIndex, 1);
+
+    // Lưu thay đổi
+    await reviewPanel.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Xóa giảng viên khỏi hội đồng thành công",
+      updatedReviewPanel: reviewPanel,
+    });
+  } catch (error) {
+    console.error("Lỗi xóa giảng viên khỏi hội đồng:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi xóa giảng viên khỏi hội đồng",
+      error: error.message,
+    });
+  }
+});
+
+// @route POST /api/review-panels/replace-teacher-review
+// @desc Replace a teacher in a review panel
+// @access Private
+router.post("/replace-teacher-review", verifyToken, async (req, res) => {
+  try {
+    const { reviewPanelId, oldTeacherId, newTeacherId } = req.body;
+
+    // Kiểm tra đầy đủ thông tin
+    if (!reviewPanelId || !oldTeacherId || !newTeacherId) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Vui lòng cung cấp ID hội đồng, giảng viên cũ và giảng viên mới",
+      });
+    }
+
+    // Tìm hội đồng cần sửa
+    const reviewPanel = await ReviewAssignment.findById(reviewPanelId);
+
+    // Kiểm tra hội đồng có tồn tại không
+    if (!reviewPanel) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy hội đồng phản biện",
+      });
+    }
+
+    // Kiểm tra giảng viên cũ có trong hội đồng không
+    const teacherIndex = reviewPanel.reviewerTeacher.indexOf(oldTeacherId);
+    if (teacherIndex === -1) {
+      return res.status(400).json({
+        success: false,
+        message: "Giảng viên cũ không thuộc hội đồng này",
+      });
+    }
+
+    // Kiểm tra giảng viên mới đã có trong hội đồng khác chưa
+    const existingAssignments = await ReviewAssignment.find({
+      reviewerTeacher: newTeacherId,
+    });
+
+    if (existingAssignments.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Giảng viên mới đã được phân công vào hội đồng khác",
+        assignedPanels: existingAssignments,
+      });
+    }
+
+    // Kiểm tra giảng viên mới có trùng trong hội đồng chưa
+    if (reviewPanel.reviewerTeacher.includes(newTeacherId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Giảng viên mới đã tồn tại trong hội đồng",
+      });
+    }
+
+    // Xóa giảng viên cũ khỏi hội đồng
+    reviewPanel.reviewerTeacher.splice(teacherIndex, 1);
+
+    // Thêm giảng viên mới vào hội đồng
+    reviewPanel.reviewerTeacher.push(newTeacherId);
+
+    // Lưu thay đổi
+    await reviewPanel.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Thay thế giảng viên thành công",
+      updatedReviewPanel: reviewPanel,
+    });
+  } catch (error) {
+    console.error("Lỗi thay thế giảng viên:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi thay thế giảng viên",
+      error: error.message,
+    });
+  }
+});
+
+router.delete(
+  "/delete-review-panel/:reviewPanelId",
+  verifyToken,
+  async (req, res) => {
+    try {
+      const reviewPanelId = req.params.reviewPanelId;
+
+      // Kiểm tra hội đồng có tồn tại không
+      const existingReviewPanel = await ReviewAssignment.findById(
+        reviewPanelId
+      );
+
+      if (!existingReviewPanel) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy hội đồng phản biện",
+        });
+      }
+
+      // Kiểm tra trạng thái của hội đồng
+      if (existingReviewPanel.status === "Đã chấm điểm") {
+        return res.status(400).json({
+          success: false,
+          message: "Không thể xóa hội đồng đã hoàn thành chấm điểm",
+        });
+      }
+
+      // Xóa hội đồng
+      await ReviewAssignment.findByIdAndDelete(reviewPanelId);
+
+      return res.status(200).json({
+        success: true,
+        message: "Xóa hội đồng phản biện thành công",
+        deletedReviewPanel: {
+          id: existingReviewPanel._id,
+          reviewerTeacher: existingReviewPanel.reviewerTeacher,
+          status: existingReviewPanel.status,
+        },
+      });
+    } catch (error) {
+      console.error("Lỗi xóa hội đồng phản biện:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi server khi xóa hội đồng phản biện",
+        error: error.message,
+      });
+    }
+  }
+);
+
+router.get("/get-all-review-assignments", verifyToken, async (req, res) => {
+  try {
+    // Fetch all review assignments and populate teacher details
+    const reviewAssignments = await ReviewAssignment.find()
+      .populate({
+        path: "reviewerTeacher",
+        select: "name email department", // Select specific fields you want to show
+      })
+      .populate({
+        path: "studentGroup",
+        select: "groupName", // If you want to include student group details
+      })
+      .populate({
+        path: "topic",
+        select: "topicName", // If you want to include topic details
+      });
+
+    // If no review assignments found
+    if (reviewAssignments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy hội đồng nào",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Lấy danh sách hội đồng thành công",
+      totalAssignments: reviewAssignments.length,
+      reviewAssignments: reviewAssignments,
+    });
+  } catch (error) {
+    console.error("Lỗi lấy danh sách hội đồng:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi lấy danh sách hội đồng",
+      error: error.message,
+    });
+  }
+});
+
+//get danh sách các nhóm đã được phâ công cho các hội đồng
+router.get("/get-all-review-assignments", verifyToken, async (req, res) => {
+  try {
+    // Lấy tất cả các phân công phản biện và populate các trường liên quan
+    const reviewAssignments = await ReviewAssignment.find()
+      .populate({
+        path: "studentGroup",
+        select: "groupCode groupName", // Chọn các trường bạn muốn hiển thị của nhóm
+      })
+      .populate({
+        path: "reviewerTeacher",
+        select: "fullName email", // Chọn các trường bạn muốn hiển thị của giảng viên
+      })
+      .populate({
+        path: "topic",
+        select: "nameTopic", // Chọn các trường bạn muốn hiển thị của đề tài
+      });
+
+    // Lọc và map dữ liệu để trả về một cấu trúc dễ đọc
+    const formattedAssignments = reviewAssignments.map((assignment) => ({
+      reviewPanelId: assignment._id,
+      reviewers: assignment.reviewerTeacher.map((teacher) => ({
+        teacherId: teacher._id,
+        teacherName: teacher.fullName,
+      })),
+      studentGroups: assignment.studentGroup.map((group) => ({
+        groupId: group._id,
+        groupCode: group.groupCode,
+        groupName: group.groupName,
+      })),
+      topics: assignment.topic.map((topic) => ({
+        topicId: topic._id,
+        topicName: topic.nameTopic,
+      })),
+      status: assignment.status,
+      assignedDate: assignment.assignedDate,
+    }));
+
+    return res.json({
+      success: true,
+      count: formattedAssignments.length,
+      data: formattedAssignments,
+    });
+  } catch (error) {
+    console.error("Error in get review assignments:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi lấy danh sách phân công phản biện",
+      error: error.message,
+    });
+  }
+});
 
 module.exports = router;

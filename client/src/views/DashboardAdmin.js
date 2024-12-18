@@ -39,6 +39,8 @@ import GradeIcon from "@mui/icons-material/Grade";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import GavelIcon from "@mui/icons-material/Gavel";
 import BlockIcon from "@mui/icons-material/Block";
+import { useLocation } from "react-router-dom";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 
 const drawerWidth = 240;
 
@@ -47,6 +49,7 @@ const DashboardAdmin = () => {
   const [openSubMenu, setOpenSubMenu] = useState({}); // State cho menu con
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width:600px)"); // Xác định nếu là màn hình nhỏ
+  const location = useLocation(); // Thêm hook useLocation
 
   const toggleDrawer = () => {
     setOpen(!open);
@@ -65,6 +68,7 @@ const DashboardAdmin = () => {
       text: "Trang chủ",
       icon: <HomeIcon />,
       onClick: () => navigate("/dashboardAdmin"),
+      path: "/dashboardAdmin", // Thêm path để so sánh
     },
     {
       text: "Quản lý giảng viên",
@@ -74,11 +78,13 @@ const DashboardAdmin = () => {
           text: "Quản lý tài khoản giảng viên",
           icon: <AccountCircleIcon />,
           onClick: () => navigate("/dashboardAdmin/manage-teacher-accounts"),
+          path: "/dashboardAdmin/manage-teacher-accounts",
         },
         {
           text: "Danh sách giảng viên", // Thêm mục "Nhóm sinh viên"
           icon: <ListAltIcon />,
           onClick: () => navigate("/dashboardAdmin/teacher-management"), // Chuyển đến trang "Nhóm sinh viên"
+          path: "/dashboardAdmin/teacher-management",
         },
       ],
     },
@@ -90,11 +96,13 @@ const DashboardAdmin = () => {
           text: "Quản lý tài khoản sinh viên",
           icon: <AccountCircleIcon />,
           onClick: () => navigate("/dashboardAdmin/manage-student-accounts"),
+          path: "/dashboardAdmin/manage-student-accounts",
         },
         {
           text: "Nhóm sinh viên", // Thêm mục "Nhóm sinh viên"
           icon: <GroupsIcon />,
           onClick: () => navigate("/dashboardAdmin/student-groups"), // Chuyển đến trang "Nhóm sinh viên"
+          path: "/dashboardAdmin/student-groups",
         },
       ],
     },
@@ -106,6 +114,7 @@ const DashboardAdmin = () => {
           text: "Đề tài của giảng viên",
           icon: <TopicIcon />,
           onClick: () => navigate("/dashboardAdmin/manage-topics"),
+          path: "/dashboardAdmin/manage-topics",
         },
         /*  {
           text: "Danh sách đề tài", // Thêm mục "Nhóm sinh viên"
@@ -123,16 +132,45 @@ const DashboardAdmin = () => {
           text: "Phân công chấm phản biện",
           icon: <AssignmentIndIcon />,
           onClick: () => navigate("/dashboardAdmin/review-topics"),
+          path: "/dashboardAdmin/review-topics",
         },
         {
           text: "Phân công chấm hội đồng",
           icon: <AccountBalanceIcon />,
           onClick: () => navigate("/dashboardAdmin/council-topics"),
+          path: "/dashboardAdmin/council-topics",
         },
         {
           text: "Phân công chấm poster",
           icon: <PictureAsPdfIcon />,
           onClick: () => navigate("/dashboardAdmin/poster-topics"),
+          path: "/dashboardAdmin/poster-topics",
+        },
+      ],
+    },
+
+    //Danh sách Giảng viên được phân công
+    {
+      text: "Quản lý hội đồng phân công",
+      icon: <AdminPanelSettingsIcon />,
+      subMenu: [
+        {
+          text: "Quản lý hội đồng phản biện",
+          icon: <AssignmentIndIcon />,
+          onClick: () => navigate("/dashboardAdmin/manage-review-teacher"),
+          path: "/dashboardAdmin/manage-review-teacher",
+        },
+        {
+          text: "Quản lý hội đồng báo cáo",
+          icon: <AccountBalanceIcon />,
+          onClick: () => navigate("/dashboardAdmin/manage-council-teacher"),
+          path: "/dashboardAdmin/manage-council-teacher",
+        },
+        {
+          text: "Quản lý hội đồng poster",
+          icon: <PictureAsPdfIcon />,
+          onClick: () => navigate("/dashboardAdmin/manage-poster-teacher"),
+          path: "/dashboardAdmin/manage-poster-teacher",
         },
       ],
     },
@@ -145,6 +183,7 @@ const DashboardAdmin = () => {
           text: "Báo cáo khóa luận của sinh viên",
           icon: <InsertDriveFileIcon />,
           onClick: () => navigate("/dashboardAdmin/AdminReportList"),
+          path: "/dashboardAdmin/AdminReportList",
         },
       ],
     },
@@ -156,6 +195,7 @@ const DashboardAdmin = () => {
           text: "Điểm sinh viên",
           icon: <LeaderboardIcon />,
           onClick: () => navigate("/dashboardAdmin/manage-score"),
+          path: "/dashboardAdmin/manage-score",
         },
       ],
     },
@@ -167,6 +207,7 @@ const DashboardAdmin = () => {
           text: "Khóa chức năng",
           icon: <BlockIcon />,
           onClick: () => navigate("/dashboardAdmin/feature-management"),
+          path: "/dashboardAdmin/feature-management",
         },
       ],
     },
@@ -180,10 +221,26 @@ const DashboardAdmin = () => {
           text: "Gửi thông báo tổng",
           icon: <SendIcon />,
           onClick: () => navigate("/dashboardAdmin/notifications"),
+          path: "/dashboardAdmin/notifications",
         },
       ],
     },
   ];
+
+  // Hàm kiểm tra xem một mục menu có đang được chọn hay không
+  const isMenuItemSelected = (item) => {
+    // Kiểm tra cho menu chính
+    if (item.path && location.pathname === item.path) return true;
+
+    // Kiểm tra cho submenu
+    if (item.subMenu) {
+      return item.subMenu.some(
+        (subItem) => subItem.path && location.pathname === subItem.path
+      );
+    }
+
+    return false;
+  };
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -239,10 +296,19 @@ const DashboardAdmin = () => {
                 onClick={
                   item.subMenu ? () => handleToggleSubMenu(index) : item.onClick // Gọi trực tiếp onClick nếu không có subMenu
                 }
-                sx={{
+                /* sx={{
                   "&:hover": {
                     backgroundColor: "#BFBFBF", // Màu nền khi hover
                     fontWeight: "bold", // Chữ đậm hơn khi hover
+                  },
+                }} */
+                sx={{
+                  backgroundColor: isMenuItemSelected(item)
+                    ? "#E0E0E0" // Màu nền khi được chọn
+                    : "transparent",
+                  "&:hover": {
+                    backgroundColor: "#BFBFBF",
+                    fontWeight: "bold",
                   },
                 }}
               >
@@ -259,11 +325,21 @@ const DashboardAdmin = () => {
                       <ListItem
                         button
                         key={subIndex}
-                        sx={{
+                        /* sx={{
                           pl: 4,
                           "&:hover": {
                             backgroundColor: "#BFBFBF", // Màu nền khi hover
                             fontWeight: "bold", // Chữ đậm hơn khi hover
+                          },
+                        }} */
+                        sx={{
+                          pl: 4,
+                          backgroundColor: isMenuItemSelected(subItem)
+                            ? "#E0E0E0" // Màu nền khi được chọn
+                            : "transparent",
+                          "&:hover": {
+                            backgroundColor: "#BFBFBF",
+                            fontWeight: "bold",
                           },
                         }}
                         onClick={subItem.onClick}

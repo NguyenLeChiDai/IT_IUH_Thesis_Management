@@ -15,6 +15,7 @@ const path = require("path");
 const fs = require("fs");
 const archiver = require("archiver");
 const Activity = require("../models/Activity");
+const Notification = require("../models/Notification");
 
 // Lấy danh sách báo cáo trong thư mục (cho giảng viên)
 router.get(
@@ -266,8 +267,8 @@ router.post(
     }
   }
 );
-// Lấy danh sách thư mục báo cáo
 
+// Lấy danh sách thư mục báo cáo
 router.get("/folders", verifyToken, async (req, res) => {
   try {
     let folders = [];
@@ -793,7 +794,7 @@ const feedbackStorage = multer.diskStorage({
 
 const uploadFeedback = multer({
   storage: feedbackStorage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
 });
 
 // Thêm phản hồi cho báo cáo
@@ -902,9 +903,116 @@ const createActivity = async (activityData) => {
   }
 };
 
-// API để giảng viên gửi báo cáo cho admin
-
+// API để giảng viên duyệt, gửi báo cáo cho admin
 router.post(
+  "/submit-to-admin/:reportId",
+  verifyToken,
+  checkRole("Giảng viên"),
+  async (req, res) => {
+    try {
+      const report = await ThesisReport.findById(req.params.reportId)
+        .populate("student", "name studentId")
+        .populate({
+          path: "group",
+          populate: {
+            path: "profileStudents.student",
+            select: "name studentId user", // Thêm trường user để có thể gửi thông báo
+          },
+        })
+        .populate("topic", "nameTopic")
+        .populate("folder", "name")
+        .populate("teacher", "name");
+
+      if (!report) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy báo cáo",
+        });
+      }
+
+      // Kiểm tra xem báo cáo đã được gửi cho admin chưa
+      const existingAdminReport = await AdminReport.findOne({
+        originalReport: report._id,
+      });
+      if (existingAdminReport) {
+        return res.status(400).json({
+          success: false,
+          message: "Báo cáo này đã được gửi cho admin",
+        });
+      }
+
+      // Tìm các sinh viên thuộc nhóm báo cáo
+      const groupMembers = report.group.profileStudents;
+
+      // Tạo bản ghi mới trong AdminReport
+      const adminReport = new AdminReport({
+        originalReport: report._id,
+        students: groupMembers.map((member) => member.student._id),
+        group: report.group._id,
+        topic: report.topic._id,
+        folder: report.folder._id,
+        teacher: report.teacher._id,
+        fileName: report.fileName,
+        fileUrl: report.fileUrl,
+        submissionDate: report.submissionDate,
+        teacherApprovalDate: new Date(),
+      });
+
+      await adminReport.save();
+
+      // Cập nhật trạng thái báo cáo gốc
+      report.adminSubmissionStatus = "Đã gửi";
+      await report.save();
+
+      // Tạo thông báo cho nhóm sinh viên
+      // Chỉ gửi cho sinh viên trong nhóm báo cáo
+      const notificationPromises = groupMembers.map(async (member) => {
+        const notification = new Notification({
+          title: "Báo cáo đã được phê duyệt",
+          message: `Báo cáo "${report.fileName}" của đề tài "${report.topic.nameTopic}" đã được giảng viên ${report.teacher.name} phê duyệt và gửi cho Admin.`,
+          type: "student", // Chỉ gửi cho sinh viên
+          recipients: [member.student._id], // Chỉ gửi cho các thành viên của nhóm
+          createdBy: req.userId,
+        });
+
+        await notification.save();
+
+        // Gửi thông báo qua socket nếu có
+        if (global.io) {
+          global.io
+            .to(member.student.user.toString())
+            .emit("receiveNotification", notification);
+        }
+      });
+
+      await Promise.all(notificationPromises);
+
+      // Tạo hoạt động mới
+      const activityDescription = `Giảng viên ${report.teacher.name} đã gửi báo cáo "${report.fileName}" của đề tài "${report.topic.nameTopic}" cho Admin`;
+
+      await createActivity({
+        type: "REPORT_SENT_TO_ADMIN",
+        description: activityDescription,
+        actor: req.userId,
+        relatedTopic: report.topic._id,
+        relatedGroup: report.group._id,
+      });
+
+      res.json({
+        success: true,
+        message: "Đã gửi báo cáo cho admin thành công",
+      });
+    } catch (error) {
+      console.error("Error in submitting report to admin:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi gửi báo cáo cho admin",
+        error: error.message,
+      });
+    }
+  }
+);
+/* router.post(
   "/submit-to-admin/:reportId",
   verifyToken,
   checkRole("Giảng viên"),
@@ -993,5 +1101,6 @@ router.post(
       });
     }
   }
-);
+); */
+
 module.exports = router;

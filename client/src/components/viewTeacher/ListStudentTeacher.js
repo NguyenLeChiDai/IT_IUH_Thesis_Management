@@ -98,7 +98,7 @@ const ListStudentTeacher = () => {
     });
   };
 
-  const handleExportExcel = async () => {
+  /*  const handleExportExcel = async () => {
     try {
       // Lấy token từ localStorage hoặc nơi bạn lưu trữ
       const token = localStorage.getItem("token"); // hoặc cookie nếu bạn sử dụng cookie
@@ -122,7 +122,7 @@ const ListStudentTeacher = () => {
       console.error("Lỗi khi xuất file Excel:", error);
       alert("Có lỗi xảy ra khi xuất file Excel."); // Thông báo cho người dùng
     }
-  };
+  }; */
 
   if (loading) return <p className="text-center py-4">Đang tải dữ liệu...</p>;
   if (error)
@@ -205,14 +205,14 @@ const ListStudentTeacher = () => {
       </TableContainer>
 
       {/* Nút xuất file Excel nằm bên dưới bảng */}
-      <Button
+      {/* <Button
         variant="contained"
         color="secondary"
         onClick={handleExportExcel}
         sx={{ ml: 2, mt: 2 }}
       >
         Xuất file Excel
-      </Button>
+      </Button> */}
 
       <TablePagination
         rowsPerPageOptions={[5, 10, 25]}

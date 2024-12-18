@@ -1,14 +1,15 @@
-const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
 const { verifyToken, checkRole } = require("../middleware/auth");
-
 const Score = require("../models/ScoreStudent.js"); // Import model profile
 const Topic = require("../models/Topic");
 const Student = require("../models/ProfileStudent"); // Import model profileStudent
 const Teacher = require("../models/ProfileTeacher"); // Import model profileTeacher
 const xlsx = require("xlsx"); // Import thư viện xlsx
+const mongoose = require("mongoose");
+
 const AdminFeature = require("../models/AdminFeature");
+
 // Chấm điểm hướng dẫn
 router.post("/input-scores", verifyToken, async (req, res) => {
   try {
@@ -1062,7 +1063,7 @@ router.get("/get-student-score/:studentId", verifyToken, async (req, res) => {
   }
 });
 
-router.get("/get-all-scores", verifyToken, async (req, res) => {
+/* router.get("/get-all-scores", verifyToken, async (req, res) => {
   try {
     let query = {
       instructorScore: { $exists: true, $ne: null },
@@ -1193,6 +1194,144 @@ router.get("/get-all-scores", verifyToken, async (req, res) => {
       error: error.message,
     });
   }
+}); */
+
+//get all score cho admin xem điểm
+router.get("/get-all-scores", verifyToken, async (req, res) => {
+  try {
+    // Điều kiện query mới: chỉ cần có ít nhất một loại điểm
+    let query = {
+      $or: [
+        { instructorScore: { $exists: true, $ne: null } },
+        { reviewerScore: { $exists: true, $ne: null } },
+        { councilScore: { $exists: true, $ne: null } },
+        { posterScore: { $exists: true, $ne: null } },
+      ],
+    };
+
+    const scores = await Score.find(query)
+      .populate("student", "studentId name email phone class major")
+      .populate({
+        path: "student",
+        populate: {
+          path: "studentGroup",
+          model: "studentgroups",
+          select: "groupId groupName",
+        },
+      })
+      .populate({
+        path: "studentGroup",
+        model: "studentgroups",
+        select: "groupId groupName",
+      })
+      .populate({
+        path: "topic",
+        model: "topics",
+        select: "nameTopic descriptionTopic",
+      })
+      .populate("gradedBy", "name email")
+      .sort({ gradedAt: -1 });
+
+    const formattedScores = await Promise.all(
+      scores
+        .filter((score) => score.student)
+        .map(async (score) => {
+          // Tính điểm theo công thức mới:
+          // totalScore = ((instructorScore * 0.7) + (reviewerScore * 0.3) + councilScore/posterScore) / 2
+          const part2Score = score.councilScore || score.posterScore;
+          const finalScore = Number(
+            (
+              (score.instructorScore * 0.7 +
+                score.reviewerScore * 0.3 +
+                part2Score) /
+              2
+            ).toFixed(1)
+          );
+
+          let studentGroup = null;
+          if (score.student && score.student.studentGroup) {
+            studentGroup = score.student.studentGroup;
+          } else if (score.studentGroup) {
+            studentGroup = score.studentGroup;
+          }
+
+          let topic = score.topic;
+          if (!topic && studentGroup) {
+            const topicData = await Topic.findOne({
+              "Groups.group": studentGroup._id,
+            }).select("nameTopic descriptionTopic");
+            topic = topicData;
+          }
+
+          return {
+            student: {
+              id: score.student._id,
+              studentId: score.student.studentId || "",
+              name: score.student.name || "",
+              email: score.student.email || "",
+              phone: score.student.phone || "",
+              class: score.student.class || "",
+              major: score.student.major || "",
+            },
+            topic: topic
+              ? {
+                  id: topic._id,
+                  nameTopic: topic.nameTopic || "",
+                  descriptionTopic: topic.descriptionTopic || "",
+                }
+              : null,
+            studentGroup: studentGroup
+              ? {
+                  id: studentGroup._id,
+                  groupId: studentGroup.groupId || "",
+                  groupName: studentGroup.groupName || "",
+                }
+              : null,
+            scores: {
+              instructor: score.instructorScore
+                ? Number(score.instructorScore.toFixed(1))
+                : null,
+              reviewer: score.reviewerScore
+                ? Number(score.reviewerScore.toFixed(1))
+                : null,
+              council: score.councilScore
+                ? Number(score.councilScore.toFixed(1))
+                : null,
+              poster: score.posterScore
+                ? Number(score.posterScore.toFixed(1))
+                : null,
+              final: score.totalScore
+                ? Number(score.totalScore.toFixed(1))
+                : finalScore,
+            },
+            feedback: score.feedback || "",
+            gradingInfo: {
+              gradedBy: score.gradedBy
+                ? {
+                    id: score.gradedBy._id,
+                    name: score.gradedBy.name || "",
+                    email: score.gradedBy.email || "",
+                  }
+                : null,
+              gradedAt: score.gradedAt || new Date(),
+            },
+          };
+        })
+    );
+
+    return res.json({
+      success: true,
+      totalRecords: formattedScores.length,
+      data: formattedScores,
+    });
+  } catch (error) {
+    console.error("Error in get-all-scores:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi lấy danh sách điểm",
+      error: error.message,
+    });
+  }
 });
 
 router.post(
@@ -1303,7 +1442,7 @@ router.put(
   }
 );
 
-// Lấy điểm của sinh viên do giảng viên hướng dẫn
+// Lấy điểm của sinh viên cho giảng viên hướng dẫn
 router.get("/get-teacher-students-scores", verifyToken, async (req, res) => {
   try {
     if (req.role !== "Giảng viên") {

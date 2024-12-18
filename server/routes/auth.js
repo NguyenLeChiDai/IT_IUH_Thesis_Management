@@ -138,7 +138,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Đổi mật khẩu bằng userId
+// ĐỔI MẬT KHẨU bằng userId
 router.post("/change-password/:id", async (req, res) => {
   const { oldPassword, newPassword } = req.body;
 
@@ -194,7 +194,7 @@ router.post("/change-password/:id", async (req, res) => {
   }
 });
 
-// Cấu hình transporter cho Nodemailer
+// QUÊN MẬT KHẨU Nodemailer
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -203,7 +203,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Hàm tạo OTP
+// HÀM TẠO OTP
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }

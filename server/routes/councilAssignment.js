@@ -9,7 +9,7 @@ const ProfileTeacher = require("../models/ProfileTeacher");
 const Topic = require("../models/Topic");
 const ReviewAssignment = require("../models/ReviewAssignment");
 const { verifyToken, checkRole } = require("../middleware/auth");
-const topic = require("../models/Topic");
+
 const Score = require("../models/ScoreStudent.js");
 const CouncilAssignment = require("../models/CouncilAssignment.js");
 
@@ -50,7 +50,157 @@ router.get("/get-all-teachers", verifyToken, async (req, res) => {
   }
 });
 
-// get danh sách nhóm để phân công chấm hội đồng
+//-----------------------------------------------------------------------------
+// Tạo hội đồng chấm
+router.post("/create-council-assignment", verifyToken, async (req, res) => {
+  try {
+    const { councilTeacher } = req.body; // Chỉ lấy danh sách giảng viên
+
+    // Kiểm tra số lượng giảng viên trong hội đồng (3-5 người)
+    if (
+      !councilTeacher ||
+      councilTeacher.length < 3 ||
+      councilTeacher.length > 5
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng chọn từ 3 đến 5 giảng viên cho hội đồng",
+      });
+    }
+
+    // Kiểm tra xem giảng viên đã được phân công vào hội đồng nào chưa
+    const existingAssignments = await CouncilAssignment.find({
+      CouncilTeacher: { $in: councilTeacher },
+    });
+
+    // Nếu bất kỳ giảng viên nào đã được phân công, trả về lỗi
+    if (existingAssignments.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Một hoặc nhiều giảng viên đã được phân công vào hội đồng khác",
+        assignedTeachers: existingAssignments
+          .map((assignment) => assignment.CouncilTeacher)
+          .flat(),
+      });
+    }
+
+    // Tạo mới bản ghi hội đồng chấm
+    const newCouncilAssignment = new CouncilAssignment({
+      CouncilTeacher: councilTeacher,
+      status: "Chờ chấm điểm", // Trạng thái mặc định ban đầu
+    });
+
+    await newCouncilAssignment.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Tạo hội đồng chấm thành công",
+      councilAssignment: newCouncilAssignment,
+    });
+  } catch (error) {
+    console.error("Lỗi tạo hội đồng:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi tạo hội đồng",
+      error: error.message,
+    });
+  }
+});
+
+// get danh sách tất cả các giảng viên chưa được phân công hội đồng ver2
+// @route GET
+// @desc Get all teachers not in any council assignment
+// @access Private
+router.get("/get-all-teachers-for-council", verifyToken, async (req, res) => {
+  try {
+    // Tìm tất cả các hội đồng đã được tạo
+    const councilAssignments = await CouncilAssignment.find({
+      CouncilTeacher: { $exists: true, $ne: null },
+    });
+
+    // Trích xuất danh sách các ID giảng viên đã được phân công
+    const assignedTeacherIds = councilAssignments.reduce((acc, council) => {
+      return acc.concat(council.CouncilTeacher);
+    }, []);
+
+    // Lấy danh sách tất cả giảng viên, loại trừ những giảng viên đã có trong hội đồng
+    const teachers = await ProfileTeacher.find({
+      _id: { $nin: assignedTeacherIds },
+    })
+      .select("teacherId name phone email gender major")
+      .populate({
+        path: "user",
+        select: "username role",
+      });
+
+    // Kiểm tra nếu không có giảng viên nào
+    if (!teachers.length) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Không tìm thấy giảng viên nào chưa được phân công vào hội đồng",
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Lấy danh sách giảng viên chưa được phân công thành công",
+      teachers,
+    });
+  } catch (error) {
+    console.error("Error in get-all-teachers-for-council:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi lấy danh sách giảng viên",
+      error: error.message,
+    });
+  }
+});
+
+//Get danh sách các hội đồng hiện có
+router.get("/get-all-council-assignments", verifyToken, async (req, res) => {
+  try {
+    // Fetch all council assignments and populate details
+    const councilAssignments = await CouncilAssignment.find()
+      .populate({
+        path: "CouncilTeacher",
+        select: "name email department", // Chọn các trường cụ thể muốn hiển thị
+      })
+      .populate({
+        path: "studentGroup",
+        select: "groupName", // Thông tin nhóm sinh viên
+      })
+      .populate({
+        path: "topic",
+        select: "topicName", // Thông tin đề tài
+      });
+
+    // Nếu không tìm thấy hội đồng nào
+    if (councilAssignments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy hội đồng nào",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Lấy danh sách hội đồng thành công",
+      totalAssignments: councilAssignments.length,
+      councilAssignments: councilAssignments,
+    });
+  } catch (error) {
+    console.error("Lỗi lấy danh sách hội đồng:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi lấy danh sách hội đồng",
+      error: error.message,
+    });
+  }
+});
+
+//get danh sách sinh viên để phân công
 router.get(
   "/get-eligible-council-students/:teacherId",
   verifyToken,
@@ -64,46 +214,24 @@ router.get(
         });
       }
 
-      // Tìm profile của giảng viên được chọn
-      const teacherProfile = await ProfileTeacher.findOne({
-        teacherId: selectedTeacherId,
-      });
-      if (!teacherProfile) {
-        return res.status(404).json({
-          success: false,
-          message: "Không tìm thấy giảng viên",
-        });
-      }
-      // Lấy thông tin phân công hội đồng hiện tại
-      const councilAssignments = await CouncilAssignment.find({
-        CouncilTeacher: teacherProfile._id,
-      }).lean();
+      // // Log giáo viên được chọn để debug
+      // console.log("Giáo viên được chọn:", selectedTeacherId);
 
-      // Tạo map các nhóm đã được phân công
-      const assignedGroupsMap = new Map(
-        councilAssignments.map((assignment) => [
-          assignment.studentGroup.toString(),
-          {
-            assignedDate: assignment.assignedDate,
-            status: assignment.status,
-            _id: assignment._id,
-          },
-        ])
-      );
-
-      // Lấy tất cả các nhóm và điểm của sinh viên
+      // Lấy tất cả các nhóm sinh viên
       const studentGroups = await StudentGroup.find({}).populate({
         path: "profileStudents.student",
         model: "profileStudent",
       });
 
-      // Tính điểm và lấy thông tin topic cho mỗi nhóm
+      // console.log("Tổng số nhóm sinh viên:", studentGroups.length);
+
+      // Xử lý điểm và thông tin topic cho từng nhóm
       const groupScores = await Promise.all(
         studentGroups.map(async (group) => {
           try {
-            // Tìm assignment để lấy thông tin topic và giảng viên
-            const assignment = await ReviewAssignment.findOne({
-              studentGroup: group._id,
+            // Tìm tất cả các assignment liên quan đến nhóm
+            const assignments = await ReviewAssignment.find({
+              studentGroup: { $in: [group._id] },
             }).populate({
               path: "topic",
               populate: {
@@ -112,18 +240,41 @@ router.get(
               },
             });
 
-            // Kiểm tra các điều kiện không hợp lệ
-            if (!assignment?.topic?.teacher || assignment.CouncilTeacher) {
+            // // Log thông tin assignment để debug
+            // console.log(`Nhóm ${group.groupId} - Số lượng assignment:`, assignments.length);
+
+            // Nếu không có assignment, bỏ qua nhóm này
+            if (assignments.length === 0) {
+              console.log(`Nhóm ${group.groupId}: Không tìm thấy assignment`);
               return null;
             }
 
-            // So sánh teacherId của giảng viên hướng dẫn với selectedTeacherId
-            if (assignment.topic.teacher.teacherId === selectedTeacherId) {
+            // Chọn assignment đầu tiên
+            const assignment = assignments[0];
+
+            // Kiểm tra điều kiện không hợp lệ
+            if (!assignment.topic?.[0]?.teacher) {
               console.log(
-                `Skipping group ${group.groupId} as it belongs to selected teacher ${selectedTeacherId}`
+                `Nhóm ${group.groupId}: Không có thông tin topic hoặc giảng viên`
               );
               return null;
             }
+
+            // Lấy ID giảng viên hướng dẫn
+            const advisorTeacherId = assignment.topic[0].teacher.teacherId;
+
+            // ĐIỀU KIỆN QUAN TRỌNG: Loại trừ nhóm do giảng viên hướng dẫn
+            if (advisorTeacherId === selectedTeacherId) {
+              console.log(
+                `Nhóm ${group.groupId}: Loại do trùng giảng viên hướng dẫn`
+              );
+              return null;
+            }
+
+            console.log(
+              `Nhóm ${group.groupId} - ID Giảng viên hướng dẫn:`,
+              advisorTeacherId
+            );
 
             // Lấy điểm của tất cả sinh viên trong nhóm
             const studentScores = await Promise.all(
@@ -132,7 +283,13 @@ router.get(
                   student: studentProfile.student._id,
                 }).sort({ gradedAt: -1 });
 
-                if (!scores?.length) return null;
+                // Nếu không có điểm, bỏ qua sinh viên
+                if (!scores?.length) {
+                  console.log(
+                    `Sinh viên ${studentProfile.student._id}: Không có điểm`
+                  );
+                  return null;
+                }
 
                 // Lấy điểm mới nhất
                 const latestScore = scores[0];
@@ -140,6 +297,9 @@ router.get(
                   !latestScore.instructorScore ||
                   !latestScore.reviewerScore
                 ) {
+                  console.log(
+                    `Sinh viên ${studentProfile.student._id}: Điểm chưa đầy đủ`
+                  );
                   return null;
                 }
 
@@ -152,10 +312,15 @@ router.get(
               })
             );
 
+            // Kiểm tra nếu có sinh viên không có điểm
             if (studentScores.includes(null)) {
+              console.log(
+                `Nhóm ${group.groupId}: Một số sinh viên không có điểm`
+              );
               return null;
             }
 
+            // Tính tổng và điểm trung bình của nhóm
             const groupTotalScore = studentScores.reduce(
               (sum, score) => sum + score.total,
               0
@@ -163,30 +328,34 @@ router.get(
             const groupAverageScore =
               groupTotalScore / (studentScores.length * 2);
 
+            console.log(
+              `Nhóm ${group.groupId} - Điểm trung bình:`,
+              groupAverageScore
+            );
+
             return {
               group,
               studentScores,
               totalScore: groupTotalScore,
               averageScore: groupAverageScore,
-              topic: assignment.topic,
-              teacherId: assignment.topic.teacher.teacherId, // Sử dụng teacherId thay vì _id
-              teacherName: assignment.topic.teacher.name,
+              advisorTeacherId,
+              teacherName: assignment.topic[0].teacher.name,
+              topic: assignment.topic[0],
             };
           } catch (error) {
-            console.error(`Error processing group ${group._id}:`, error);
+            console.error(`Lỗi xử lý nhóm ${group._id}:`, error);
             return null;
           }
         })
       );
 
-      // Lọc bỏ các nhóm null và nhóm của giảng viên được chọn
-      const validGroupScores = groupScores.filter(
-        (item) => item !== null && item.teacherId !== selectedTeacherId
-      );
+      // Lọc bỏ các nhóm null
+      const validGroupScores = groupScores.filter((item) => item !== null);
+      console.log("Số nhóm hợp lệ:", validGroupScores.length);
 
       // Nhóm các nhóm theo giảng viên
       const teacherGroups = validGroupScores.reduce((acc, groupScore) => {
-        const teacherId = groupScore.teacherId;
+        const teacherId = groupScore.advisorTeacherId;
 
         if (!acc[teacherId]) {
           acc[teacherId] = {
@@ -198,15 +367,19 @@ router.get(
         return acc;
       }, {});
 
+      console.log("Các giảng viên có nhóm:", Object.keys(teacherGroups));
+
       // Lấy các nhóm đủ điều kiện
       const eligibleGroups = [];
       for (const [teacherId, teacherData] of Object.entries(teacherGroups)) {
-        if (teacherId === selectedTeacherId) continue; // Double check một lần nữa
-
         const numberOfGroups = teacherData.groups.length;
         const numberOfEligibleGroups = Math.max(
           1,
           Math.ceil(numberOfGroups * 0.1)
+        );
+
+        console.log(
+          `Giảng viên ${teacherId}: Tổng số nhóm ${numberOfGroups}, Số nhóm đủ điều kiện ${numberOfEligibleGroups}`
         );
 
         const topGroups = teacherData.groups
@@ -216,65 +389,45 @@ router.get(
         eligibleGroups.push(...topGroups);
       }
 
-      // Format dữ liệu trả về
-      // Format dữ liệu trả về với thông tin phân công
-      const formattedGroups = eligibleGroups.map(
-        ({
-          group,
-          studentScores,
-          totalScore,
-          averageScore,
-          teacherName,
-          topic,
-        }) => {
-          const assignmentInfo = assignedGroupsMap.get(group._id.toString());
+      console.log("Số nhóm được chọn:", eligibleGroups.length);
 
-          return {
-            _id: group._id,
-            groupInfo: {
-              groupId: group.groupId,
-              groupName: group.groupName,
-              totalScore: totalScore.toFixed(2),
-              averageScore: averageScore.toFixed(2),
-            },
-            students: group.profileStudents.map((student, index) => ({
-              name: student.student.name,
-              studentId: student.student.studentId,
-              email: student.student.email,
-              phone: student.student.phone,
-              role: student.role,
-              scores: {
-                instructorScore:
-                  studentScores[index].instructorScore.toFixed(2),
-                reviewerScore: studentScores[index].reviewerScore.toFixed(2),
-                total: studentScores[index].total.toFixed(2),
-              },
-            })),
-            advisor: {
-              name: teacherName,
-            },
-            nameTopic: topic?.nameTopic || "Chưa có chủ đề",
-            isAssigned: !!assignmentInfo,
-            councilInfo: assignmentInfo || null,
-          };
-        }
-      );
-      // Thống kê chỉ bao gồm các giảng viên không được chọn
-      const teacherStats = Object.entries(teacherGroups)
-        .filter(([teacherId]) => teacherId !== selectedTeacherId)
-        .map(([_, data]) => ({
-          teacherName: data.teacherName,
-          totalGroups: data.groups.length,
-          selectedGroups: Math.max(1, Math.ceil(data.groups.length * 0.1)),
-        }));
+      // Thống kê giảng viên
+      const teacherStats = Object.entries(teacherGroups).map(([_, data]) => ({
+        teacherName: data.teacherName,
+        totalGroups: data.groups.length,
+        selectedGroups: Math.max(1, Math.ceil(data.groups.length * 0.1)),
+      }));
 
-      const totalEligibleGroups = formattedGroups.length;
+      const totalEligibleGroups = eligibleGroups.length;
       const totalGroups = studentGroups.length;
 
       return res.json({
         success: true,
         message: "Lấy danh sách nhóm đủ điều kiện chấm hội đồng thành công",
-        eligibleGroups: formattedGroups,
+        eligibleGroups: eligibleGroups.map((group) => ({
+          _id: group.group._id,
+          groupInfo: {
+            groupId: group.group.groupId,
+            groupName: group.group.groupName,
+            totalScore: group.totalScore.toFixed(2),
+            averageScore: group.averageScore.toFixed(2),
+          },
+          students: group.group.profileStudents.map((student, index) => ({
+            name: student.student.name,
+            studentId: student.student.studentId,
+            scores: {
+              instructorScore:
+                group.studentScores[index].instructorScore.toFixed(2),
+              reviewerScore:
+                group.studentScores[index].reviewerScore.toFixed(2),
+              total: group.studentScores[index].total.toFixed(2),
+            },
+          })),
+          advisor: {
+            name: group.teacherName,
+          },
+          topic: group.topic,
+        })),
         totalEligibleGroups,
         totalGroups,
         percentageSelected:
@@ -282,7 +435,10 @@ router.get(
         teacherStats,
       });
     } catch (error) {
-      console.error("Error in get-eligible-council-students:", error);
+      console.error(
+        "Lỗi khi lấy danh sách nhóm đủ điều kiện chấm hội đồng:",
+        error
+      );
       return res.status(500).json({
         success: false,
         message: "Lỗi server khi lấy danh sách nhóm đủ điều kiện chấm hội đồng",
@@ -292,153 +448,202 @@ router.get(
   }
 );
 
-// Api phân công giảng viên chấm hội đồng
-router.post("/assign-council-teacher", verifyToken, async (req, res) => {
-  console.log("Received request to assign council teacher");
+// Xóa hội đồng
+router.delete(
+  "/delete-council-assignment/:councilAssignmentId",
+  verifyToken,
+  async (req, res) => {
+    try {
+      const councilAssignmentId = req.params.councilAssignmentId;
+
+      // Kiểm tra hội đồng có tồn tại không
+      const existingCouncilAssignment = await CouncilAssignment.findById(
+        councilAssignmentId
+      );
+
+      if (!existingCouncilAssignment) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy hội đồng chấm",
+        });
+      }
+
+      // Kiểm tra trạng thái của hội đồng
+      if (existingCouncilAssignment.status === "Đã chấm điểm") {
+        return res.status(400).json({
+          success: false,
+          message: "Không thể xóa hội đồng đã hoàn thành chấm điểm",
+        });
+      }
+
+      // Xóa hội đồng
+      await CouncilAssignment.findByIdAndDelete(councilAssignmentId);
+
+      return res.status(200).json({
+        success: true,
+        message: "Xóa hội đồng chấm thành công",
+        deletedCouncilAssignment: {
+          id: existingCouncilAssignment._id,
+          councilTeacher: existingCouncilAssignment.CouncilTeacher,
+          studentGroup: existingCouncilAssignment.studentGroup,
+          topic: existingCouncilAssignment.topic,
+          status: existingCouncilAssignment.status,
+        },
+      });
+    } catch (error) {
+      console.error("Lỗi xóa hội đồng chấm:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi server khi xóa hội đồng chấm",
+        error: error.message,
+      });
+    }
+  }
+);
+
+//ver 4 phân công
+router.post("/assign-council", async (req, res) => {
   try {
-    const { teacherId, groupId } = req.body;
+    const { reviewPanelId, teacherIds, groupId } = req.body;
 
     // Validate input
-    if (!teacherId || !groupId) {
-      console.log("Missing teacherId or groupId");
+    if (!reviewPanelId || !mongoose.Types.ObjectId.isValid(reviewPanelId)) {
       return res.status(400).json({
         success: false,
-        message: "Thiếu thông tin cần thiết để phân công",
+        message: "reviewPanelId không hợp lệ.",
       });
     }
 
-    // Kiểm tra giảng viên tồn tại
-    const teacherProfile = await ProfileTeacher.findOne({ teacherId });
-    if (!teacherProfile) {
-      console.log("Teacher not found with ID:", teacherId);
+    if (!teacherIds || !Array.isArray(teacherIds) || teacherIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "teacherIds phải là một mảng và không được rỗng.",
+      });
+    }
+
+    if (!groupId || !mongoose.Types.ObjectId.isValid(groupId)) {
+      return res.status(400).json({
+        success: false,
+        message: "groupId không hợp lệ.",
+      });
+    }
+
+    // Kiểm tra xem nhóm sinh viên đã được phân công hội đồng chưa
+    const existingAssignment = await CouncilAssignment.findOne({
+      studentGroup: groupId,
+    });
+
+    if (existingAssignment) {
+      return res.status(400).json({
+        success: false,
+        message: "Nhóm sinh viên này đã được phân công cho một hội đồng khác.",
+      });
+    }
+
+    // Kiểm tra tồn tại nhóm sinh viên
+    const studentGroup = await StudentGroup.findById(groupId);
+    if (!studentGroup) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy giảng viên",
+        message: "Không tìm thấy nhóm sinh viên.",
       });
     }
 
-    // Kiểm tra nhóm tồn tại và lấy thông tin
-    const group = await StudentGroup.findById(groupId).populate({
-      path: "profileStudents.student",
-      model: "profileStudent",
+    // Tìm đề tài của nhóm sinh viên
+    const topic = await Topic.findOne({
+      "Groups.group": groupId,
     });
 
-    if (!group) {
-      console.log("Group not found with ID:", groupId);
+    if (!topic) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy nhóm sinh viên",
+        message: "Không tìm thấy đề tài cho nhóm sinh viên này.",
       });
     }
 
-    // Tìm topic của nhóm từ assignment hiện tại
-    const currentAssignment = await ReviewAssignment.findOne({
-      studentGroup: groupId,
-    }).populate("topic");
-
-    if (!currentAssignment) {
+    // Kiểm tra tồn tại hội đồng
+    const reviewPanel = await CouncilAssignment.findById(reviewPanelId);
+    if (!reviewPanel) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin phân công của nhóm",
+        message: "Không tìm thấy hội đồng.",
       });
     }
 
-    // Kiểm tra xem giảng viên này có phải là giảng viên hướng dẫn của nhóm không
-    if (
-      currentAssignment.topic.teacher.toString() ===
-      teacherProfile._id.toString()
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Giảng viên hướng dẫn không thể được phân công chấm hội đồng cho nhóm của mình",
-      });
-    }
-
-    // Kiểm tra xem giảng viên này đã được phân công chấm hội đồng cho nhóm này chưa
-    const existingCouncilAssignment = await CouncilAssignment.findOne({
-      studentGroup: groupId,
-      CouncilTeacher: teacherProfile._id,
+    // Kiểm tra tồn tại các giảng viên
+    const existingTeachers = await ProfileTeacher.find({
+      _id: { $in: teacherIds },
     });
 
-    if (existingCouncilAssignment) {
-      return res.status(400).json({
+    if (existingTeachers.length !== teacherIds.length) {
+      return res.status(404).json({
         success: false,
-        message: "Giảng viên này đã được phân công chấm hội đồng cho nhóm này",
+        message: "Một hoặc nhiều giảng viên không tồn tại.",
       });
     }
 
-    // Đếm số lượng giảng viên hội đồng hiện tại của nhóm
-    const currentCouncilCount = await CouncilAssignment.countDocuments({
-      studentGroup: groupId,
+    // Cập nhật hội đồng
+    teacherIds.forEach((teacherId) => {
+      if (!reviewPanel.CouncilTeacher.includes(teacherId)) {
+        reviewPanel.CouncilTeacher.push(teacherId);
+      }
     });
 
-    // Giới hạn số lượng giảng viên hội đồng
-    const MAX_COUNCIL_MEMBERS = 3;
-    if (currentCouncilCount >= MAX_COUNCIL_MEMBERS) {
-      return res.status(400).json({
-        success: false,
-        message: `Nhóm này đã có đủ ${MAX_COUNCIL_MEMBERS} giảng viên hội đồng`,
-      });
+    if (!reviewPanel.studentGroup.includes(groupId)) {
+      reviewPanel.studentGroup.push(groupId);
     }
 
-    // Tạo phân công mới cho giảng viên hội đồng sử dụng schema mới
-    const newCouncilAssignment = new CouncilAssignment({
-      CouncilTeacher: teacherProfile._id,
-      studentGroup: groupId,
-      topic: currentAssignment.topic._id,
-      assignedDate: new Date(),
-      status: "Chờ chấm điểm",
-    });
+    if (!reviewPanel.topic.includes(topic._id)) {
+      reviewPanel.topic.push(topic._id);
+      reviewPanel.nameTopic = topic.nameTopic;
+    }
 
-    await newCouncilAssignment.save();
+    // Lưu thay đổi
+    await reviewPanel.save();
 
-    // Lấy thông tin chi tiết về phân công để trả về
-    const assignmentDetails = {
-      groupInfo: {
-        groupId: group.groupId,
-        groupName: group.groupName,
-      },
-      teacher: {
-        name: teacherProfile.name,
-        teacherId: teacherProfile.teacherId,
-      },
-      topic: currentAssignment.topic.nameTopic,
-      assignedDate: newCouncilAssignment.assignedDate,
-      status: newCouncilAssignment.status,
-      currentCouncilCount: currentCouncilCount + 1,
-      maxCouncilMembers: MAX_COUNCIL_MEMBERS,
-    };
+    // Lấy thông tin đầy đủ để trả về
+    const fullReviewPanel = await CouncilAssignment.findById(reviewPanelId)
+      .populate({
+        path: "CouncilTeacher",
+        select: "name email",
+      })
+      .populate({
+        path: "studentGroup",
+        select: "name code",
+      })
+      .populate({
+        path: "topic",
+        select: "nameTopic descriptionTopic",
+      });
 
-    console.log("Council teacher assigned successfully");
-    return res.json({
+    return res.status(200).json({
       success: true,
-      message: "Phân công giảng viên hội đồng thành công",
-      assignment: assignmentDetails,
+      message: "Cập nhật hội đồng thành công.",
+      data: {
+        ...fullReviewPanel.toObject(),
+        nameTopic: topic.nameTopic, // Trả về nameTopic
+      },
     });
   } catch (error) {
-    console.error("Error in assign-council-teacher:", error);
+    console.error("Error in /assign-council:", error);
     return res.status(500).json({
       success: false,
-      message: "Lỗi server khi phân công giảng viên hội đồng",
+      message: "Đã xảy ra lỗi máy chủ.",
       error: error.message,
     });
   }
 });
 
-// Api Hủy phân công giảng viên chấm hội đồng
-router.delete(
-  "/cancel-council-assignment/:assignmentId",
+//Hủy phân công
+router.put(
+  "/cancel-council-assignment/:assignmentId/:studentGroupId/:topicId",
   verifyToken,
   async (req, res) => {
     try {
-      const assignmentId = req.params.assignmentId;
+      const { assignmentId, studentGroupId, topicId } = req.params;
 
       // Kiểm tra xem assignment có tồn tại không
-      const existingAssignment = await CouncilAssignment.findById(assignmentId)
-        .populate("CouncilTeacher", "name teacherId")
-        .populate("studentGroup", "groupName")
-        .populate("topic", "nameTopic");
+      const existingAssignment = await CouncilAssignment.findById(assignmentId);
 
       if (!existingAssignment) {
         return res.status(404).json({
@@ -455,35 +660,57 @@ router.delete(
         });
       }
 
-      // Đếm số lượng giảng viên hội đồng còn lại
-      const remainingCouncilCount = await CouncilAssignment.countDocuments({
-        studentGroup: existingAssignment.studentGroup._id,
-        _id: { $ne: assignmentId },
-      });
+      // Loại bỏ studentGroup và topic khỏi mảng
+      existingAssignment.studentGroup = existingAssignment.studentGroup.filter(
+        (group) => group.toString() !== studentGroupId
+      );
+      existingAssignment.topic = existingAssignment.topic.filter(
+        (topic) => topic.toString() !== topicId
+      );
 
-      // Thực hiện xóa assignment
-      await CouncilAssignment.findByIdAndDelete(assignmentId);
+      // Nếu không còn nhóm sinh viên thì reset trạng thái
+      if (existingAssignment.studentGroup.length === 0) {
+        existingAssignment.status = "Chờ chấm điểm";
+      }
+
+      // Lưu thay đổi
+      await existingAssignment.save();
+
+      // Populate thông tin để trả về
+      const populatedAssignment = await CouncilAssignment.findById(assignmentId)
+        .populate({
+          path: "CouncilTeacher",
+          select: "name teacherId",
+        })
+        .populate({
+          path: "studentGroup",
+          select: "groupName",
+        })
+        .populate({
+          path: "topic",
+          select: "nameTopic",
+        });
 
       return res.json({
         success: true,
-        message: "Hủy phân công chấm hội đồng thành công",
+        message: "Hủy phân công nhóm sinh viên cho hội đồng thành công",
         canceledAssignment: {
           assignmentId: existingAssignment._id,
-          teacher: {
-            id: existingAssignment.CouncilTeacher.teacherId,
-            name: existingAssignment.CouncilTeacher.name,
-          },
-          group: {
-            id: existingAssignment.studentGroup._id,
-            name: existingAssignment.studentGroup.groupName,
-          },
-          topic: {
-            id: existingAssignment.topic._id,
-            name: existingAssignment.topic.nameTopic,
-          },
+          teachers: populatedAssignment.CouncilTeacher.map((teacher) => ({
+            id: teacher.teacherId,
+            name: teacher.name,
+          })),
+          remainingStudentGroups: populatedAssignment.studentGroup.map(
+            (group) => ({
+              id: group._id,
+              name: group.groupName,
+            })
+          ),
+          remainingTopics: populatedAssignment.topic.map((topic) => ({
+            id: topic._id,
+            name: topic.nameTopic,
+          })),
           status: existingAssignment.status,
-          assignedDate: existingAssignment.assignedDate,
-          remainingCouncilMembers: remainingCouncilCount,
         },
       });
     } catch (error) {
@@ -497,12 +724,11 @@ router.delete(
   }
 );
 
-// lấy danh sách nhóm đã được phân công chấm hội đồng cho giảng viên
-
 router.get("/get-council-assignments", verifyToken, async (req, res) => {
   try {
     const userId = req.userId;
 
+    // Tìm thông tin giảng viên dựa trên user ID
     const teacherProfile = await ProfileTeacher.findOne({ user: userId });
     if (!teacherProfile) {
       return res.status(404).json({
@@ -511,6 +737,7 @@ router.get("/get-council-assignments", verifyToken, async (req, res) => {
       });
     }
 
+    // Tìm các phân công hội đồng cho giảng viên này
     const councilAssignments = await CouncilAssignment.find({
       CouncilTeacher: teacherProfile._id,
     })
@@ -531,73 +758,119 @@ router.get("/get-council-assignments", verifyToken, async (req, res) => {
           select: "name teacherId email",
         },
       })
-      .populate({
-        path: "CouncilTeacher",
-        model: "profileTeacher",
-        select: "name teacherId",
-      })
       .sort({ assignedDate: -1 });
 
-    const formattedAssignments = await Promise.all(
-      councilAssignments.map(async (assignment) => {
-        const students = assignment.studentGroup.profileStudents.map(
-          (student) => ({
-            name: student.student.name,
-            studentId: student.student.studentId,
-            email: student.student.email,
-            phone: student.student.phone,
-            role: student.role,
-          })
-        );
-
-        const councilMemberCount = await CouncilAssignment.countDocuments({
-          studentGroup: assignment.studentGroup._id,
-        });
+    // Định dạng lại dữ liệu để trả về
+    const formattedAssignments = councilAssignments.map((assignment) => {
+      // Xử lý nhiều nhóm sinh viên
+      const studentGroupsInfo = assignment.studentGroup.map((group) => {
+        const students = group.profileStudents
+          ? group.profileStudents.map((student) => ({
+              name: student.student?.name || "",
+              studentId: student.student?.studentId || "",
+              email: student.student?.email || "",
+              phone: student.student?.phone || "",
+              role: student.role || "",
+            }))
+          : [];
 
         return {
-          assignmentId: assignment._id,
-          assignmentStatus: assignment.status,
-          assignedDate: assignment.assignedDate,
-          groupInfo: {
-            groupId: assignment.studentGroup.groupId,
-            groupName: assignment.studentGroup.groupName,
-            groupStatus: assignment.studentGroup.groupStatus,
-            students: students,
-            councilInfo: {
-              currentMembers: councilMemberCount,
-              maxMembers: 3,
-            },
-          },
-          topicInfo: {
-            topicId: assignment.topic.topicId,
-            name: assignment.topic.nameTopic,
-            description: assignment.topic.descriptionTopic,
-            status: assignment.topic.status,
-            advisor: {
-              name: assignment.topic.teacher.name,
-              teacherId: assignment.topic.teacher.teacherId,
-              email: assignment.topic.teacher.email,
-            },
-          },
-          councilMember: {
-            teacherId: assignment.CouncilTeacher.teacherId,
-            name: assignment.CouncilTeacher.name,
-          },
+          groupId: group.groupId || null,
+          groupName: group.groupName || null,
+          students: students,
         };
-      })
-    );
+      });
+
+      // Xử lý nhiều đề tài
+      const topicsInfo = assignment.topic.map((topic) => ({
+        topicId: topic.topicId || null,
+        name: topic.nameTopic || null,
+        description: topic.descriptionTopic || null,
+        status: topic.status || null,
+        advisor: topic.teacher
+          ? {
+              name: topic.teacher.name,
+              teacherId: topic.teacher.teacherId,
+              email: topic.teacher.email,
+            }
+          : null,
+      }));
+
+      return {
+        assignmentId: assignment._id,
+        assignmentStatus: assignment.status,
+        assignedDate: assignment.assignedDate,
+        groupsInfo: studentGroupsInfo,
+        topicsInfo: topicsInfo,
+      };
+    });
 
     return res.json({
       success: true,
-      message: "Lấy danh sách nhóm được phân công chấm hội đồng thành công",
+      message: "Lấy danh sách nhóm được phân công hội đồng thành công",
       assignments: formattedAssignments,
       totalAssignments: formattedAssignments.length,
     });
   } catch (error) {
-    console.error("Error in get-council-assignments:", error);
+    console.error("Lỗi lấy danh sách nhóm hội đồng:", error);
     return res.status(500).json({
       success: false,
-      message: "Lỗi server khi lấy danh sách nhóm được phân công chấm hội đồng",
+      message: "Lỗi server khi lấy danh sách nhóm hội đồng",
+      error: error.message,
+    });
+  }
+});
+
+//lấy hết danh sách hội đồng đã phân công
+router.get("/get-all-assigned-groups", async (req, res) => {
+  try {
+    // Lấy tất cả các hội đồng với thông tin chi tiết về nhóm sinh viên, giảng viên và đề tài
+    const councilAssignments = await CouncilAssignment.find()
+      .populate({
+        path: "studentGroup",
+        select: "groupCode groupName", // Lấy tên và mã nhóm
+      })
+      .populate({
+        path: "CouncilTeacher",
+        select: "name email", // Lấy tên và email giảng viên
+      })
+      .populate({
+        path: "topic",
+        select: "nameTopic descriptionTopic", // Lấy tên và mô tả đề tài
+      });
+
+    // Chuẩn bị dữ liệu trả về
+    const formattedAssignments = councilAssignments.map((council) => ({
+      councilId: council._id,
+      teacherInfo: council.CouncilTeacher.map((teacher) => ({
+        teacherId: teacher._id,
+        name: teacher.name,
+        email: teacher.email,
+      })),
+      assignedGroups: council.studentGroup.map((group) => ({
+        groupId: group._id,
+        groupName: group.groupName,
+        groupCode: group.groupCode,
+      })),
+      topics: council.topic.map((topic) => ({
+        topicId: topic._id,
+        topicName: topic.nameTopic,
+        topicDescription: topic.descriptionTopic,
+      })),
+      status: council.status,
+      assignedDate: council.assignedDate,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      message: "Lấy danh sách nhóm được phân công thành công",
+      data: formattedAssignments,
+    });
+  } catch (error) {
+    console.error("Lỗi trong API get-assigned-groups:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Đã xảy ra lỗi máy chủ",
       error: error.message,
     });
   }

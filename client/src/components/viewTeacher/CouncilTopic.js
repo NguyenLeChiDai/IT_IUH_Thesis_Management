@@ -3,8 +3,8 @@ import axios from "axios";
 import { TablePagination } from "@mui/material";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { apiUrl } from "../../contexts/constants";
 import Swal from "sweetalert2";
+import { apiUrl } from "../../contexts/constants";
 function CouncilTopic() {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +24,7 @@ function CouncilTopic() {
   useEffect(() => {
     if (assignments.length > 0) {
       const allStudents = assignments.flatMap(
-        (assignment) => assignment.groupInfo.students
+        (assignment) => assignment.groupsInfo.students
       );
       fetchExistingScores(allStudents);
     }
@@ -63,9 +63,56 @@ function CouncilTopic() {
     }
   };
 
+  // const fetchCouncilAssignments = async () => {
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     const response = await axios.get(
+  //       `${apiUrl}/councilAssignment/get-council-assignments`,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
+
+  //     if (response.data.success) {
+  //       const assignmentsData = await Promise.all(
+  //         response.data.assignments.map(async (assignment) => {
+  //           const hasScores = await checkGroupScores(
+  //             assignment.groupsInfo.students
+  //           );
+  //           return {
+  //             ...assignment,
+  //             assignmentStatus: hasScores ? "Đã chấm điểm" : "Chờ chấm điểm",
+  //           };
+  //         })
+  //       );
+  //       setAssignments(assignmentsData);
+  //       setError(null);
+  //     } else {
+  //       setError(response.data.message);
+  //     }
+  //   } catch (err) {
+  //     setError(
+  //       err.response?.data?.message ||
+  //       "Có lỗi xảy ra khi tải danh sách nhóm được phân công"
+  //     );
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const fetchCouncilAssignments = async () => {
     try {
+      // Thiết lập trạng thái ban đầu
+      setLoading(true);
+      setError(null);
+
+      // Lấy token từ localStorage
       const token = localStorage.getItem("token");
+
+      // Gọi API để lấy danh sách phân công poster
       const response = await axios.get(
         `${apiUrl}/councilAssignment/get-council-assignments`,
         {
@@ -76,29 +123,74 @@ function CouncilTopic() {
         }
       );
 
+      // Kiểm tra phản hồi thành công
       if (response.data.success) {
+        // Biến đổi dữ liệu assignments
+        const transformedAssignments = response.data.assignments.flatMap(
+          (assignment) =>
+            assignment.groupsInfo.map((group) => ({
+              assignmentId: assignment.assignmentId,
+              assignedDate: assignment.assignedDate,
+              assignmentStatus: assignment.assignmentStatus || "Chờ chấm điểm",
+              groupsInfo: {
+                groupId: group.groupId,
+                groupName: group.groupName,
+                students: group.students.map((student) => ({
+                  name: student.name,
+                  studentId: student.studentId,
+                  email: student.email,
+                  phone: student.phone,
+                  role: student.role,
+                })),
+              },
+              topicsInfo: assignment.topicsInfo[0]
+                ? {
+                    name: assignment.topicsInfo[0].name,
+                    description: assignment.topicsInfo[0].description,
+                    advisor: {
+                      name: assignment.topicsInfo[0].advisor?.name,
+                      teacherId: assignment.topicsInfo[0].advisor?.teacherId,
+                    },
+                  }
+                : null,
+            }))
+        );
+
+        // Kiểm tra điểm số cho từng nhóm
         const assignmentsData = await Promise.all(
-          response.data.assignments.map(async (assignment) => {
-            const hasScores = await checkGroupScores(
-              assignment.groupInfo.students
-            );
-            return {
-              ...assignment,
-              assignmentStatus: hasScores ? "Đã chấm điểm" : "Chờ chấm điểm",
-            };
+          transformedAssignments.map(async (assignment) => {
+            try {
+              const hasScores = await checkGroupScores(
+                assignment.groupsInfo.students
+              );
+              return {
+                ...assignment,
+                assignmentStatus: hasScores ? "Đã chấm điểm" : "Chờ chấm điểm",
+              };
+            } catch (scoreError) {
+              console.error("Error checking scores:", scoreError);
+              return assignment; // Trả về trạng thái ban đầu nếu có lỗi
+            }
           })
         );
+
+        // Cập nhật state
         setAssignments(assignmentsData);
-        setError(null);
       } else {
-        setError(response.data.message);
+        // Xử lý khi không có dữ liệu
+        setError(response.data.message || "Không có dữ liệu phân công");
+        setAssignments([]);
       }
     } catch (err) {
+      // Xử lý lỗi
+      console.error("Full error in fetchCouncilAssignments:", err);
       setError(
         err.response?.data?.message ||
           "Có lỗi xảy ra khi tải danh sách nhóm được phân công"
       );
+      setAssignments([]);
     } finally {
+      // Kết thúc quá trình tải
       setLoading(false);
     }
   };
@@ -116,7 +208,7 @@ function CouncilTopic() {
       );
 
       const responses = await Promise.all(promises);
-      return responses.some(
+      return responses.every(
         (response) =>
           response.data.success &&
           response.data.scores &&
@@ -143,7 +235,7 @@ function CouncilTopic() {
         (a) => a.assignmentId === assignmentId
       );
       if (assignment) {
-        await fetchExistingScores(assignment.groupInfo.students);
+        await fetchExistingScores(assignment.groupsInfo.students);
       }
     }
   };
@@ -158,7 +250,7 @@ function CouncilTopic() {
   const handleSubmitScores = async (assignment) => {
     setSubmitting(true);
 
-    const hasInvalidScores = assignment.groupInfo.students.some((student) => {
+    const hasInvalidScores = assignment.groupsInfo.students.some((student) => {
       const score = scores[student.studentId];
       return score !== undefined && (score < 0 || score > 10);
     });
@@ -169,7 +261,7 @@ function CouncilTopic() {
       return;
     }
 
-    const hasAnyScores = assignment.groupInfo.students.some(
+    const hasAnyScores = assignment.groupsInfo.students.some(
       (student) => scores[student.studentId] !== undefined
     );
 
@@ -181,7 +273,7 @@ function CouncilTopic() {
 
     try {
       const token = localStorage.getItem("token");
-      const promises = assignment.groupInfo.students.map((student) => {
+      const promises = assignment.groupsInfo.students.map((student) => {
         const score = scores[student.studentId];
         if (score !== undefined) {
           return axios.post(
@@ -224,8 +316,9 @@ function CouncilTopic() {
 
       toast.success("Nhập điểm thành công! 🎉");
       setScores({});
-      await fetchCouncilAssignments();
+      // await fetchCouncilAssignments();
     } catch (error) {
+      // toast.error(err.response?.data?.message || "Có lỗi xảy ra khi lưu điểm");
       // Xử lý trường hợp chức năng bị khóa
       if (error.response && error.response.status === 403) {
         await Swal.fire({
@@ -246,20 +339,60 @@ function CouncilTopic() {
     }
   };
 
-  const filteredAssignments = assignments.filter(
-    (assignment) =>
-      assignment.groupInfo.groupName
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      assignment.topicInfo.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      assignment.groupInfo.students.some(
+  // const filteredAssignments = assignments.filter(
+  //   (assignment) =>
+  //     assignment.groupsInfo.groupName
+  //       .toLowerCase()
+  //       .includes(searchTerm.toLowerCase()) ||
+  //     assignment.topicsInfo.name
+  //       .toLowerCase()
+  //       .includes(searchTerm.toLowerCase()) ||
+  //     assignment.groupsInfo.students.some(
+  //       (student) =>
+  //         student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //         student.studentId.toLowerCase().includes(searchTerm.toLowerCase())
+  //     )
+  // );
+
+  // const filteredAssignments = assignments.filter((assignment) => {
+  //   return (
+  //     (assignment.groupsInfo.groupName &&
+  //       assignment.groupsInfo.groupName
+  //         .toLowerCase()
+  //         .includes(searchTerm.toLowerCase())) ||
+  //     (assignment.topicsInfo.name &&
+  //       assignment.topicsInfo.name
+  //         .toLowerCase()
+  //         .includes(searchTerm.toLowerCase())) ||
+  //     assignment.groupsInfo.students.some(
+  //       (student) =>
+  //         (student.name &&
+  //           student.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+  //         (student.studentId &&
+  //           student.studentId.toLowerCase().includes(searchTerm.toLowerCase()))
+  //     )
+  //   );
+  // });
+
+  const filteredAssignments = assignments.filter((assignment) => {
+    return (
+      (assignment.groupsInfo.groupName &&
+        assignment.groupsInfo.groupName
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())) ||
+      (assignment.topicsInfo.name &&
+        assignment.topicsInfo.name
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())) ||
+      assignment.groupsInfo.students.some(
         (student) =>
-          student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          student.studentId.toLowerCase().includes(searchTerm.toLowerCase())
+          (student.name &&
+            student.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (student.studentId &&
+            student.studentId.toLowerCase().includes(searchTerm.toLowerCase()))
       )
-  );
+    );
+  });
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -324,7 +457,7 @@ function CouncilTopic() {
                     borderRadius: "5px",
                   }}
                 >
-                  {assignment.topicInfo.name}
+                  {assignment.topicsInfo.name}
                 </h3>
                 <div className="details-container">
                   <button
@@ -342,12 +475,12 @@ function CouncilTopic() {
                   </span>
                 </div>
               </div>
-              <h4>{assignment.groupInfo.groupName}</h4>
+              <h4>{assignment.groupsInfo.groupName}</h4>
               <p className="advisor-info">
-                <strong>GVHD:</strong> {assignment.topicInfo.advisor.name}
+                <strong>GVHD:</strong> {assignment.topicsInfo.advisor.name}
               </p>
               {/* <p className="council-info">
-                                <strong>Số thành viên hội đồng:</strong> {assignment.groupInfo.councilInfo.currentMembers}/{assignment.groupInfo.councilInfo.maxMembers}
+                                <strong>Số thành viên hội đồng:</strong> {assignment.groupsInfo.councilInfo.currentMembers}/{assignment.groupsInfo.councilInfo.maxMembers}
                             </p> */}
             </div>
 
@@ -355,13 +488,13 @@ function CouncilTopic() {
               <>
                 <div className="description-info">
                   <h4 style={{ fontWeight: "bold" }}>Mô tả dự án: </h4>
-                  <p>{assignment.topicInfo.description}</p>
+                  <p>{assignment.topicsInfo.description}</p>
                 </div>
 
                 <div className="group-info">
                   <div className="students-list">
                     <div className="students-grid">
-                      {assignment.groupInfo.students.map((student, index) => (
+                      {assignment.groupsInfo.students.map((student, index) => (
                         <div key={index} className="student-info">
                           <p>
                             <strong>{student.role}:</strong> {student.name}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Badge, Button, Table, Alert } from "react-bootstrap";
+import { Badge, Button, Table, Alert, Form } from "react-bootstrap";
 import {
   Users,
   FileText,
@@ -8,6 +8,11 @@ import {
   Download,
   FileUp,
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
@@ -23,6 +28,16 @@ const FolderContent = () => {
   const [alert, setAlert] = useState(null);
   const navigate = useNavigate();
   const { folderId } = useParams();
+  const [searchTerm, setSearchTerm] = useState("");
+  // Phân trang
+  const [currentPage, setCurrentPage] = useState(1);
+  const reportsPerPage = 5;
+
+  // Sắp xếp
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: "asc",
+  });
 
   useEffect(() => {
     fetchFolderContent();
@@ -158,6 +173,192 @@ const FolderContent = () => {
     }
   };
 
+  // Hàm sắp xếp
+  const sortReports = (reportsToSort) => {
+    if (!sortConfig.key) return reportsToSort;
+
+    return [...reportsToSort].sort((a, b) => {
+      if (a[sortConfig.key] == null) return 1;
+      if (b[sortConfig.key] == null) return -1;
+
+      if (sortConfig.key === "groupName" || sortConfig.key === "topicName") {
+        const comparison = a[sortConfig.key].localeCompare(b[sortConfig.key]);
+        return sortConfig.direction === "asc" ? comparison : -comparison;
+      } else if (sortConfig.key === "submissionDate") {
+        const dateA = new Date(a[sortConfig.key]);
+        const dateB = new Date(b[sortConfig.key]);
+        return sortConfig.direction === "asc" ? dateA - dateB : dateB - dateA;
+      }
+      return 0;
+    });
+  };
+
+  // Xử lý sắp xếp
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // Render icon sắp xếp
+  const renderSortIcon = (key) => {
+    if (sortConfig.key !== key) {
+      return <ArrowUpDown size={16} className="ms-2 text-muted" />;
+    }
+    return sortConfig.direction === "asc" ? (
+      <ArrowUp size={16} className="ms-2 text-primary" />
+    ) : (
+      <ArrowDown size={16} className="ms-2 text-primary" />
+    );
+  };
+
+  // Lọc và sắp xếp báo cáo
+  const filteredAndSortedReports = sortReports(
+    reports.filter(
+      (report) =>
+        report.groupName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.topicName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.members.some((member) =>
+          member.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+    )
+  );
+
+  // Phân trang
+  const indexOfLastReport = currentPage * reportsPerPage;
+  const indexOfFirstReport = indexOfLastReport - reportsPerPage;
+  const currentReports = filteredAndSortedReports.slice(
+    indexOfFirstReport,
+    indexOfLastReport
+  );
+
+  // Render phân trang
+  const renderPagination = () => {
+    const pageNumbers = [];
+    const totalPages = Math.ceil(
+      filteredAndSortedReports.length / reportsPerPage
+    );
+
+    const renderPageNumbers = () => {
+      if (totalPages <= 5) {
+        return pageNumbers.map((number) => (
+          <Button
+            key={number}
+            variant={currentPage === number ? "primary" : "outline-primary"}
+            className="me-1"
+            onClick={() => setCurrentPage(number)}
+          >
+            {number}
+          </Button>
+        ));
+      }
+
+      let startPage, endPage;
+      if (currentPage <= 3) {
+        startPage = 1;
+        endPage = 5;
+      } else if (currentPage >= totalPages - 2) {
+        startPage = totalPages - 4;
+        endPage = totalPages;
+      } else {
+        startPage = currentPage - 2;
+        endPage = currentPage + 2;
+      }
+
+      const displayPages = [];
+
+      if (startPage > 1) {
+        displayPages.push(
+          <Button
+            key="first"
+            variant="outline-primary"
+            className="me-1"
+            onClick={() => setCurrentPage(1)}
+          >
+            1
+          </Button>
+        );
+
+        if (startPage > 2) {
+          displayPages.push(
+            <span key="ellipsis1" className="me-1">
+              ...
+            </span>
+          );
+        }
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        displayPages.push(
+          <Button
+            key={i}
+            variant={currentPage === i ? "primary" : "outline-primary"}
+            className="me-1"
+            onClick={() => setCurrentPage(i)}
+          >
+            {i}
+          </Button>
+        );
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          displayPages.push(
+            <span key="ellipsis2" className="me-1">
+              ...
+            </span>
+          );
+        }
+
+        displayPages.push(
+          <Button
+            key="last"
+            variant="outline-primary"
+            className="me-1"
+            onClick={() => setCurrentPage(totalPages)}
+          >
+            {totalPages}
+          </Button>
+        );
+      }
+
+      return displayPages;
+    };
+
+    for (let i = 1; i <= totalPages; i++) {
+      pageNumbers.push(i);
+    }
+
+    //return phân trang
+    return (
+      <div className="d-flex justify-content-center align-items-center mt-3">
+        <Button
+          variant="outline-primary"
+          className="me-2"
+          onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          <ChevronLeft size={16} />
+        </Button>
+
+        {renderPageNumbers()}
+
+        <Button
+          variant="outline-primary"
+          className="ms-2"
+          onClick={() =>
+            currentPage < totalPages && setCurrentPage(currentPage + 1)
+          }
+          disabled={currentPage === totalPages}
+        >
+          <ChevronRight size={16} />
+        </Button>
+      </div>
+    );
+  };
+
   return (
     <div className="container-fluid mt-4">
       {alert && (
@@ -188,6 +389,19 @@ const FolderContent = () => {
         </div>
       </div>
 
+      {/* Thanh tìm kiếm */}
+      <div className="mb-4">
+        <Form.Control
+          type="search"
+          placeholder="Tìm kiếm nhóm, đề tài, thành viên..."
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+
       {reports?.length > 0 && (
         <Button
           variant="primary"
@@ -203,19 +417,46 @@ const FolderContent = () => {
       <Table responsive striped bordered hover>
         <thead>
           <tr>
-            <th>Nhóm</th>
+            <th>
+              Nhóm
+              <Button
+                variant="link"
+                className="p-0 ms-2"
+                onClick={() => handleSort("groupName")}
+              >
+                {renderSortIcon("groupName")}
+              </Button>
+            </th>
             <th>Thành viên</th>
             {/* <th>MSSV</th> */}
-            <th>Đề tài</th>
+            <th>
+              Đề tài
+              <Button
+                variant="link"
+                className="p-0 ms-2"
+                onClick={() => handleSort("topicName")}
+              >
+                {renderSortIcon("topicName")}
+              </Button>
+            </th>
             <th>File</th>
-            <th>Thời gian nộp</th>
+            <th>
+              Thời gian nộp
+              <Button
+                variant="link"
+                className="p-0 ms-2"
+                onClick={() => handleSort("submissionDate")}
+              >
+                {renderSortIcon("submissionDate")}
+              </Button>
+            </th>
             <th>Trạng thái nộp</th>
             {/* <th>Trạng thái xem</th> */}
             <th>Thao tác</th>
           </tr>
         </thead>
         <tbody>
-          {reports.map((report) => (
+          {currentReports.map((report) => (
             <tr key={report.id}>
               <td>{report.groupName}</td>
               <td>
@@ -266,16 +507,28 @@ const FolderContent = () => {
                 <Button
                   variant="success"
                   size="sm"
-                  className="me-1"
+                  className="me-2 p-1 d-flex align-items-center"
+                  style={{
+                    width: "130px",
+                    height: "32px",
+                    justifyContent: "center",
+                  }}
                   onClick={() =>
                     navigate(`/dashboardTeacher/submission/${report.id}`)
                   }
                 >
-                  <MessageSquare size={16} /> Xem / nhận xét
+                  <MessageSquare size={16} /> Xem/nhận xét
                 </Button>
                 <Button
                   variant="info"
                   size="sm"
+                  className="me-2 p-1 d-flex align-items-center"
+                  style={{
+                    width: "130px",
+                    height: "32px",
+                    justifyContent: "center",
+                    marginTop: "3px",
+                  }}
                   onClick={() => handleDownload(report.id, report.fileName)}
                   disabled={loading}
                 >
@@ -284,7 +537,13 @@ const FolderContent = () => {
                 <Button
                   variant="primary"
                   size="sm"
-                  className="me-1"
+                  className="me-2 p-1 d-flex align-items-center"
+                  style={{
+                    width: "130px",
+                    height: "32px",
+                    justifyContent: "center",
+                    marginTop: "3px",
+                  }}
                   onClick={() => handleSubmitToAdmin(report.id)}
                 >
                   <FileUp size={16} /> Phê duyệt
@@ -295,7 +554,11 @@ const FolderContent = () => {
         </tbody>
       </Table>
 
-      {(!reports || reports.length === 0) && (
+      {/* Phân trang */}
+      {filteredAndSortedReports.length > reportsPerPage && renderPagination()}
+
+      {/* Trạng thái trống */}
+      {(!currentReports || currentReports.length === 0) && (
         <div className="text-center py-5">
           <FileUp size={48} className="text-muted mb-3" />
           <p className="text-muted mb-0">

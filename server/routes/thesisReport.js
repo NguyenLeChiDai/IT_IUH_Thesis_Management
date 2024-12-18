@@ -157,7 +157,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // Giới hạn kích thước file 5MB
+  limits: { fileSize: 10 * 1024 * 1024 }, // Giới hạn kích thước file 5MB
 });
 
 // Route xử lý nộp báo cáo với kiểm tra thời hạn

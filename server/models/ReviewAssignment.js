@@ -3,36 +3,33 @@ const Schema = mongoose.Schema;
 
 const ReviewAssignmentSchema = new Schema({
   // Giảng viên được phân công chấm phản biện
-  reviewerTeacher: {
-    type: Schema.Types.ObjectId,
-    ref: "profileTeacher",
-    required: true,
-  },
-  CouncilTeacher: {
-    type: Schema.Types.ObjectId,
-    ref: "profileTeacher",
-    required: false,
-  },
-
-  posterTeacher: {
-    type: Schema.Types.ObjectId,
-    ref: "profileTeacher",
-    required: false,
-  },
+  reviewerTeacher: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "profileTeacher",
+      required: true,
+    },
+  ],
 
   // Nhóm sinh viên được chấm phản biện
-  studentGroup: {
-    type: Schema.Types.ObjectId,
-    ref: "studentgroups",
-    required: true,
-  },
+  studentGroup: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "studentgroups",
+      required: false,
+      default: [],
+    },
+  ],
 
   // Đề tài được chấm phản biện
-  topic: {
-    type: Schema.Types.ObjectId,
-    ref: "topics",
-    required: true,
-  },
+  topic: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "topics",
+      required: false,
+      default: [],
+    },
+  ],
 
   assignedDate: {
     type: Date,

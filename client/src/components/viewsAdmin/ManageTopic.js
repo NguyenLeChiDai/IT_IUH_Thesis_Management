@@ -225,6 +225,60 @@ const ManageTopic = () => {
     page * rowsPerPage + rowsPerPage
   );
 
+  //CÔNG BỐ ĐỀ TÀI
+  const handlePublishAllTopics = async () => {
+    try {
+      const result = await Swal.fire({
+        title: "Xác nhận công bố/ẩn tất cả đề tài",
+        text: "Bạn có chắc chắn muốn CÔNG BỐ/ẨN tất cả các đề tài đã phê duyệt cho sinh viên đăng ký?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Có",
+        cancelButtonText: "Không",
+      });
+
+      if (result.isConfirmed) {
+        const response = await axios.put(
+          `${apiUrl}/topics/toggle-publish-all`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          // Cập nhật trạng thái công bố cho tất cả các đề tài trong state
+          setTopics((prevTopics) =>
+            prevTopics.map((topic) =>
+              topic.status === "Đã phê duyệt"
+                ? { ...topic, isPublished: response.data.isPublished }
+                : topic
+            )
+          );
+
+          toast.success(
+            response.data.isPublished
+              ? "Đã công bố tất cả đề tài"
+              : "Đã ẩn tất cả đề tài",
+            {
+              position: "top-right",
+              autoClose: 2500,
+            }
+          );
+        }
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi thay đổi trạng thái công bố", {
+        position: "top-right",
+        autoClose: 2500,
+      });
+    }
+  };
+
   return (
     <div style={{ padding: "1rem" }}>
       <h1
@@ -243,7 +297,7 @@ const ManageTopic = () => {
         Quản Lý Đề Tài
       </h1>
 
-      <div style={{ marginBottom: "1rem", position: "relative" }}>
+      {/* <div style={{ marginBottom: "1rem", position: "relative" }}>
         <SearchIcon
           style={{
             position: "absolute",
@@ -265,6 +319,58 @@ const ManageTopic = () => {
             borderRadius: "0.25rem",
           }}
         />
+      </div> */}
+      <div
+        style={{ marginBottom: "1rem", display: "flex", alignItems: "center" }}
+      >
+        <div style={{ position: "relative", flexGrow: 1, marginRight: "1rem" }}>
+          <SearchIcon
+            style={{
+              position: "absolute",
+              left: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "#ccc",
+            }}
+          />
+          <input
+            type="text"
+            placeholder="Tìm kiếm theo tên giảng viên hoặc tên đề tài"
+            value={searchTerm}
+            onChange={handleSearch}
+            style={{
+              width: "100%",
+              padding: "0.5rem 0.5rem 0.5rem 2.5rem",
+              border: "1px solid #ccc",
+              borderRadius: "0.25rem",
+            }}
+          />
+        </div>
+
+        <button
+          onClick={handlePublishAllTopics}
+          style={{
+            padding: "0.5rem 1rem",
+            backgroundColor: topics.some(
+              (topic) => topic.status === "Đã phê duyệt" && topic.isPublished
+            )
+              ? "#FFA500"
+              : "#4CAF50",
+            color: "white",
+            border: "none",
+            borderRadius: "0.25rem",
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.5rem",
+          }}
+        >
+          {topics.some(
+            (topic) => topic.status === "Đã phê duyệt" && topic.isPublished
+          )
+            ? "Ẩn tất cả đề tài được duyệt"
+            : "Công bố tất cả đề tài được duyệt"}
+        </button>
       </div>
 
       {loading && <p>Đang tải danh sách đề tài...</p>}

@@ -62,7 +62,6 @@ function TopicReview() {
       setSavedScores(newSavedScores);
     } catch (error) {
       console.error("Error fetching existing scores:", error);
-      toast.error("Lỗi khi tải điểm từ database");
     }
   };
 
@@ -146,12 +145,13 @@ function TopicReview() {
 
       const responses = await Promise.all(promises);
 
-      // Trả về true nếu ít nhất một sinh viên trong nhóm đã có điểm
-      return responses.some(
+      // Trả về true chỉ khi TẤT CẢ sinh viên đều có điểm
+      return responses.every(
         (response) =>
           response.data.success &&
           response.data.scores &&
-          response.data.scores.length > 0
+          response.data.scores.length > 0 &&
+          response.data.scores[0].reviewerScore !== undefined
       );
     } catch (error) {
       console.error("Error checking group scores:", error);
@@ -322,7 +322,6 @@ function TopicReview() {
                 >
                   {assignment.assignmentStatus}
                 </span>
-
                 <span className="assigned-date" style={{ marginLeft: "15px" }}>
                   Ngày phân công:{" "}
                   {new Date(assignment.assignedDate).toLocaleDateString(
@@ -332,43 +331,40 @@ function TopicReview() {
               </div>
             </div>
 
-            <div className="assignment-card">
-              <div className="assignment-content">
-                <div className="assignment-header">
-                  <h3
-                    style={{
-                      display: "inline-block",
-                      padding: "4px 8px",
-                      borderRadius: "5px",
-                    }}
+            <div className="assignment-content">
+              <div className="assignment-header">
+                <h3
+                  style={{
+                    display: "inline-block",
+                    padding: "4px 8px",
+                    borderRadius: "5px",
+                  }}
+                >
+                  {assignment.topicInfo.name}
+                </h3>
+                <div className="details-container">
+                  <button
+                    onClick={() => toggleExpand(assignment.assignmentId)}
+                    className="details-button"
                   >
-                    {assignment.topicInfo.name}
-                  </h3>
-
-                  <div className="details-container">
-                    <button
-                      onClick={() => toggleExpand(assignment.assignmentId)}
-                      className="details-button"
-                    >
-                      {expandedAssignmentId === assignment.assignmentId
-                        ? "Thu gọn"
-                        : "Xem chi tiết"}
-                    </button>
-                    <span className="expand-icon">
-                      {expandedAssignmentId === assignment.assignmentId
-                        ? "▲"
-                        : "▼"}
-                    </span>
-                  </div>
+                    {expandedAssignmentId === assignment.assignmentId
+                      ? "Thu gọn"
+                      : "Xem chi tiết"}
+                  </button>
+                  <span className="expand-icon">
+                    {expandedAssignmentId === assignment.assignmentId
+                      ? "▲"
+                      : "▼"}
+                  </span>
                 </div>
-                <h4>{assignment.groupInfo.groupName}</h4>
-                <p className="advisor-info">
-                  <strong>GVHD:</strong> {assignment.topicInfo.advisor.name}
-                </p>
               </div>
-            </div>
 
-            {/* Phần hiển thị Description */}
+              <h4>{assignment.groupInfo.groupName}</h4>
+              <p className="advisor-info">
+                <strong>GVHD:</strong>{" "}
+                {assignment.topicInfo.advisor[0]?.name || "Chưa có giảng viên"}
+              </p>
+            </div>
 
             {expandedAssignmentId === assignment.assignmentId && (
               <div className="description-info">
@@ -379,18 +375,14 @@ function TopicReview() {
 
             {expandedAssignmentId === assignment.assignmentId && (
               <div className="group-info">
-                <div className="group-header">
-                  {/* <h4>{assignment.groupInfo.groupName} - {assignment.groupInfo.groupId}</h4> */}
-                </div>
-
                 <div className="students-list">
                   <div className="students-grid">
                     {assignment.groupInfo.students.map((student, index) => (
                       <div key={index} className="student-info">
                         <p>
-                          <strong>{student.role}:</strong> {student.name}{" "}
+                          <strong>{student.role}:</strong> {student.name}
                         </p>
-                        <p>MSSV: {student.studentId} </p>
+                        <p>MSSV: {student.studentId}</p>
                         <p>Email: {student.email}</p>
                         <p>SĐT: {student.phone}</p>
                         <div className="grade-inputs">
@@ -411,7 +403,6 @@ function TopicReview() {
                               placeholder="Nhập điểm"
                               style={{ width: "180px" }}
                             />
-
                             {savedScores[student.studentId] !== undefined && (
                               <div className="saved-score">
                                 <span>Điểm đã nhập: </span>

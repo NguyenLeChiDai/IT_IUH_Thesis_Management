@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Table, Form, Button } from "react-bootstrap";
-import { Search } from "lucide-react";
+import { Search, ArrowUp, ArrowDown } from "lucide-react";
 import {
   InputAdornment,
   TextField,
@@ -37,6 +37,9 @@ export const ListStudentTopics = () => {
   const MAX_GROUPS_PER_TOPIC = 2; // Thêm hằng số cho số nhóm tối đa
   const [isGroupLeader, setIsGroupLeader] = useState(false);
   const [socket, setSocket] = useState(null);
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState("asc");
+  const [groupCountSortDirection, setGroupCountSortDirection] = useState("asc");
 
   // Kết nối socket
   useEffect(() => {
@@ -287,7 +290,7 @@ export const ListStudentTopics = () => {
       };
     } else if (registeredTopicId) {
       return {
-        variant: "primary",
+        variant: "secondary",
         disabled: true,
         text: "Đăng ký",
       };
@@ -298,6 +301,47 @@ export const ListStudentTopics = () => {
         text: "Đăng ký",
       };
     }
+  };
+
+  // Hàm xử lý sắp xếp
+  const handleSort = (column) => {
+    const isAsc = sortColumn === column && sortDirection === "asc";
+    setSortColumn(column);
+    setSortDirection(isAsc ? "desc" : "asc");
+
+    const sortedTopics = [...filteredTopics].sort((a, b) => {
+      if (column === "nameTopic") {
+        return isAsc
+          ? a.nameTopic.localeCompare(b.nameTopic)
+          : b.nameTopic.localeCompare(a.nameTopic);
+      }
+      if (column === "teacher") {
+        const teacherA = a.teacher?.name || "";
+        const teacherB = b.teacher?.name || "";
+        return isAsc
+          ? teacherA.localeCompare(teacherB)
+          : teacherB.localeCompare(teacherA);
+      }
+      return 0;
+    });
+
+    setTopics(sortedTopics);
+  };
+
+  // New sorting function for group count
+  const handleGroupCountSort = () => {
+    const sortedTopics = [...filteredTopics].sort((a, b) => {
+      const countA = a.registeredGroupsCount || 0;
+      const countB = b.registeredGroupsCount || 0;
+      return groupCountSortDirection === "asc"
+        ? countA - countB
+        : countB - countA;
+    });
+
+    setTopics(sortedTopics);
+    setGroupCountSortDirection(
+      groupCountSortDirection === "asc" ? "desc" : "asc"
+    );
   };
 
   if (loading) return <div>Loading...</div>;
@@ -329,12 +373,60 @@ export const ListStudentTopics = () => {
       </Form>
 
       <Table striped bordered hover className="custom-table">
-        <thead>
+        <thead style={{ backgroundColor: "#e6f3e6" }}>
           <tr>
             <th>STT</th>
-            <th>Tên đề tài</th>
-            <th>Giảng viên HD</th>
-            <th>SL nhóm đã DK</th>
+            <th
+              onClick={() => handleSort("nameTopic")}
+              style={{ cursor: "pointer" }}
+            >
+              Tên đề tài
+              <span style={{ marginLeft: "5px", opacity: 0.5 }}>
+                {sortColumn === "nameTopic" ? (
+                  sortDirection === "asc" ? (
+                    <ArrowUp size={16} />
+                  ) : (
+                    <ArrowDown size={16} />
+                  )
+                ) : (
+                  <ArrowUp size={16} style={{ opacity: 0.3 }} />
+                )}
+              </span>
+            </th>
+            <th
+              onClick={() => handleSort("teacher")}
+              style={{ cursor: "pointer" }}
+            >
+              Giảng viên HD
+              <span style={{ marginLeft: "5px", opacity: 0.5 }}>
+                {sortColumn === "teacher" ? (
+                  sortDirection === "asc" ? (
+                    <ArrowUp size={16} />
+                  ) : (
+                    <ArrowDown size={16} />
+                  )
+                ) : (
+                  <ArrowUp size={16} style={{ opacity: 0.3 }} />
+                )}
+              </span>
+            </th>
+            <th
+              onClick={handleGroupCountSort}
+              style={{
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              SL nhóm đã DK
+              <span style={{ marginLeft: "5px", opacity: 0.5 }}>
+                {groupCountSortDirection === "asc" ? (
+                  <ArrowUp size={16} />
+                ) : (
+                  <ArrowDown size={16} />
+                )}
+              </span>
+            </th>
             <th>Hành động</th>
           </tr>
         </thead>
@@ -369,16 +461,30 @@ export const ListStudentTopics = () => {
         </tbody>
       </Table>
 
-      <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
-        component="div"
-        count={filteredTopics.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
+      {/* nếu ko có đề tài nào thì thông báo ra cho ng dùng biết */}
+      {filteredTopics.length > 0 ? (
+        <>
+          <Table striped bordered hover className="custom-table">
+            {/* Existing table code */}
+          </Table>
 
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={filteredTopics.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
+        </>
+      ) : (
+        <div className="no-topics-message text-center mt-4">
+          <Typography variant="h6" color="textSecondary">
+            Hiện tại không có đề tài nào được công bố.
+          </Typography>
+        </div>
+      )}
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}

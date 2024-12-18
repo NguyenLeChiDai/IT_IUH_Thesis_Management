@@ -29,6 +29,8 @@ import ExpandMore from "@mui/icons-material/ExpandMore"; // Icon mở rộng
 import "font-awesome/css/font-awesome.min.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faList } from "@fortawesome/free-solid-svg-icons";
+import { useLocation } from "react-router-dom";
+
 const drawerWidth = 240;
 
 const DashboardStudent = () => {
@@ -36,6 +38,7 @@ const DashboardStudent = () => {
   const [openSubMenu, setOpenSubMenu] = useState({}); // State cho submenu
   const isMobile = useMediaQuery("(max-width:600px)"); // Xác định nếu là màn hình nhỏ
   const navigate = useNavigate();
+  const location = useLocation(); // Thêm hook useLocation
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -54,6 +57,7 @@ const DashboardStudent = () => {
       text: "Trang chủ",
       icon: <HomeIcon />,
       onClick: () => navigate("/dashboardStudent"),
+      path: "/dashboardStudent",
     },
     {
       text: "Nhóm sinh viên",
@@ -63,6 +67,7 @@ const DashboardStudent = () => {
           text: "Danh sách nhóm sinh viên",
           icon: <FontAwesomeIcon icon={faList} />,
           onClick: () => navigate("/dashboardStudent/list-student-groups"),
+          path: "/dashboardStudent/list-student-groups",
         },
       ],
     },
@@ -74,11 +79,13 @@ const DashboardStudent = () => {
           text: "Danh sách đề tài",
           icon: <FontAwesomeIcon icon={faList} />,
           onClick: () => navigate("/dashboardStudent/list-student-topics"),
+          path: "/dashboardStudent/list-student-topics",
         },
         {
           text: "Đề Tài Của Tôi",
           icon: <GroupIcon />,
           onClick: () => navigate("/dashboardStudent/TopicStudent"),
+          path: "/dashboardStudent/TopicStudent",
         },
       ],
     },
@@ -90,10 +97,16 @@ const DashboardStudent = () => {
           text: "Đăng báo cáo khóa luận",
           icon: <FontAwesomeIcon icon={faList} />,
           onClick: () => navigate("/dashboardStudent/submit-report"),
+          path: "/dashboardStudent/submit-report",
         },
       ],
     },
-    { text: "Tiêu chí Đánh giá của học kỳ", icon: <GradeIcon /> },
+    {
+      text: "Hội đồng phản biện",
+      icon: <GradeIcon />,
+      onClick: () => navigate("/dashboardStudent/review-teacher"),
+      path: "/dashboardStudent/review-teacher",
+    },
     {
       text: "Bảng điểm",
       icon: <ScoreIcon />,
@@ -102,10 +115,26 @@ const DashboardStudent = () => {
           text: "Bảng điểm của tôi",
           icon: <FontAwesomeIcon icon={faChartBar} />,
           onClick: () => navigate("/dashboardStudent/score-student"),
+          path: "/dashboardStudent/score-student",
         },
       ],
     },
   ];
+
+  // Hàm kiểm tra xem một mục menu có đang được chọn hay không
+  const isMenuItemSelected = (item) => {
+    // Kiểm tra cho menu chính
+    if (item.path && location.pathname === item.path) return true;
+
+    // Kiểm tra cho submenu
+    if (item.subMenu) {
+      return item.subMenu.some(
+        (subItem) => subItem.path && location.pathname === subItem.path
+      );
+    }
+
+    return false;
+  };
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -164,6 +193,15 @@ const DashboardStudent = () => {
                 onClick={
                   item.subMenu ? () => handleToggleSubMenu(index) : item.onClick
                 }
+                sx={{
+                  backgroundColor: isMenuItemSelected(item)
+                    ? "#E0E0E0" // Màu nền khi được chọn
+                    : "transparent",
+                  "&:hover": {
+                    backgroundColor: "#BFBFBF",
+                    fontWeight: "bold",
+                  },
+                }}
               >
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text} />
@@ -178,7 +216,19 @@ const DashboardStudent = () => {
                       <ListItem
                         button
                         key={subIndex}
-                        sx={{ pl: 4 }}
+                        /* sx={{ pl: 4 }}
+                        onClick={subItem.onClick} 
+                      >*/
+                        sx={{
+                          pl: 4,
+                          backgroundColor: isMenuItemSelected(subItem)
+                            ? "#E0E0E0" // Màu nền khi được chọn
+                            : "transparent",
+                          "&:hover": {
+                            backgroundColor: "#BFBFBF",
+                            fontWeight: "bold",
+                          },
+                        }}
                         onClick={subItem.onClick}
                       >
                         <ListItemIcon>{subItem.icon}</ListItemIcon>

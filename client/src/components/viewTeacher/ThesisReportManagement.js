@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Button, Form, Table, Modal, Badge, Alert } from "react-bootstrap";
-import { Folder, Plus, Trash2, FileUp, Calendar, Edit } from "lucide-react";
+import {
+  Folder,
+  Plus,
+  Trash2,
+  FileUp,
+  Calendar,
+  Edit,
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import EditFolderModal from "./ThesisReportManagement/EditFolderModal";
@@ -17,6 +29,9 @@ const ThesisReportManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState(""); // Thêm state để lưu role của user
+  // Thêm state cho phân trang
+  const [currentPage, setCurrentPage] = useState(1);
+  const foldersPerPage = 5; // Số lượng thư mục mỗi trang
 
   useEffect(() => {
     // Lấy role từ token JWT hoặc local storage
@@ -247,6 +262,202 @@ const ThesisReportManagement = () => {
     }
   };
 
+  //SẮP XẾP
+  // New state for sorting
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: "asc",
+  });
+
+  // Sorting function
+  const sortFolders = (foldersToSort) => {
+    if (!sortConfig.key) return foldersToSort;
+
+    return [...foldersToSort].sort((a, b) => {
+      if (a[sortConfig.key] == null) return 1;
+      if (b[sortConfig.key] == null) return -1;
+
+      if (sortConfig.key === "name" || sortConfig.key === "description") {
+        // String comparison
+        const comparison = a[sortConfig.key].localeCompare(b[sortConfig.key]);
+        return sortConfig.direction === "asc" ? comparison : -comparison;
+      } else if (
+        sortConfig.key === "createdAt" ||
+        sortConfig.key === "deadline"
+      ) {
+        // Date comparison
+        const dateA = new Date(a[sortConfig.key]);
+        const dateB = new Date(b[sortConfig.key]);
+        return sortConfig.direction === "asc" ? dateA - dateB : dateB - dateA;
+      }
+      return 0;
+    });
+  };
+
+  // Sorting handler
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // Render sort icon
+  const renderSortIcon = (key) => {
+    if (sortConfig.key !== key) {
+      return <ArrowUpDown size={16} className="ms-2 text-muted" />;
+    }
+    return sortConfig.direction === "asc" ? (
+      <ArrowUp size={16} className="ms-2 text-primary" />
+    ) : (
+      <ArrowDown size={16} className="ms-2 text-primary" />
+    );
+  };
+
+  //PHẦN XỬ LÝ PHÂN TRANG
+  // Modify the filtering and sorting process
+  const filteredAndSortedFolders = sortFolders(
+    folders.filter((folder) =>
+      folder.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
+
+  // Tính toán phân trang
+  const indexOfLastFolder = currentPage * foldersPerPage;
+  const indexOfFirstFolder = indexOfLastFolder - foldersPerPage;
+  const currentFolders = filteredAndSortedFolders.slice(
+    indexOfFirstFolder,
+    indexOfLastFolder
+  );
+
+  // Render phân trang
+  const renderPagination = () => {
+    const pageNumbers = [];
+    const totalPages = Math.ceil(filteredFolders.length / foldersPerPage);
+
+    // Logic render trang động
+    const renderPageNumbers = () => {
+      if (totalPages <= 5) {
+        return pageNumbers.map((number) => (
+          <Button
+            key={number}
+            variant={currentPage === number ? "primary" : "outline-primary"}
+            className="me-1"
+            onClick={() => setCurrentPage(number)}
+          >
+            {number}
+          </Button>
+        ));
+      }
+
+      let startPage, endPage;
+      if (currentPage <= 3) {
+        startPage = 1;
+        endPage = 5;
+      } else if (currentPage >= totalPages - 2) {
+        startPage = totalPages - 4;
+        endPage = totalPages;
+      } else {
+        startPage = currentPage - 2;
+        endPage = currentPage + 2;
+      }
+
+      const displayPages = [];
+
+      // Nút trang đầu tiên
+      if (startPage > 1) {
+        displayPages.push(
+          <Button
+            key="first"
+            variant="outline-primary"
+            className="me-1"
+            onClick={() => setCurrentPage(1)}
+          >
+            1
+          </Button>
+        );
+
+        if (startPage > 2) {
+          displayPages.push(
+            <span key="ellipsis1" className="me-1">
+              ...
+            </span>
+          );
+        }
+      }
+
+      // Các nút trang
+      for (let i = startPage; i <= endPage; i++) {
+        displayPages.push(
+          <Button
+            key={i}
+            variant={currentPage === i ? "primary" : "outline-primary"}
+            className="me-1"
+            onClick={() => setCurrentPage(i)}
+          >
+            {i}
+          </Button>
+        );
+      }
+
+      // Nút trang cuối
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          displayPages.push(
+            <span key="ellipsis2" className="me-1">
+              ...
+            </span>
+          );
+        }
+
+        displayPages.push(
+          <Button
+            key="last"
+            variant="outline-primary"
+            className="me-1"
+            onClick={() => setCurrentPage(totalPages)}
+          >
+            {totalPages}
+          </Button>
+        );
+      }
+
+      return displayPages;
+    };
+
+    // Tạo mảng trang
+    for (let i = 1; i <= totalPages; i++) {
+      pageNumbers.push(i);
+    }
+
+    return (
+      <div className="d-flex justify-content-center align-items-center mt-3">
+        <Button
+          variant="outline-primary"
+          className="me-2"
+          onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          <ChevronLeft size={16} />
+        </Button>
+
+        {renderPageNumbers()}
+
+        <Button
+          variant="outline-primary"
+          className="ms-2"
+          onClick={() =>
+            currentPage < totalPages && setCurrentPage(currentPage + 1)
+          }
+          disabled={currentPage === totalPages}
+        >
+          <ChevronRight size={16} />
+        </Button>
+      </div>
+    );
+  };
+
   return (
     <div className="container-fluid mt-4">
       {/* Alert message */}
@@ -280,17 +491,53 @@ const ThesisReportManagement = () => {
       <Table responsive striped bordered hover>
         <thead className="bg-light">
           <tr>
-            <th>Tên thư mục</th>
-            <th>Mô tả</th>
-            <th style={{ width: "160px" }}>Ngày tạo</th>
-            <th style={{ width: "160px" }}>Thời hạn nộp</th>
+            <th>
+              Tên thư mục
+              <Button
+                variant="link"
+                className="p-0 ms-2"
+                onClick={() => handleSort("name")}
+              >
+                {renderSortIcon("name")}
+              </Button>
+            </th>
+            <th>
+              Mô tả
+              <Button
+                variant="link"
+                className="p-0 ms-2"
+                onClick={() => handleSort("description")}
+              >
+                {renderSortIcon("description")}
+              </Button>
+            </th>
+            <th style={{ width: "160px" }}>
+              Ngày tạo
+              <Button
+                variant="link"
+                className="p-0 ms-2"
+                onClick={() => handleSort("createdAt")}
+              >
+                {renderSortIcon("createdAt")}
+              </Button>
+            </th>
+            <th style={{ width: "160px" }}>
+              Thời hạn nộp
+              <Button
+                variant="link"
+                className="p-0 ms-2"
+                onClick={() => handleSort("deadline")}
+              >
+                {renderSortIcon("deadline")}
+              </Button>
+            </th>
             <th>Số bài nộp</th>
             <th>Trạng thái</th>
             <th>Thao tác</th>
           </tr>
         </thead>
         <tbody>
-          {filteredFolders.map((folder) => (
+          {currentFolders.map((folder) => (
             <tr key={folder._id}>
               <td>{folder.name}</td>
               <td>{folder.description}</td>
@@ -321,38 +568,58 @@ const ThesisReportManagement = () => {
                 </Badge>
               </td>
               <td>
-                <Button
-                  variant="info"
-                  size="sm"
-                  className="me-2"
-                  onClick={() => handleOpenFolder(folder)}
-                >
-                  <Folder className="me-1" size={16} />
-                  Mở
-                </Button>
-                <Button
-                  variant="warning"
-                  size="sm"
-                  className="me-2"
-                  onClick={() => handleEditClick(folder)}
-                >
-                  <Edit size={16} className="me-1" />
-                  Sửa
-                </Button>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() => handleDeleteFolder(folder._id)}
-                >
-                  <Trash2 size={16} />
-                </Button>
+                <div className="d-flex">
+                  <Button
+                    variant="info"
+                    size="sm"
+                    className="me-2 p-1 d-flex align-items-center"
+                    style={{
+                      width: "52px",
+                      height: "32px",
+                      justifyContent: "center",
+                    }}
+                    onClick={() => handleOpenFolder(folder)}
+                  >
+                    <Folder size={16} /> Mở
+                  </Button>
+                  <Button
+                    variant="warning"
+                    size="sm"
+                    className="me-2 p-1 d-flex align-items-center"
+                    style={{
+                      width: "55px",
+                      height: "32px",
+                      justifyContent: "center",
+                    }}
+                    onClick={() => handleEditClick(folder)}
+                  >
+                    <Edit size={16} /> Sửa
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    className="p-1 d-flex align-items-center"
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      justifyContent: "center",
+                    }}
+                    onClick={() => handleDeleteFolder(folder._id)}
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </div>
               </td>
             </tr>
           ))}
         </tbody>
       </Table>
+
+      {/* Phân trang */}
+      {filteredFolders.length > foldersPerPage && renderPagination()}
+
       {/* Empty state */}
-      {(!filteredFolders || filteredFolders.length === 0) && (
+      {(!currentFolders || currentFolders.length === 0) && (
         <div className="text-center py-5">
           <FileUp size={48} className="text-muted mb-3" />
           <p className="text-muted mb-0">Chưa có thư mục nào được tạo</p>
