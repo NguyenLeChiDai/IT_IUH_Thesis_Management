@@ -5,7 +5,7 @@ import "../../css/PostTheTopic.css"; // Import file CSS để style
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
-import { CircularProgress } from "@mui/material";
+import { Box, CircularProgress, Typography } from "@mui/material";
 import ReactPaginate from "react-paginate";
 import "font-awesome/css/font-awesome.min.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -415,7 +415,25 @@ const PostTheTopic = () => {
                     color: "#333", // Màu chữ
                   }}
                 >
-                  Tải lên file Excel:
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                    }}
+                  >
+                    <Typography variant="body1">File Excel</Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "red",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      * Tải file Excel phải có đủ thông tin như: nameTopic,
+                      descriptionTopic, teacherId, phải đúng định dạng.
+                    </Typography>
+                  </Box>
                 </label>
                 <input
                   type="file"

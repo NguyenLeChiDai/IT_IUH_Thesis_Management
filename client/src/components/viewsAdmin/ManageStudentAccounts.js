@@ -511,6 +511,18 @@ const ManageStudentAccounts = () => {
         </Button>
       </Box>
 
+      <Typography
+        variant="body2"
+        sx={{
+          color: "red",
+          fontStyle: "italic",
+          marginBottom: 2,
+        }}
+      >
+        * Tải file Excel phải có đủ thông tin như: username, password, role,
+        studentId, name, phone, email, class, major, gender
+      </Typography>
+
       {/* Tìm kiếm tài khoản */}
       <TextField
         label="Tìm kiếm theo Tên đăng nhập hoặc Mã sinh viên"

@@ -210,7 +210,7 @@ function AssignmentCouncil() {
   };
 
   //get danh sách để phân công
-  const handleListGroupCouncil = async (committee) => {
+  /* const handleListGroupCouncil = async (committee) => {
     if (
       !committee ||
       !committee.reviewerTeacher ||
@@ -256,6 +256,81 @@ function AssignmentCouncil() {
         setError(response.data.message || "Không thể tải danh sách nhóm");
       }
     } catch (err) {
+      setError("Đã xảy ra lỗi khi tải danh sách nhóm");
+    } finally {
+      setLoading(false);
+    }
+  };
+ */
+  const handleListGroupCouncil = async (committee) => {
+    if (
+      !committee ||
+      !committee.reviewerTeacher ||
+      committee.reviewerTeacher.length < 5
+    ) {
+      setError("Hội đồng phải có ít nhất 5 giảng viên");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem("token");
+      const teacherIds = committee.reviewerTeacher.map(
+        (teacher) => teacher._id
+      );
+      const response = await axios.get(
+        `${apiUrl}/councilAssignment/get-eligible-council-students/${teacherIds[0]}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          params: { secondTeacherId: teacherIds[1] },
+        }
+      );
+
+      if (response.data.success) {
+        // Lọc các nhóm:
+        // 1. Chưa được phân công cho bất kỳ hội đồng nào
+        // 2. Hoặc đã được phân công cho hội đồng hiện tại
+        const filteredGroups = response.data.eligibleGroups.filter((group) => {
+          // Kiểm tra nếu nhóm đã được phân công cho hội đồng hiện tại
+          const isAssignedToCurrentCommittee = committee.studentGroup?.some(
+            (assignedGroup) => assignedGroup._id === group._id
+          );
+
+          // Kiểm tra nếu nhóm đã được phân công cho bất kỳ hội đồng nào khác
+          const isAssignedToAnyCommittee = committees.some((comm) =>
+            comm.studentGroup?.some(
+              (assignedGroup) => assignedGroup._id === group._id
+            )
+          );
+
+          // Hiển thị nhóm nếu:
+          // - Đã được phân công cho hội đồng hiện tại
+          // - Hoặc chưa được phân công cho bất kỳ hội đồng nào
+          return isAssignedToCurrentCommittee || !isAssignedToAnyCommittee;
+        });
+
+        // Thêm trạng thái isAssigned cho mỗi nhóm
+        const groupsWithAssignmentStatus = filteredGroups.map((group) => ({
+          ...group,
+          isAssigned: committee.studentGroup?.some(
+            (assignedGroup) => assignedGroup._id === group._id
+          ),
+        }));
+
+        console.log("Processed groups:", groupsWithAssignmentStatus);
+
+        setAssignedGroups(groupsWithAssignmentStatus);
+        setSelectedCommittee(committee);
+        setShowGroupModal(true);
+      } else {
+        setError(response.data.message || "Không thể tải danh sách nhóm");
+      }
+    } catch (err) {
+      console.error("Error in handleListGroupCouncil:", err);
       setError("Đã xảy ra lỗi khi tải danh sách nhóm");
     } finally {
       setLoading(false);
